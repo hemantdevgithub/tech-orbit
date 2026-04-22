@@ -1,0 +1,16 @@
+{
+  "name": "@techorbit/config-eslint",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./node": "./eslint.node.config.mjs",
+    "./nextjs": "./eslint.nextjs.config.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.59.0"
+  }
+}
