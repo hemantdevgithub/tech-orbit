@@ -191,6 +191,7 @@ export type UpdateCustomerCompany = z.infer<typeof UpdateCustomerCompanySchema>;
 export const AttributeCrmSchema = z.object({
   crmUserId: z.string().uuid(),
 });
+export type AttributeCrm = z.infer<typeof AttributeCrmSchema>;
 
 // ─── Interviewer ──────────────────────────────────────────────────────────────
 

@@ -137,6 +137,7 @@ export type {
   CustomerCompanyResponse,
   CreateCustomerCompany,
   UpdateCustomerCompany,
+  AttributeCrm,
   InterviewerProfileResponse,
   CreateInterviewerProfile,
   UpdateInterviewerProfile,
