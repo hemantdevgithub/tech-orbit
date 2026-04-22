@@ -62,3 +62,7 @@ export async function disconnectAll(): Promise<void> {
   }
   cachedClients.clear();
 }
+
+// ─── Field-level encryption ──────────────────────────────────────────────────
+export { createEncryptionService } from "./field-encryption.js";
+export type { EncryptedField, EncryptionContext, EncryptionService } from "./field-encryption.js";
