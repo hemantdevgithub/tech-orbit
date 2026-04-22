@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum FilePurpose {
+  RESUME
+  CONTRACT
+  W9
+  VIDEO_INTRO
+  PROFILE_PHOTO
+}
+
+enum FileStatus {
+  PENDING
+  CONFIRMED
+  VIRUS_DETECTED
+  DELETED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model FileRecord {
+  id              String      @id @default(uuid())
+  uploadedBy      String      @map("uploaded_by")
+  filename        String
+  contentType     String      @map("content_type")
+  sizeBytes       Int         @map("size_bytes")
+  purpose         FilePurpose
+  s3Key           String?     @map("s3_key")
+  localPath       String?     @map("local_path")
+  status          FileStatus  @default(PENDING)
+  virusScanResult String?     @map("virus_scan_result")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@index([uploadedBy])
+  @@index([status])
+  @@index([purpose])
+  @@map("file_record")
+}
