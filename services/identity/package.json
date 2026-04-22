@@ -24,6 +24,7 @@
     "@fastify/helmet": "^11.1.1",
     "@fastify/rate-limit": "^9.1.0",
     "@prisma/client": "^5.14.0",
+    "@techorbit/auth-middleware": "workspace:*",
     "@techorbit/errors": "workspace:*",
     "@techorbit/event-bus": "workspace:*",
     "@techorbit/logger": "workspace:*",
@@ -34,7 +35,8 @@
     "qrcode": "^1.5.3",
     "speakeasy": "^2.0.0",
     "uuid": "^9.0.1",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "zxcvbn-ts": "^2.0.2"
   },
   "devDependencies": {
     "@prisma/client": "^5.14.0",

@@ -101,3 +101,13 @@ export function requireAllRoles(fastify: FastifyInstance, ...roles: string[]) {
     }
   };
 }
+
+// ─── Token verification helper ─────────────────────────────────────────────────
+
+export interface TokenVerificationResult {
+  valid: boolean;
+  userId?: string;
+  sessionId?: string;
+  roles?: string[];
+  error?: string;
+}
