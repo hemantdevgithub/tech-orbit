@@ -1,12 +1,19 @@
-import { ApiClient, createAuthApiClient } from "@techorbit/api-client";
-import type { AuthApiClient } from "@techorbit/api-client";
+import { ApiClient, createAuthApiClient, createProfileApiClient } from "@techorbit/api-client";
+import type { AuthApiClient, ProfileApiClient } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 
 const IDENTITY_BASE_URL =
   process.env.NEXT_PUBLIC_IDENTITY_URL ?? "http://localhost:4001";
+const PROFILE_BASE_URL =
+  process.env.NEXT_PUBLIC_PROFILE_URL ?? "http://localhost:3004";
+const FILE_BASE_URL =
+  process.env.NEXT_PUBLIC_FILE_URL ?? "http://localhost:3003";
 
 let apiClientInstance: ApiClient | null = null;
 let authClientInstance: AuthApiClient | null = null;
+let profileClientInstance: ProfileApiClient | null = null;
+let profileApiClientInstance: ApiClient | null = null;
+let fileApiClientInstance: ApiClient | null = null;
 
 export function getApiClient(): ApiClient {
   if (!apiClientInstance) {
@@ -37,8 +44,51 @@ export function getAuthClient(): AuthApiClient {
   return authClientInstance;
 }
 
+function makeServiceClient(baseUrl: string): ApiClient {
+  const store = useAuthStore.getState();
+  return new ApiClient({
+    baseUrl,
+    getAccessToken: () => store.accessToken,
+    onAccessTokenRefresh: (token) => {
+      useAuthStore.getState().setTokens(token, 900);
+    },
+    onRefreshFailure: () => {
+      useAuthStore.getState().logout();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+    },
+  });
+}
+
+export function getProfileApiClient(): ApiClient {
+  if (!profileApiClientInstance) {
+    profileApiClientInstance = makeServiceClient(PROFILE_BASE_URL);
+  }
+  return profileApiClientInstance;
+}
+
+export function getFileApiClient(): ApiClient {
+  if (!fileApiClientInstance) {
+    fileApiClientInstance = makeServiceClient(FILE_BASE_URL);
+  }
+  return fileApiClientInstance;
+}
+
+export function getProfileClient(): ProfileApiClient {
+  if (!profileClientInstance) {
+    // Profile client routes to both profile-svc and file-svc
+    // For simplicity, file endpoints use profile-svc's ApiClient with FILE_BASE_URL
+    profileClientInstance = createProfileApiClient(getProfileApiClient());
+  }
+  return profileClientInstance;
+}
+
 // Singleton reset for server-side / HMR
 export function resetApiClient(): void {
   apiClientInstance = null;
   authClientInstance = null;
+  profileClientInstance = null;
+  profileApiClientInstance = null;
+  fileApiClientInstance = null;
 }

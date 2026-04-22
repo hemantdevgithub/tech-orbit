@@ -128,6 +128,7 @@ export type {
   AvailabilitySlot,
   CandidateProfileResponse,
   UpdateCandidateProfile,
+  StartKycResponse,
   MsmeProfileResponse,
   CreateMsmeProfile,
   UpdateMsmeProfile,

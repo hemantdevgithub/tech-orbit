@@ -1,4 +1,4 @@
-import type { InterviewerProfile } from "@prisma/client";
+import type { InterviewerProfile } from "../generated/client/index.js";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import type {
   InterviewerProfileResponse,

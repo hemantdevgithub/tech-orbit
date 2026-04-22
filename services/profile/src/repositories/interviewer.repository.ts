@@ -1,4 +1,4 @@
-import type { InterviewerProfile } from "@prisma/client";
+import type { InterviewerProfile } from "../generated/client/index.js";
 import { ForbiddenError, NotFoundError } from "@techorbit/errors";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import { prisma } from "../lib/prisma.js";

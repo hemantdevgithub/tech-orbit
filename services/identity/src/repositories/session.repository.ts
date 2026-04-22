@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
-import type { Session } from "@prisma/client";
+import type { Session } from "../generated/client/index.js";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 

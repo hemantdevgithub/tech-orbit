@@ -1,4 +1,4 @@
-import type { FileRecord, FilePurpose, FileStatus } from "@prisma/client";
+import type { FileRecord, FilePurpose, FileStatus } from "../generated/client/index.js";
 import { prisma } from "../lib/prisma.js";
 
 export type CreateFileInput = {

@@ -1,5 +1,5 @@
-import type { CustomerCompanyProfile } from "@prisma/client";
-import { Prisma } from "@prisma/client";
+import type { CustomerCompanyProfile } from "../generated/client/index.js";
+import { Prisma } from "../generated/client/index.js";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import type {
   CustomerCompanyResponse,

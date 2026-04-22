@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
-import type { TwoFAKind } from "@prisma/client";
+import type { TwoFAKind } from "../generated/client/index.js";
 
 type TwoFAChallengeWithUser = {
   id: string;

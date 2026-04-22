@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
 import { PageHeader, Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit/ui";
 import { isOnboardingComplete } from "@/lib/auth-guards";
@@ -23,7 +24,15 @@ const ROLE_DESCRIPTIONS: Record<RoleType, string> = {
   INTERVIEWER: "Conduct technical interviews for candidates",
 };
 
+const ONBOARDING_ROUTES: Partial<Record<RoleType, string>> = {
+  CANDIDATE: "/onboarding/candidate",
+  MSME: "/onboarding/msme",
+  CUSTOMER: "/onboarding/customer",
+  INTERVIEWER: "/onboarding/interviewer",
+};
+
 export default function DashboardPage() {
+  const router = useRouter();
   const store = useAuthStore();
   const user = store.user;
 
@@ -58,12 +67,26 @@ export default function DashboardPage() {
               You have {pendingRoles.length} role{pendingRoles.length > 1 ? "s" : ""} pending verification.
               Complete the steps below to unlock full access.
             </p>
-            <div className="flex flex-wrap gap-2">
-              {pendingRoles.map((r) => (
-                <Badge variant="success">
-                  {ROLE_LABELS[r.roleType as RoleType] ?? r.roleType}
-                </Badge>
-              ))}
+            <div className="flex flex-wrap gap-3">
+              {pendingRoles.map((r) => {
+                const route = ONBOARDING_ROUTES[r.roleType as RoleType];
+                return (
+                  <div key={r.id} className="flex items-center gap-2">
+                    <Badge variant="success">
+                      {ROLE_LABELS[r.roleType as RoleType] ?? r.roleType}
+                    </Badge>
+                    {route && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => router.push(route)}
+                      >
+                        Complete profile →
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </CardBody>
         </Card>

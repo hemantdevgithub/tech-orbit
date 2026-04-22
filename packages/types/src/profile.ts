@@ -75,6 +75,7 @@ export const StartKycResponseSchema = z.object({
   sessionId: z.string(),
   isMock: z.boolean(),
 });
+export type StartKycResponse = z.infer<typeof StartKycResponseSchema>;
 
 // ─── MSME ────────────────────────────────────────────────────────────────────
 

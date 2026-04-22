@@ -1,4 +1,4 @@
-import type { CandidateProfile } from "@prisma/client";
+import type { CandidateProfile } from "../generated/client/index.js";
 import { Decimal } from "@prisma/client/runtime/library";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import type { CandidateProfileResponse, UpdateCandidateProfile } from "@techorbit/types";

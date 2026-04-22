@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
-import type { UserRoleType, UserRoleStatus } from "@prisma/client";
+import type { UserRoleType, UserRoleStatus } from "../generated/client/index.js";
 
 type UserRoleWithUser = {
   id: string;

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import fs from "node:fs";
-import { FilePurpose } from "@prisma/client";
+import { FilePurpose } from "../generated/client/index.js";
 import { FileUploadUrlRequestSchema } from "@techorbit/types";
 import { createFileService } from "../services/file.service.js";
 import type { Config } from "../config.js";

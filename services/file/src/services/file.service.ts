@@ -7,7 +7,7 @@ import {
   InternalError,
   ValidationError,
 } from "@techorbit/errors";
-import type { FilePurpose } from "@prisma/client";
+import type { FilePurpose } from "../generated/client/index.js";
 import { fileRepository } from "../repositories/file.repository.js";
 import type { Config } from "../config.js";
 

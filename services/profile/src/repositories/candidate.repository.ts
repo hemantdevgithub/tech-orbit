@@ -1,5 +1,5 @@
-import type { CandidateProfile } from "@prisma/client";
-import type { BackgroundCheckStatus, BenchAvailability } from "@prisma/client";
+import type { CandidateProfile } from "../generated/client/index.js";
+import type { BackgroundCheckStatus, BenchAvailability } from "../generated/client/index.js";
 import { ForbiddenError, NotFoundError } from "@techorbit/errors";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import { prisma } from "../lib/prisma.js";

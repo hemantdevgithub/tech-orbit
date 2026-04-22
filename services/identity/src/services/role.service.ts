@@ -1,5 +1,5 @@
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
-import type { UserRoleType } from "@prisma/client";
+import type { UserRoleType } from "../generated/client/index.js";
 import { roleRepository } from "../repositories/index.js";
 import { outboxRepository } from "../repositories/index.js";
 

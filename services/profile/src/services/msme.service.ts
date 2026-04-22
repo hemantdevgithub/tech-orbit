@@ -1,5 +1,5 @@
-import type { MsmeProfile, MsmeBenchEntry } from "@prisma/client";
-import { Prisma } from "@prisma/client";
+import type { MsmeProfile, MsmeBenchEntry } from "../generated/client/index.js";
+import { Prisma } from "../generated/client/index.js";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import type {
   MsmeProfileResponse,

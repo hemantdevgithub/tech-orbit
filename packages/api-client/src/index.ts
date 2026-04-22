@@ -9,3 +9,4 @@ export type {
   PasswordResetRequestInput,
   AddRoleInput,
 } from "./auth.js";
+export { ProfileApiClient, createProfileApiClient } from "./profile.js";

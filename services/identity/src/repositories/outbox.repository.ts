@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
-import type { OutgoingEventStatus } from "@prisma/client";
+import type { OutgoingEventStatus } from "../generated/client/index.js";
 
 type CreateEventInput = {
   type: string;

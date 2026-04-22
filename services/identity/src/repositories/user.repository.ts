@@ -1,9 +1,9 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../generated/client/index.js";
 import { prisma } from "../lib/prisma.js";
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
 import type { EncryptedField } from "@techorbit/db-client";
 import { NotFoundError } from "@techorbit/errors";
-import type { User } from "@prisma/client";
+import type { User } from "../generated/client/index.js";
 
 // ─── Prisma types ──────────────────────────────────────────────────────────────
 
