@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UserRoleType } from "./enums.js";
 
 // ─── Email & Password ────────────────────────────────────────────────────────
 
@@ -46,7 +47,7 @@ export const AuthSuccessResponseSchema = z.object({
     has2FA: z.boolean(),
     roles: z.array(
       z.object({
-        roleType: z.string(),
+        roleType: UserRoleType,
         status: z.enum(["PENDING_VERIFICATION", "ACTIVE", "SUSPENDED"]),
         addedAt: z.string().datetime(),
       })
@@ -135,7 +136,7 @@ export const MeResponseSchema = z.object({
   roles: z.array(
     z.object({
       id: z.string().uuid(),
-      roleType: z.string(),
+      roleType: UserRoleType,
       status: z.enum(["PENDING_VERIFICATION", "ACTIVE", "SUSPENDED"]),
       addedAt: z.string().datetime(),
       verificationData: z.record(z.unknown()).optional(),
@@ -226,7 +227,7 @@ export const UserRegisteredEventSchema = z.object({
   payload: z.object({
     userId: z.string().uuid(),
     email: EmailSchema,
-    roleType: z.string().optional(),
+    roleType: UserRoleType.optional(),
     method: z.enum(["EMAIL", "GOOGLE", "LINKEDIN"]),
   }),
 });
@@ -262,7 +263,7 @@ export const UserRoleAddedEventSchema = z.object({
   payload: z.object({
     userId: z.string().uuid(),
     roleId: z.string().uuid(),
-    roleType: z.string(),
+    roleType: UserRoleType,
     initialStatus: z.enum(["PENDING_VERIFICATION", "ACTIVE"]),
   }),
 });
