@@ -4,9 +4,18 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import cookie from "@fastify/cookie";
 
+import type { EncryptionService } from "@techorbit/db-client";
+import { createEncryptionService } from "@techorbit/db-client";
 import { getConfig } from "./config.js";
 import { createAuthMiddleware } from "@techorbit/auth-middleware";
 import { setJwtKeys } from "./services/token.service.js";
+
+// Declare Fastify decoration
+declare module "fastify" {
+  interface FastifyInstance {
+    encryptionService: EncryptionService;
+  }
+}
 import {
   registerRoutes,
   loginRoutes,
@@ -38,7 +47,11 @@ export async function buildServer(): Promise<FastifyInstance> {
   if (!process.env.JWT_PRIVATE_KEY || !process.env.JWT_PUBLIC_KEY) {
     throw new Error("JWT_PRIVATE_KEY and JWT_PUBLIC_KEY environment variables are required");
   }
-  setJwtKeys(process.env.JWT_PRIVATE_KEY, process.env.JWT_PUBLIC_KEY);
+  // Env files store PEMs with "\n" escape sequences — normalize to real newlines
+  // before handing to @fastify/jwt / jose.
+  const privatePem = process.env.JWT_PRIVATE_KEY.replace(/\\n/g, "\n");
+  const publicPem = process.env.JWT_PUBLIC_KEY.replace(/\\n/g, "\n");
+  setJwtKeys(privatePem, publicPem);
 
   // Security middleware
   await fastify.register(cors, {
@@ -47,18 +60,27 @@ export async function buildServer(): Promise<FastifyInstance> {
   });
   await fastify.register(helmet);
   await fastify.register(cookie);
-  await fastify.register(rateLimit, {
-    global: false, // Per-route limits instead
-  });
+  // Integration tests share one Fastify instance across files, so per-IP
+  // rate-limit buckets would cross-pollute test files. Tests that need to
+  // assert limiting enable it explicitly (see rate-limit.test.ts).
+  if (process.env.DISABLE_RATE_LIMIT !== "1") {
+    await fastify.register(rateLimit, {
+      global: false, // Per-route limits instead
+    });
+  }
 
   // Register auth middleware
   await createAuthMiddleware(fastify, {
-    publicKey: process.env.JWT_PUBLIC_KEY ?? "",
+    publicKey: publicPem,
     verifyOptions: {
       algorithms: ["RS256"],
       clockTolerance: 30,
     },
   });
+
+  // Initialize field encryption service (fails fast if KEK is missing)
+  const encryptionService = createEncryptionService();
+  fastify.decorate("encryptionService", encryptionService);
 
   // Auth routes
   await fastify.register(registerRoutes);

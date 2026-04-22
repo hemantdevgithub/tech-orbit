@@ -17,7 +17,9 @@ function getRefreshCookieOptions() {
     httpOnly: true,
     sameSite: "lax" as const,
     secure: COOKIE_SECURE,
-    path: "/api/v1/auth/refresh",
+    // Refresh token cookie is used by /refresh and cleared by /logout,
+    // so scope to the auth namespace (both endpoints live under /api/v1/auth).
+    path: "/api/v1/auth",
     maxAge: 14 * 24 * 60 * 60, // 14 days in seconds
     domain: COOKIE_DOMAIN,
   };
@@ -77,9 +79,17 @@ export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
         request.headers["user-agent"] ?? undefined
       );
 
-      // Email enumeration prevention: always return 201
+      if (result.refreshToken) {
+        reply.setCookie("refresh_token", result.refreshToken, getRefreshCookieOptions());
+      }
+
+      // Email enumeration prevention: always return 201.
+      // On duplicate-email we return the same shape with no token fields.
       return reply.status(201).send({
         message: "Registration successful",
+        accessToken: result.accessToken,
+        tokenType: result.accessToken ? "Bearer" : undefined,
+        expiresIn: result.expiresIn,
         require2FA: result.requires2FA ?? false,
       });
     }
@@ -134,6 +144,10 @@ export async function loginRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
+      if (result.refreshToken) {
+        reply.setCookie("refresh_token", result.refreshToken, getRefreshCookieOptions());
+      }
+
       return reply.status(200).send({
         accessToken: result.accessToken,
         tokenType: "Bearer",
@@ -159,6 +173,8 @@ export async function refreshRoutes(fastify: FastifyInstance): Promise<void> {
 
       try {
         const result = await authService.refreshSession(systemCtx, refreshToken);
+
+        reply.setCookie("refresh_token", result.refreshToken, getRefreshCookieOptions());
 
         return reply.status(200).send({
           accessToken: result.accessToken,
@@ -215,7 +231,8 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
       const result = await twoFAService.setupTOTP(
         systemCtx,
         ctx.userId,
-        "user@techorbit.dev" // Would come from user profile
+        "user@techorbit.dev", // Would come from user profile
+        fastify.encryptionService
       );
 
       return reply.status(200).send(result);
@@ -251,14 +268,26 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
         const { userRepository } = await import("../repositories/index.js");
         const user = await userRepository.findById(systemCtx, userId);
 
-        if (!user || !user.twoFASecret) {
+        if (!user || !user.twoFASecretEncrypted) {
           return reply.status(401).send({
             error: { code: "2FA_NOT_CONFIGURED", message: "2FA not configured" },
           });
         }
 
+        let secret: string;
+        try {
+          secret = await fastify.encryptionService.decrypt(user.twoFASecretEncrypted, {
+            purpose: "2fa_secret",
+            userId,
+          });
+        } catch (error) {
+          return reply.status(500).send({
+            error: { code: "DECRYPTION_ERROR", message: "Failed to decrypt 2FA secret" },
+          });
+        }
+
         const { authenticator } = await import("otplib");
-        const isValid = authenticator.verify({ token: code, secret: user.twoFASecret });
+        const isValid = authenticator.verify({ token: code, secret });
 
         if (!isValid) {
           return reply.status(401).send({
@@ -274,6 +303,10 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
           challengeToken
         );
 
+        if (loginResult.refreshToken) {
+          reply.setCookie("refresh_token", loginResult.refreshToken, getRefreshCookieOptions());
+        }
+
         return reply.status(200).send({
           accessToken: loginResult.accessToken,
           tokenType: "Bearer",
@@ -288,13 +321,25 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
 
       const user = await userRepository.findById(systemCtx, ctx.userId);
 
-      if (!user || !user.twoFASecret) {
+      if (!user || !user.twoFASecretEncrypted) {
         return reply.status(400).send({
           error: { code: "2FA_NOT_SETUP", message: "2FA not set up" },
         });
       }
 
-      const isValid = authenticator.verify({ token: code, secret: user.twoFASecret });
+      let secret: string;
+      try {
+        secret = await fastify.encryptionService.decrypt(user.twoFASecretEncrypted, {
+          purpose: "2fa_secret",
+          userId: ctx.userId,
+        });
+      } catch (error) {
+        return reply.status(500).send({
+          error: { code: "DECRYPTION_ERROR", message: "Failed to decrypt 2FA secret" },
+        });
+      }
+
+      const isValid = authenticator.verify({ token: code, secret });
 
       if (!isValid) {
         return reply.status(401).send({
