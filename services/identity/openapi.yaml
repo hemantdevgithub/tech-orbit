@@ -1,0 +1,769 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Identity Service
+  version: 0.1.0
+  description: Authentication, session management, 2FA, password reset, OAuth, and
+    user-role management for the Techorbit platform.
+servers:
+  - url: http://localhost:3002
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 12
+          description: Password strength validated server-side with zxcvbn (score >= 3
+            required)
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+    RegisterResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        require2FA:
+          type: boolean
+      required:
+        - message
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+      required:
+        - email
+        - password
+    LoginSuccessResponse:
+      type: object
+      properties:
+        require2FA:
+          type: boolean
+          enum:
+            - false
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          enum:
+            - Bearer
+        expiresIn:
+          type: number
+      required:
+        - require2FA
+        - accessToken
+        - tokenType
+        - expiresIn
+    Login2FAResponse:
+      type: object
+      properties:
+        require2FA:
+          type: boolean
+          enum:
+            - true
+        challengeToken:
+          type: string
+        expiresIn:
+          type: number
+      required:
+        - require2FA
+        - challengeToken
+        - expiresIn
+    TokenRefreshResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          enum:
+            - Bearer
+        expiresIn:
+          type: number
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+    MeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - ACTIVE
+            - SUSPENDED
+        emailVerified:
+          type: boolean
+        has2FA:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              roleType:
+                type: string
+                enum:
+                  - CUSTOMER
+                  - CRM
+                  - SRM
+                  - CANDIDATE
+                  - MSME
+                  - INTERVIEWER
+                  - ADMIN
+              status:
+                type: string
+                enum:
+                  - PENDING_VERIFICATION
+                  - ACTIVE
+                  - SUSPENDED
+              addedAt:
+                type: string
+                format: date-time
+              verificationData:
+                type: object
+                additionalProperties:
+                  nullable: true
+            required:
+              - id
+              - roleType
+              - status
+              - addedAt
+        sessions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              userAgent:
+                type: string
+                nullable: true
+              ipAddress:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+              lastActiveAt:
+                type: string
+                format: date-time
+              current:
+                type: boolean
+            required:
+              - id
+              - userAgent
+              - ipAddress
+              - createdAt
+              - lastActiveAt
+              - current
+      required:
+        - id
+        - email
+        - firstName
+        - lastName
+        - status
+        - emailVerified
+        - has2FA
+        - roles
+        - sessions
+    AddRoleRequest:
+      type: object
+      properties:
+        roleType:
+          type: string
+          enum:
+            - CUSTOMER
+            - CANDIDATE
+            - CRM
+            - SRM
+            - MSME
+            - INTERVIEWER
+      required:
+        - roleType
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email
+    PasswordResetConfirm:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 12
+          description: Password strength validated server-side with zxcvbn (score >= 3
+            required)
+      required:
+        - token
+        - password
+    PasswordResetRequestResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+    TwoFASetupResponse:
+      type: object
+      properties:
+        secret:
+          type: string
+          description: Base32 TOTP secret for authenticator apps
+        qrDataUrl:
+          type: string
+          format: uri
+          description: otpauth:// URI for QR code
+        backupCodes:
+          type: array
+          items:
+            type: string
+      required:
+        - secret
+        - qrDataUrl
+        - backupCodes
+    TwoFAVerifyRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: ^\d{6}$
+      required:
+        - code
+    TwoFADisableRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: ^\d{6}$
+        password:
+          type: string
+          minLength: 1
+      required:
+        - code
+        - password
+    LogoutResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+    TwoFAVerifyWithChallenge:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+        challengeToken:
+          type: string
+      required:
+        - code
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account and sets an httpOnly refresh-token
+        cookie. Returns the same shape whether or not the email is already taken
+        (email enumeration prevention).
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+        "400":
+          description: Validation error or weak password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded (10 / hour / IP)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/login:
+    post:
+      summary: Log in with email + password
+      description: Returns either an access token (no 2FA) or a short-lived 2FA
+        challenge token. Sets the refresh-token cookie on successful full login.
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in (or 2FA required)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - _def:
+                      unknownKeys: strip
+                      catchall:
+                        _def:
+                          typeName: ZodNever
+                        ~standard:
+                          version: 1
+                          vendor: zod
+                      typeName: ZodObject
+                      openapi:
+                        _internal:
+                          refId: LoginSuccessResponse
+                    ~standard:
+                      version: 1
+                      vendor: zod
+                    _cached: null
+                  - _def:
+                      unknownKeys: strip
+                      catchall:
+                        _def:
+                          typeName: ZodNever
+                        ~standard:
+                          version: 1
+                          vendor: zod
+                      typeName: ZodObject
+                      openapi:
+                        _internal:
+                          refId: Login2FAResponse
+                    ~standard:
+                      version: 1
+                      vendor: zod
+                    _cached: null
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded (5 / 15 min / IP)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/refresh:
+    post:
+      summary: Rotate refresh token and issue new access token
+      description: Reads the opaque refresh token from the `refresh_token` cookie,
+        rotates it (old token is revoked, new one set in the cookie), and
+        returns a new access token. Replaying a revoked refresh token revokes
+        ALL sessions for the user.
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenRefreshResponse"
+        "401":
+          description: Refresh token missing, invalid, expired, or replayed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/logout:
+    post:
+      summary: Log out the current session
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/2fa/setup:
+    post:
+      summary: Start TOTP 2FA setup
+      description: Generates a TOTP secret, a QR-code data URL, and backup codes.
+      tags:
+        - 2FA
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Setup payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFASetupResponse"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/2fa/verify:
+    post:
+      summary: Verify a TOTP code
+      description: "Two modes: (1) with a `challengeToken` from /login (exchanges for
+        an access token), (2) authed with an access token (confirms setup)."
+      tags:
+        - 2FA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFAVerifyWithChallenge"
+      responses:
+        "200":
+          description: Verified or access token issued
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid code or challenge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/2fa/disable:
+    post:
+      summary: Disable 2FA
+      description: Requires a current password + TOTP code.
+      tags:
+        - 2FA
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFADisableRequest"
+      responses:
+        "200":
+          description: 2FA disabled
+        "401":
+          description: Invalid code or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/password/reset/request:
+    post:
+      summary: Request a password reset email
+      description: Always returns 200 regardless of whether the email exists.
+      tags:
+        - Password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+      responses:
+        "200":
+          description: Reset request accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetRequestResponse"
+        "429":
+          description: Rate limit exceeded (5 / 15 min / IP)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/password/reset/confirm:
+    post:
+      summary: Confirm a password reset with a token
+      tags:
+        - Password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetConfirm"
+      responses:
+        "200":
+          description: Password reset
+        "400":
+          description: Invalid or expired token, or weak new password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/me:
+    get:
+      summary: Get the current user's profile, roles, and active sessions
+      tags:
+        - Me
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/me/roles:
+    post:
+      summary: Add a role to the current user
+      description: CUSTOMER and CANDIDATE roles auto-activate. CRM, SRM, MSME,
+        INTERVIEWER roles start as PENDING_VERIFICATION.
+      tags:
+        - Me
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddRoleRequest"
+      responses:
+        "201":
+          description: Role added
+        "400":
+          description: Invalid role type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/oauth/google/start:
+    get:
+      summary: Start google OAuth flow
+      tags:
+        - OAuth
+      parameters:
+        - schema:
+            type: string
+            format: uri
+          required: false
+          name: returnTo
+          in: query
+      responses:
+        "302":
+          description: Redirect to provider
+        "500":
+          description: Provider not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/oauth/google/callback:
+    get:
+      summary: Handle google OAuth callback
+      tags:
+        - OAuth
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: code
+          in: query
+        - schema:
+            type: string
+          required: true
+          name: state
+          in: query
+      responses:
+        "302":
+          description: Redirect to frontend with result
+        "400":
+          description: Missing or invalid callback params
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: OAuth exchange failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/oauth/linkedin/start:
+    get:
+      summary: Start linkedin OAuth flow
+      tags:
+        - OAuth
+      parameters:
+        - schema:
+            type: string
+            format: uri
+          required: false
+          name: returnTo
+          in: query
+      responses:
+        "302":
+          description: Redirect to provider
+        "500":
+          description: Provider not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/oauth/linkedin/callback:
+    get:
+      summary: Handle linkedin OAuth callback
+      tags:
+        - OAuth
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: code
+          in: query
+        - schema:
+            type: string
+          required: true
+          name: state
+          in: query
+      responses:
+        "302":
+          description: Redirect to frontend with result
+        "400":
+          description: Missing or invalid callback params
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: OAuth exchange failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      summary: Health check
+      tags:
+        - System
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
