@@ -5,6 +5,10 @@ import { useAuthStore } from "@/store/auth.store";
 import { PageHeader, Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit/ui";
 import { isOnboardingComplete } from "@/lib/auth-guards";
 import type { RoleType } from "@/lib/auth-guards";
+import { CandidateDashboard } from "@/components/dashboard/candidate-dashboard";
+import { MsmeDashboard } from "@/components/dashboard/msme-dashboard";
+import { CustomerDashboard } from "@/components/dashboard/customer-dashboard";
+import { InterviewerDashboard } from "@/components/dashboard/interviewer-dashboard";
 
 const ROLE_LABELS: Record<RoleType, string> = {
   CUSTOMER: "Customer",
@@ -124,6 +128,32 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+
+      {/* Role-specific dashboards */}
+      {activeRoles.some((r) => r.roleType === "CANDIDATE") && (
+        <section>
+          <h2 className="text-lg font-semibold text-forest-900 mb-4">Candidate workspace</h2>
+          <CandidateDashboard />
+        </section>
+      )}
+      {activeRoles.some((r) => r.roleType === "MSME") && (
+        <section>
+          <h2 className="text-lg font-semibold text-forest-900 mb-4">MSME workspace</h2>
+          <MsmeDashboard />
+        </section>
+      )}
+      {activeRoles.some((r) => r.roleType === "CUSTOMER") && (
+        <section>
+          <h2 className="text-lg font-semibold text-forest-900 mb-4">Customer workspace</h2>
+          <CustomerDashboard />
+        </section>
+      )}
+      {activeRoles.some((r) => r.roleType === "INTERVIEWER") && (
+        <section>
+          <h2 className="text-lg font-semibold text-forest-900 mb-4">Interviewer workspace</h2>
+          <InterviewerDashboard />
+        </section>
+      )}
 
       {/* Available roles to add */}
       <section>
