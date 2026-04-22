@@ -11,7 +11,7 @@
  */
 import type { FastifyInstance } from "fastify";
 import { describe } from "vitest";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../src/generated/client/index.js";
 
 let serverInstance: FastifyInstance | undefined;
 let prismaInstance: PrismaClient | undefined;

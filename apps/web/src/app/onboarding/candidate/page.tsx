@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import type { z } from "zod";
 import { Card, CardBody, CardHeader, CardTitle, Button, Input, Label } from "@techorbit/ui";
 import { UpdateCandidateProfileSchema } from "@techorbit/types";
 import { getProfileClient } from "@/lib/api-client";
@@ -43,7 +43,6 @@ export default function CandidateOnboardingPage() {
     handleSubmit,
     watch,
     setValue,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(UpdateCandidateProfileSchema),

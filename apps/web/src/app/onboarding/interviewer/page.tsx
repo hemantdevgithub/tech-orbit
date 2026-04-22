@@ -39,7 +39,7 @@ export default function InterviewerOnboardingPage() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(CreateInterviewerProfileSchema),
     defaultValues: {

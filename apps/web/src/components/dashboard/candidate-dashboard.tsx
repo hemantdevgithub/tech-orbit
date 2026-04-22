@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit/ui";
+import { Card, CardBody, CardHeader, CardTitle, Button } from "@techorbit/ui";
 import { getProfileClient } from "@/lib/api-client";
 
 export function CandidateDashboard() {

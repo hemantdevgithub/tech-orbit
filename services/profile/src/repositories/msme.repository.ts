@@ -1,5 +1,4 @@
-import type { MsmeProfile, MsmeBenchEntry } from "../generated/client/index.js";
-import { Prisma } from "../generated/client/index.js";
+import type { MsmeProfile, MsmeBenchEntry, Prisma } from "../generated/client/index.js";
 import { ForbiddenError, NotFoundError, ConflictError } from "@techorbit/errors";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import { prisma } from "../lib/prisma.js";

@@ -1,5 +1,4 @@
-import type { CustomerCompanyProfile } from "../generated/client/index.js";
-import { Prisma } from "../generated/client/index.js";
+import type { CustomerCompanyProfile, Prisma } from "../generated/client/index.js";
 import { ForbiddenError, NotFoundError } from "@techorbit/errors";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import { prisma } from "../lib/prisma.js";

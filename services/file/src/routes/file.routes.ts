@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import fs from "node:fs";
-import { FilePurpose } from "../generated/client/index.js";
+import type { FilePurpose } from "../generated/client/index.js";
 import { FileUploadUrlRequestSchema } from "@techorbit/types";
 import { createFileService } from "../services/file.service.js";
 import type { Config } from "../config.js";
@@ -11,6 +11,12 @@ export async function fileRoutes(
   options: { config: Config },
 ): Promise<void> {
   const fileService = createFileService(options.config);
+
+  fastify.addContentTypeParser(
+    "application/octet-stream",
+    { parseAs: "buffer" },
+    (_req, body, done) => done(null, body as Buffer),
+  );
 
   // POST /api/v1/files/upload-url
   fastify.post(

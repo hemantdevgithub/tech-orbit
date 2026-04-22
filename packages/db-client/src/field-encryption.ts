@@ -79,17 +79,20 @@ export function createEncryptionService(): EncryptionService {
         );
       }
 
-      let iv: Buffer;
-      let ciphertext: Buffer;
-      let authTag: Buffer;
-
-      try {
-        iv = Buffer.from(field.iv, "base64");
-        ciphertext = Buffer.from(field.ciphertext, "base64");
-        authTag = Buffer.from(field.authTag, "base64");
-      } catch {
-        throw new InternalError("Encrypted field has invalid base64 encoding");
+      // Node's Buffer.from silently ignores invalid base64 chars, so validate explicitly.
+      const BASE64_RE = /^[A-Za-z0-9+/]+=*$/;
+      const invalidField = ["iv", "ciphertext", "authTag"].find(
+        (k) => !BASE64_RE.test(field[k as keyof EncryptedField] as string),
+      );
+      if (invalidField) {
+        throw new InternalError(
+          `Encrypted field '${invalidField}' is not valid base64`,
+        );
       }
+
+      const iv = Buffer.from(field.iv, "base64");
+      const ciphertext = Buffer.from(field.ciphertext, "base64");
+      const authTag = Buffer.from(field.authTag, "base64");
 
       const decipher = createDecipheriv("aes-256-gcm", kek, iv);
 
