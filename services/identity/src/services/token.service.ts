@@ -8,25 +8,39 @@ const REFRESH_TOKEN_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 const REFRESH_TOKEN_BYTES = 64;
 const CHALLENGE_TOKEN_TTL_SECONDS = 5 * 60; // 5 minutes
 
-// Environment variables set at runtime
-let privateKey: Uint8Array | null = null;
-let publicKey: Uint8Array | null = null;
+// RS256 keys — imported as KeyLike via jose.importPKCS8 / importSPKI so that
+// jose can use them for sign/verify. PEMs stored in env may be "\n"-escaped;
+// we normalize to real newlines before import.
+let privateKey: jose.KeyLike | null = null;
+let publicKey: jose.KeyLike | null = null;
+let importPromise: Promise<void> | null = null;
 
-export function setJwtKeys(privateKeyPem: string, publicKeyPem: string): void {
-  privateKey = new TextEncoder().encode(privateKeyPem.replace(/\\n/g, "\n"));
-  publicKey = new Uint8Array(
-    Buffer.from(publicKeyPem.replace(/\\n/g, "\n"), "base64")
-  );
+function normalizePem(pem: string): string {
+  return pem.replace(/\\n/g, "\n").trim();
 }
 
-function getPrivateKey(): Uint8Array {
+export function setJwtKeys(privateKeyPem: string, publicKeyPem: string): void {
+  const priv = normalizePem(privateKeyPem);
+  const pub = normalizePem(publicKeyPem);
+  // Reset and lazily import on first use.
+  privateKey = null;
+  publicKey = null;
+  importPromise = (async () => {
+    privateKey = await jose.importPKCS8(priv, "RS256");
+    publicKey = await jose.importSPKI(pub, "RS256");
+  })();
+}
+
+async function getPrivateKey(): Promise<jose.KeyLike> {
+  if (importPromise) await importPromise;
   if (!privateKey) {
     throw new Error("JWT private key not initialized. Call setJwtKeys() first.");
   }
   return privateKey;
 }
 
-function getPublicKey(): Uint8Array {
+async function getPublicKey(): Promise<jose.KeyLike> {
+  if (importPromise) await importPromise;
   if (!publicKey) {
     throw new Error("JWT public key not initialized. Call setJwtKeys() first.");
   }
@@ -52,7 +66,7 @@ export async function issueAccessToken(
 ): Promise<string> {
   const alg = "RS256";
 
-  return new jose.SignJWT({ roles })
+  return new jose.SignJWT({ roles, sessionId })
     .setProtectedHeader({ alg })
     .setSubject(userId)
     .setIssuedAt()
@@ -60,7 +74,7 @@ export async function issueAccessToken(
     .setIssuer(JWT_ISSUER)
     .setAudience(JWT_AUDIENCE)
     .setJti(crypto.randomUUID())
-    .sign(getPrivateKey());
+    .sign(await getPrivateKey());
 }
 
 // ─── 2FA Challenge token ─────────────────────────────────────────────────────
@@ -73,12 +87,20 @@ export async function issue2FAChallengeToken(userId: string): Promise<string> {
     .setExpirationTime(`${CHALLENGE_TOKEN_TTL_SECONDS} seconds`)
     .setIssuer(JWT_ISSUER)
     .setAudience(JWT_AUDIENCE)
-    .sign(getPrivateKey());
+    .sign(await getPrivateKey());
+}
+
+export async function verifyAccessToken(token: string): Promise<jose.JWTPayload> {
+  const { payload } = await jose.jwtVerify(token, await getPublicKey(), {
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+  });
+  return payload;
 }
 
 export async function verify2FAChallengeToken(token: string): Promise<string | null> {
   try {
-    const result = await jose.jwtVerify(token, getPublicKey(), {
+    const result = await jose.jwtVerify(token, await getPublicKey(), {
       issuer: JWT_ISSUER,
       audience: JWT_AUDIENCE,
     });

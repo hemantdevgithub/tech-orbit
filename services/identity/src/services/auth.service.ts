@@ -19,14 +19,18 @@ import {
 export interface RegisterResult {
   userId: string;
   accessToken?: string;
+  refreshToken?: string;
+  sessionId?: string;
   requires2FA?: boolean;
   challengeToken?: string;
+  expiresIn?: number;
 }
 
 export interface LoginResult {
   userId: string;
   sessionId: string;
   accessToken?: string;
+  refreshToken?: string;
   requires2FA?: boolean;
   challengeToken?: string;
   expiresIn: number;
@@ -109,7 +113,13 @@ export const authService = {
     // Issue access token
     const accessToken = await issueAccessToken(user.id, session.id, []);
 
-    return { userId: user.id, accessToken };
+    return {
+      userId: user.id,
+      accessToken,
+      refreshToken,
+      sessionId: session.id,
+      expiresIn: ACCESS_TOKEN_TTL,
+    };
   },
 
   async login(
@@ -199,6 +209,7 @@ export const authService = {
       userId: user.id,
       sessionId: session.id,
       accessToken,
+      refreshToken,
       expiresIn: ACCESS_TOKEN_TTL,
     };
   },
@@ -245,6 +256,7 @@ export const authService = {
       userId: user.id,
       sessionId: session.id,
       accessToken,
+      refreshToken,
       expiresIn: ACCESS_TOKEN_TTL,
     };
   },
@@ -252,7 +264,7 @@ export const authService = {
   async refreshSession(
     ctx: SystemContext,
     refreshToken: string
-  ): Promise<{ accessToken: string; sessionId: string; expiresIn: number }> {
+  ): Promise<{ accessToken: string; refreshToken: string; sessionId: string; expiresIn: number }> {
     const hash = hashRefreshToken(refreshToken);
     const session = await sessionRepository.findByRefreshTokenHash(ctx, hash);
 
@@ -303,6 +315,7 @@ export const authService = {
 
     return {
       accessToken,
+      refreshToken: newRefreshToken,
       sessionId: newSession.id,
       expiresIn: ACCESS_TOKEN_TTL,
     };

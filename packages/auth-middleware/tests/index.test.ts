@@ -5,6 +5,7 @@ describe("auth-middleware", () => {
   describe("AuthContextSchema", () => {
     it("should validate a valid auth context", () => {
       const context = {
+        type: "user" as const,
         userId: crypto.randomUUID(),
         sessionId: crypto.randomUUID(),
         roles: ["CANDIDATE", "SRM"],
@@ -17,6 +18,7 @@ describe("auth-middleware", () => {
 
     it("should reject invalid auth context", () => {
       const invalidContext = {
+        type: "user" as const,
         userId: "not-a-uuid",
         sessionId: crypto.randomUUID(),
         roles: "CANDIDATE",
@@ -27,6 +29,7 @@ describe("auth-middleware", () => {
 
     it("should allow empty roles array", () => {
       const context = {
+        type: "user" as const,
         userId: crypto.randomUUID(),
         sessionId: crypto.randomUUID(),
         roles: [],

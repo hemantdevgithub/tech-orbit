@@ -112,3 +112,18 @@ Copy `.env.example` to `.env` in the root and fill in values. Never commit `.env
 ```bash
 cp .env.example .env
 ```
+
+### Authentication (Sprint 1)
+
+The identity service needs an RS256 keypair for JWT signing. Generate it after copying `.env.example`:
+
+```bash
+./scripts/generate-jwt-keys.sh
+```
+
+For local OAuth testing (optional), create dev credentials at:
+
+- Google Cloud Console → OAuth 2.0 → `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- LinkedIn Developer Portal → OAuth 2.0 → `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET`
+
+Set the matching `*_REDIRECT_URI` to the identity service's callback URL (e.g. `http://localhost:3002/api/v1/auth/oauth/google/callback`). Without these set, the `/oauth/*/start` endpoints return `OAUTH_NOT_CONFIGURED`. See [`services/identity/README.md`](./services/identity/README.md) for the full list of identity env vars.

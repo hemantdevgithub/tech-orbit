@@ -38,9 +38,12 @@ export async function createAuthMiddleware(
   fastify: FastifyInstance,
   options: AuthMiddlewareOptions
 ): Promise<void> {
+  // @fastify/jwt is used here for verification only. If we declared a sign
+  // algorithm, the plugin would also require a private key, which this
+  // package intentionally doesn't carry — signing lives in the identity
+  // service. Omitting `sign` keeps us verify-only.
   await fastify.register(await import("@fastify/jwt"), {
-    secret: options.publicKey,
-    sign: { algorithm: "RS256" },
+    secret: { public: options.publicKey },
     verify: {
       algorithms: options.verifyOptions?.algorithms ?? ["RS256"],
       clockTolerance: options.verifyOptions?.clockTolerance ?? 30,

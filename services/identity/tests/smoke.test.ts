@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildServer } from "../src/server.js";
 
-const TEST_PORT = 3002;
+const TEST_PORT = 0; // port 0 = OS picks an available port, avoids conflict with running dev server
 
 describe("identity smoke tests", () => {
   let server: ReturnType<typeof buildServer> extends Promise<infer T> ? T : never;
