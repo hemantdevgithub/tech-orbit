@@ -1,4 +1,5 @@
 import { buildServer } from "./server.js";
+import { getConfig } from "./config.js";
 
 const fastify = await buildServer();
 
@@ -11,4 +12,4 @@ for (const signal of signals) {
   });
 }
 
-await fastify.listen({ host: "0.0.0.0", port: 3001 });
+await fastify.listen({ host: "0.0.0.0", port: getConfig().PORT });
