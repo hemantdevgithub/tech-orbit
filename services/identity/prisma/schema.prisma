@@ -63,8 +63,8 @@ model User {
   oauthProfile String?  @map("oauth_profile") // JSON snapshot of OAuth user profile
 
   // 2FA fields (field-level encrypted via application-level encryption)
-  twoFASecret     String? @map("two_fa_secret")
-  twoFABackupHash String? @map("two_fa_backup_hash") // comma-separated SHA-256 hashes
+  twoFASecretEncrypted Json? @map("two_fa_secret_encrypted")
+  twoFABackupHash String?    @map("two_fa_backup_hash") // comma-separated SHA-256 hashes
 
   // Verification (for future email verification flow)
   emailVerifyToken     String?   @map("email_verify_token")
