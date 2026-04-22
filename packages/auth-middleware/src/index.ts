@@ -3,12 +3,18 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { UnauthorizedError } from "@techorbit/errors";
 
 export const AuthContextSchema = z.object({
+  type: z.literal("user"),
   userId: z.string().uuid(),
   sessionId: z.string().uuid(),
   roles: z.array(z.string()),
 });
 
 export type AuthContext = z.infer<typeof AuthContextSchema>;
+
+// System context used by internal services that need to bypass auth checks
+export type SystemContext = { type: "system" };
+
+export type RequestContext = AuthContext | SystemContext;
 
 export interface AuthMiddlewareOptions {
   publicKey: string;
@@ -52,6 +58,7 @@ export async function createAuthMiddleware(
         }>();
 
         request.auth = {
+          type: "user",
           userId: decoded.sub,
           sessionId: decoded.sessionId,
           roles: decoded.roles ?? [],
