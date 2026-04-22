@@ -15,6 +15,7 @@
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db:seed": "./scripts/seed.sh",
+    "db:migrate:identity": "pnpm --filter @techorbit/identity prisma migrate dev",
     "clean": "turbo run clean && rm -rf node_modules .turbo"
   },
   "packageManager": "pnpm@9.0.0",
