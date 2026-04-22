@@ -14,7 +14,7 @@ build/
 out/
 
 # Prisma
-**/prisma/migrations/
+# migrations are version-controlled (removed from ignore)
 
 # IDE
 .vscode/
