@@ -127,3 +127,9 @@ For local OAuth testing (optional), create dev credentials at:
 - LinkedIn Developer Portal → OAuth 2.0 → `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET`
 
 Set the matching `*_REDIRECT_URI` to the identity service's callback URL (e.g. `http://localhost:3002/api/v1/auth/oauth/google/callback`). Without these set, the `/oauth/*/start` endpoints return `OAUTH_NOT_CONFIGURED`. See [`services/identity/README.md`](./services/identity/README.md) for the full list of identity env vars.
+
+## How this codebase was built
+
+This project was built via Claude Code across a sequence of sprints. Each sprint had a detailed prompt in [`prompts/`](./prompts/) that defined scope, architecture decisions, and acceptance criteria. Per-sprint summaries (e.g. [`SPRINT_2_SUMMARY.md`](./SPRINT_2_SUMMARY.md)) record what shipped, what was deferred, and follow-ups.
+
+If you're wondering "why does X work this way?", check the relevant sprint prompt first — the intent behind a design choice is usually documented there.

@@ -45,3 +45,10 @@ coverage/
 
 # Docker
 Dockerfile.dev
+
+# Local file storage (dev mode)
+services/*/uploads/
+services/uploads/
+
+# Session artifacts
+sprint*-audit.txt
