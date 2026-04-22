@@ -39,6 +39,10 @@ export async function setup(): Promise<void> {
   process.env.JWT_PRIVATE_KEY = privateKey;
   process.env.JWT_PUBLIC_KEY = publicKey;
 
+  // Set field encryption key for tests
+  const encryptionKey = Buffer.alloc(32, "test-encryption-key-32-bytes");
+  process.env.FIELD_ENCRYPTION_KEK_V1 = encryptionKey.toString("base64");
+
   if (!(await dockerAvailable())) {
     process.env.DOCKER_AVAILABLE = "0";
     // eslint-disable-next-line no-console
