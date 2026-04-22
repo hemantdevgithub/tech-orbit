@@ -94,3 +94,44 @@ export const RatingType = z.enum([
   "MSME",
 ]);
 export type RatingType = z.infer<typeof RatingType>;
+
+// Profile enums
+export const Seniority = z.enum(["JUNIOR", "MID", "SENIOR", "STAFF", "PRINCIPAL", "PARTNER"]);
+export type Seniority = z.infer<typeof Seniority>;
+
+export const BackgroundCheckStatus = z.enum([
+  "NOT_INITIATED", "INITIATED", "IN_PROGRESS", "CLEAR", "CONSIDER", "FAILED",
+]);
+export type BackgroundCheckStatus = z.infer<typeof BackgroundCheckStatus>;
+
+export const BenchAvailability = z.enum(["AVAILABLE", "ENGAGED", "NOTICE_PERIOD", "UNAVAILABLE"]);
+export type BenchAvailability = z.infer<typeof BenchAvailability>;
+
+export const CompanySizeRange = z.enum([
+  "SIZE_1_10", "SIZE_11_50", "SIZE_51_200", "SIZE_201_500", "SIZE_501_1000", "SIZE_1001_PLUS",
+]);
+export type CompanySizeRange = z.infer<typeof CompanySizeRange>;
+
+export const CustomerStatus = z.enum(["PENDING", "ACTIVE", "SUSPENDED"]);
+export type CustomerStatus = z.infer<typeof CustomerStatus>;
+
+export const InterviewType = z.enum([
+  "TECHNICAL_CODING", "SYSTEM_DESIGN", "BEHAVIORAL", "CASE_STUDY", "DOMAIN_SPECIFIC",
+]);
+export type InterviewType = z.infer<typeof InterviewType>;
+
+export const CalendarProvider = z.enum(["GOOGLE", "OUTLOOK"]);
+export type CalendarProvider = z.infer<typeof CalendarProvider>;
+
+export const InterviewerStatus = z.enum(["PENDING_VERIFICATION", "ACTIVE", "SUSPENDED"]);
+export type InterviewerStatus = z.infer<typeof InterviewerStatus>;
+
+export const MsmeStatus = z.enum(["PENDING_VERIFICATION", "ACTIVE", "SUSPENDED"]);
+export type MsmeStatus = z.infer<typeof MsmeStatus>;
+
+// File enums
+export const FilePurpose = z.enum(["RESUME", "CONTRACT", "W9", "VIDEO_INTRO", "PROFILE_PHOTO"]);
+export type FilePurpose = z.infer<typeof FilePurpose>;
+
+export const FileStatus = z.enum(["PENDING", "CONFIRMED", "VIRUS_DETECTED", "DELETED"]);
+export type FileStatus = z.infer<typeof FileStatus>;
