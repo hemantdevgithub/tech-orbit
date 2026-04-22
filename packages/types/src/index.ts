@@ -148,3 +148,32 @@ export type {
 
 export { TECH_STACK_OPTIONS } from "./tech-stack.js";
 export type { TechStack } from "./tech-stack.js";
+
+// ─── Requirement types (re-exported from requirement.ts) ─────────────────────
+// AttributeCrmSchema is already re-exported above from ./profile.js; it's
+// reused by the requirement-svc endpoint with the same shape.
+export {
+  CreateRequirementSchema,
+  UpdateRequirementSchema,
+  PublishRequirementSchema,
+  CloseRequirementSchema,
+  RequirementFilterSchema,
+  RequirementResponseSchema,
+  RequirementListResponseSchema,
+  CrmAttributionRequestResponseSchema,
+  RequirementPublishedEventSchema,
+  RequirementClosedEventSchema,
+} from "./requirement.js";
+
+export type {
+  CreateRequirement,
+  UpdateRequirement,
+  PublishRequirement,
+  CloseRequirement,
+  RequirementFilter,
+  RequirementResponse,
+  RequirementListResponse,
+  CrmAttributionRequestResponse,
+  RequirementPublishedEvent,
+  RequirementClosedEvent,
+} from "./requirement.js";

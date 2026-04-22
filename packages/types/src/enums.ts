@@ -38,15 +38,25 @@ export const CandidateStatus = z.enum([
 ]);
 export type CandidateStatus = z.infer<typeof CandidateStatus>;
 
-// Requirement status
+// Requirement status (see ENGINEERING_SPEC 5.4)
 export const RequirementStatus = z.enum([
   "DRAFT",
   "OPEN",
-  "FILLED",
+  "INTERVIEWING",
+  "OFFER_EXTENDED",
+  "PLACED",
   "CLOSED",
   "CANCELLED",
 ]);
 export type RequirementStatus = z.infer<typeof RequirementStatus>;
+
+// Work location mode for a requirement
+export const LocationType = z.enum(["ONSITE", "HYBRID", "REMOTE"]);
+export type LocationType = z.infer<typeof LocationType>;
+
+// CRM attribution request lifecycle (PRD 6.2)
+export const CrmAttributionStatus = z.enum(["PENDING", "APPROVED", "REJECTED"]);
+export type CrmAttributionStatus = z.infer<typeof CrmAttributionStatus>;
 
 // Interview status
 export const InterviewStatus = z.enum([
