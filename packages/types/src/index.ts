@@ -145,3 +145,6 @@ export type {
   FileUploadUrlResponse,
   FileResponse,
 } from "./profile.js";
+
+export { TECH_STACK_OPTIONS } from "./tech-stack.js";
+export type { TechStack } from "./tech-stack.js";
