@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export const configSchema = z.object({
-  PORT: z.coerce.number().int().default(0),
+  PORT: z.coerce.number().int().default(3002),
+  PORT_IDENTITY: z.coerce.number().int().optional(),
   SERVICE_NAME: z.string().default("identity"),
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
   DATABASE_URL: z.string().url().optional(),
@@ -11,7 +12,7 @@ export const configSchema = z.object({
   JWT_PUBLIC_KEY: z.string().optional(),
   ALLOWED_ORIGINS: z.string().optional(),
   COOKIE_DOMAIN: z.string().default("localhost"),
-  COOKIE_SECURE: z.boolean().default(false),
+  COOKIE_SECURE: z.coerce.boolean().default(false),
   FRONTEND_URL: z.string().default("http://localhost:3000"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -29,7 +30,7 @@ export function getConfig(): Config {
   if (cachedConfig) return cachedConfig;
 
   const env = {
-    PORT: process.env.PORT,
+    PORT: process.env.PORT ?? process.env.PORT_IDENTITY,
     SERVICE_NAME: process.env.SERVICE_NAME,
     LOG_LEVEL: process.env.LOG_LEVEL,
     DATABASE_URL: process.env.DATABASE_URL,

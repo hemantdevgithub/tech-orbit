@@ -57,7 +57,7 @@ services:
       - "8025:8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
-      MP_SMTP_AUTH_REQUIRE_TLS: "0"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
 
 volumes:
   postgres_data:

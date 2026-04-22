@@ -68,8 +68,8 @@ export const sessionRepository: SessionRepository = {
       },
     });
 
-    // Reject revoked or expired sessions
-    if (session && session.revokedAt !== null) return null;
+    // Reject expired sessions; return revoked sessions so the service layer
+    // can detect ROTATED-token replay and revoke all sessions for the user.
     if (session && session.expiresAt < new Date()) return null;
 
     return session;

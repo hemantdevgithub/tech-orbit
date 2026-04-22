@@ -1,6 +1,10 @@
 import argon2 from "argon2";
-import { zxcvbn } from "zxcvbn-ts";
 import { createHash } from "crypto";
+import { createRequire } from "module";
+
+// zxcvbn-ts v2 ESM dist has a broken specifier on Node 23 — load via CJS
+const _require = createRequire(import.meta.url);
+const { zxcvbn } = _require("zxcvbn-ts") as { zxcvbn: (password: string) => { score: number; feedback: { suggestions: string[]; warning: string } } };
 
 // Configure zxcvbn-ts (optional: load dictionaries for better results)
 // zxcvbnOptions.load();

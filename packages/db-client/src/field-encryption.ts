@@ -87,7 +87,7 @@ export function createEncryptionService(): EncryptionService {
         iv = Buffer.from(field.iv, "base64");
         ciphertext = Buffer.from(field.ciphertext, "base64");
         authTag = Buffer.from(field.authTag, "base64");
-      } catch (error) {
+      } catch {
         throw new InternalError("Encrypted field has invalid base64 encoding");
       }
 
@@ -107,7 +107,7 @@ export function createEncryptionService(): EncryptionService {
           decipher.final(),
         ]);
         return plaintext.toString("utf-8");
-      } catch (error) {
+      } catch {
         throw new InternalError(
           "Decryption failed: authentication tag mismatch (ciphertext may be corrupted or AAD mismatch)"
         );

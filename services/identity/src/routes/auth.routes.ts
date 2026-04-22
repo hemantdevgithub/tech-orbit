@@ -281,7 +281,7 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
             purpose: "2fa_secret",
             userId,
           });
-        } catch (error) {
+        } catch {
           return reply.status(500).send({
             error: { code: "DECRYPTION_ERROR", message: "Failed to decrypt 2FA secret" },
           });
@@ -315,7 +315,10 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
-      // Direct verification with access token (during setup)
+      // Direct verification with access token (during 2FA setup confirmation)
+      // Authenticate the request manually since this route handles both
+      // authenticated (setup confirmation) and unauthenticated (challenge) paths.
+      await fastify.authenticate(request, reply);
       const ctx = request.auth;
       const { userRepository } = await import("../repositories/index.js");
       const { authenticator } = await import("otplib");
@@ -334,7 +337,7 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
           purpose: "2fa_secret",
           userId: ctx.userId,
         });
-      } catch (error) {
+      } catch {
         return reply.status(500).send({
           error: { code: "DECRYPTION_ERROR", message: "Failed to decrypt 2FA secret" },
         });
@@ -402,7 +405,7 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
           purpose: "2fa_secret",
           userId: ctx.userId,
         });
-      } catch (error) {
+      } catch {
         return reply.status(500).send({
           error: { code: "DECRYPTION_ERROR", message: "Failed to decrypt 2FA secret" },
         });
