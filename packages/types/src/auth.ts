@@ -155,6 +155,57 @@ export const MeResponseSchema = z.object({
 
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 
+// ─── API Response Types ────────────────────────────────────────────────────────
+
+export const RegisterResponseSchema = z.object({
+  message: z.string(),
+  require2FA: z.boolean().optional(),
+});
+
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
+
+export const LoginSuccessResponseSchema = z.object({
+  require2FA: z.literal(false),
+  accessToken: z.string(),
+  tokenType: z.literal("Bearer"),
+  expiresIn: z.number(),
+});
+
+export type LoginSuccessResponse = z.infer<typeof LoginSuccessResponseSchema>;
+
+export const Login2FAResponseSchema = z.object({
+  require2FA: z.literal(true),
+  challengeToken: z.string(),
+  expiresIn: z.number(),
+});
+
+export type Login2FAResponse = z.infer<typeof Login2FAResponseSchema>;
+
+export const LoginResponseSchema = z.discriminatedUnion("require2FA", [
+  LoginSuccessResponseSchema,
+  Login2FAResponseSchema,
+]);
+
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;
+
+export const TokenRefreshResponseSchema = z.object({
+  accessToken: z.string(),
+  tokenType: z.literal("Bearer"),
+  expiresIn: z.number(),
+});
+
+export type TokenRefreshResponse = z.infer<typeof TokenRefreshResponseSchema>;
+
+export const PasswordResetRequestResponseSchema = z.object({
+  message: z.string(),
+});
+
+export type PasswordResetRequestResponse = z.infer<typeof PasswordResetRequestResponseSchema>;
+
+export const UserProfileSchema = MeResponseSchema;
+
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
 // ─── OAuth ───────────────────────────────────────────────────────────────────
 
 export const OAuthStartResponseSchema = z.object({
