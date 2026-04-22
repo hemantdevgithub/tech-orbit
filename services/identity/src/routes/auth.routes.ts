@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { SystemContext } from "@techorbit/auth-middleware";
+import type { EncryptedField } from "@techorbit/db-client";
 import { authService, roleService, twoFAService } from "../services/index.js";
 import { validatePasswordStrength } from "../services/password.service.js";
 
@@ -276,7 +277,7 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
 
         let secret: string;
         try {
-          secret = await fastify.encryptionService.decrypt(user.twoFASecretEncrypted, {
+          secret = await fastify.encryptionService.decrypt(user.twoFASecretEncrypted as EncryptedField, {
             purpose: "2fa_secret",
             userId,
           });
@@ -329,7 +330,7 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
 
       let secret: string;
       try {
-        secret = await fastify.encryptionService.decrypt(user.twoFASecretEncrypted, {
+        secret = await fastify.encryptionService.decrypt(user.twoFASecretEncrypted as EncryptedField, {
           purpose: "2fa_secret",
           userId: ctx.userId,
         });
@@ -389,8 +390,26 @@ export async function twoFARoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       // Verify TOTP
+      if (!user.twoFASecretEncrypted) {
+        return reply.status(400).send({
+          error: { code: "2FA_NOT_ENABLED", message: "2FA is not enabled" },
+        });
+      }
+
+      let secret: string;
+      try {
+        secret = await fastify.encryptionService.decrypt(user.twoFASecretEncrypted as EncryptedField, {
+          purpose: "2fa_secret",
+          userId: ctx.userId,
+        });
+      } catch (error) {
+        return reply.status(500).send({
+          error: { code: "DECRYPTION_ERROR", message: "Failed to decrypt 2FA secret" },
+        });
+      }
+
       const { authenticator } = await import("otplib");
-      const isValid = authenticator.verify({ token: code, secret: user.twoFASecret ?? "" });
+      const isValid = authenticator.verify({ token: code, secret });
 
       if (!isValid) {
         return reply.status(401).send({

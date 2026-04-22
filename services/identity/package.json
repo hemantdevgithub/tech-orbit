@@ -13,6 +13,8 @@
     "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:integration": "vitest run tests/integration",
+    "openapi:generate": "tsx scripts/generate-openapi.ts",
     "clean": "rm -rf dist .tsbuildinfo",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
@@ -26,6 +28,7 @@
     "@fastify/rate-limit": "^9.1.0",
     "@prisma/client": "^5.14.0",
     "@techorbit/auth-middleware": "workspace:*",
+    "@techorbit/db-client": "workspace:*",
     "@techorbit/errors": "workspace:*",
     "@techorbit/event-bus": "workspace:*",
     "@techorbit/logger": "workspace:*",
@@ -41,15 +44,21 @@
     "zxcvbn-ts": "^2.0.2"
   },
   "devDependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.1.1",
     "@prisma/client": "^5.14.0",
     "@techorbit/config-tsconfig": "workspace:*",
     "@techorbit/config-vitest": "workspace:*",
+    "@testcontainers/postgresql": "^10.10.0",
     "@types/node": "^25.6.0",
     "@types/qrcode": "^1.5.5",
+    "@types/supertest": "^6.0.2",
     "@types/uuid": "^9.0.8",
     "prisma": "^5.14.0",
+    "supertest": "^7.0.0",
+    "testcontainers": "^10.10.0",
     "tsx": "^4.7.2",
     "typescript": "^5.4.0",
-    "vitest": "^1.6.1"
+    "vitest": "^1.6.1",
+    "yaml": "^2.4.5"
   }
 }

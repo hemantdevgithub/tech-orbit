@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
 import type { EncryptedField } from "@techorbit/db-client";
@@ -150,7 +151,7 @@ export const userRepository: UserRepository = {
       },
       include: { roles: true },
     });
-    return user;
+    return user as UserWithRoles;
   },
 
   async disableTwoFA(ctx, id) {
@@ -159,12 +160,12 @@ export const userRepository: UserRepository = {
       where: { id },
       data: {
         has2FA: false,
-        twoFASecretEncrypted: null,
+        twoFASecretEncrypted: Prisma.JsonNull,
         twoFABackupHash: null,
       },
       include: { roles: true },
     });
-    return user;
+    return user as UserWithRoles;
   },
 
   async findByIdOrThrow(ctx, id) {
