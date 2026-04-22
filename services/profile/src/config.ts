@@ -1,13 +1,16 @@
 import { z } from "zod";
 
-export const configSchema = z.object({
-  PORT: z.coerce.number().int().default(0),
-  SERVICE_NAME: z.string().default("profile"),
+const configSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: z.coerce.number().int().default(3004),
+  SERVICE_NAME: z.string().default("profile-svc"),
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
-  DATABASE_URL: z.string().url().optional(),
-  REDIS_URL: z.string().url().optional(),
-  RABBITMQ_URL: z.string().url().optional(),
-  JWT_PUBLIC_KEY: z.string().optional(),
+  DATABASE_URL: z.string(),
+  RABBITMQ_URL: z.string().optional(),
+  JWT_PUBLIC_KEY: z.string(),
+  ALLOWED_ORIGINS: z.string().optional(),
+  FIELD_ENCRYPTION_KEK_V1: z.string().optional(),
+  DISABLE_RATE_LIMIT: z.coerce.boolean().default(false),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -16,18 +19,7 @@ let cachedConfig: Config | null = null;
 
 export function getConfig(): Config {
   if (cachedConfig) return cachedConfig;
-
-  const env = {
-    PORT: process.env.PORT,
-    SERVICE_NAME: process.env.SERVICE_NAME,
-    LOG_LEVEL: process.env.LOG_LEVEL,
-    DATABASE_URL: process.env.DATABASE_URL,
-    REDIS_URL: process.env.REDIS_URL,
-    RABBITMQ_URL: process.env.RABBITMQ_URL,
-    JWT_PUBLIC_KEY: process.env.JWT_PUBLIC_KEY,
-  };
-
-  cachedConfig = configSchema.parse(env);
+  cachedConfig = configSchema.parse(process.env);
   return cachedConfig;
 }
 

@@ -238,6 +238,7 @@ export type UpdateInterviewerProfile = z.infer<typeof UpdateInterviewerProfileSc
 export const SetAvailabilitySchema = z.object({
   slots: z.array(AvailabilitySlotSchema).max(100),
 });
+export type SetAvailability = z.infer<typeof SetAvailabilitySchema>;
 
 export const CalendarConnectResponseSchema = z.object({
   provider: CalendarProvider,

@@ -139,6 +139,7 @@ export type {
   InterviewerProfileResponse,
   CreateInterviewerProfile,
   UpdateInterviewerProfile,
+  SetAvailability,
   FileUploadUrlRequest,
   FileUploadUrlResponse,
   FileResponse,
