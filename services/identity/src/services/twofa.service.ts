@@ -1,6 +1,7 @@
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import type { SystemContext } from "@techorbit/auth-middleware";
+import type { EncryptionService } from "@techorbit/db-client";
 import { twoFAChallengeRepository } from "../repositories/index.js";
 import { userRepository } from "../repositories/index.js";
 import {
@@ -26,15 +27,26 @@ export interface Verify2FAResult {
 }
 
 export const twoFAService = {
-  async setupTOTP(ctx: SystemContext, userId: string, email: string): Promise<SetupTwoFAResult> {
+  async setupTOTP(
+    ctx: SystemContext,
+    userId: string,
+    email: string,
+    encryptionService: EncryptionService
+  ): Promise<SetupTwoFAResult> {
     const secret = authenticator.generateSecret();
     const otpauth = authenticator.keyuri(email, TOTP_ISSUER, secret);
     const qrDataUrl = await QRCode.toDataURL(otpauth);
     const backupCodes = generateBackupCodes(8);
     const backupHash = hashBackupCodes(backupCodes);
 
+    // Encrypt the secret before storing
+    const secretEncrypted = await encryptionService.encrypt(secret, {
+      purpose: "2fa_secret",
+      userId,
+    });
+
     // Store encrypted secret and hashed backup codes
-    await userRepository.enableTwoFA(ctx, userId, secret, backupHash);
+    await userRepository.enableTwoFA(ctx, userId, secretEncrypted, backupHash);
 
     return {
       secret, // Return raw secret for manual entry fallback

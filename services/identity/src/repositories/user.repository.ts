@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import type { AuthContext, SystemContext } from "@techorbit/auth-middleware";
+import type { EncryptedField } from "@techorbit/db-client";
 import { NotFoundError } from "@techorbit/errors";
 import type { User } from "@prisma/client";
 
@@ -43,7 +44,7 @@ export interface UserRepository {
   create(ctx: AuthContext | SystemContext, data: CreateUserInput): Promise<UserWithRoles>;
   updatePassword(ctx: AuthContext | SystemContext, id: string, data: UpdatePasswordInput): Promise<UserWithRoles>;
   updateStatus(ctx: AuthContext | SystemContext, id: string, status: "PENDING" | "ACTIVE" | "SUSPENDED"): Promise<UserWithRoles>;
-  enableTwoFA(ctx: AuthContext | SystemContext, id: string, secret: string, backupHash: string): Promise<UserWithRoles>;
+  enableTwoFA(ctx: AuthContext | SystemContext, id: string, secretEncrypted: EncryptedField, backupHash: string): Promise<UserWithRoles>;
   disableTwoFA(ctx: AuthContext | SystemContext, id: string): Promise<UserWithRoles>;
   findByIdOrThrow(ctx: AuthContext | SystemContext, id: string): Promise<UserWithRoles>;
   findByEmailOrThrow(ctx: AuthContext | SystemContext, email: string): Promise<UserWithRoles>;
@@ -138,13 +139,13 @@ export const userRepository: UserRepository = {
     return user;
   },
 
-  async enableTwoFA(ctx, id, secret, backupHash) {
+  async enableTwoFA(ctx, id, secretEncrypted, backupHash) {
     checkWriteAccess(ctx, id);
     const user = await prisma.user.update({
       where: { id },
       data: {
         has2FA: true,
-        twoFASecret: secret,
+        twoFASecretEncrypted: secretEncrypted,
         twoFABackupHash: backupHash,
       },
       include: { roles: true },
@@ -158,7 +159,7 @@ export const userRepository: UserRepository = {
       where: { id },
       data: {
         has2FA: false,
-        twoFASecret: null,
+        twoFASecretEncrypted: null,
         twoFABackupHash: null,
       },
       include: { roles: true },
