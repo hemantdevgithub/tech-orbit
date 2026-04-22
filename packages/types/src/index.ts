@@ -96,10 +96,10 @@ export const RatingType = z.enum([
 export type RatingType = z.infer<typeof RatingType>;
 
 // Pagination cursor
-export interface PaginationCursor {
-  id: string;
-  createdAt: string;
-}
+export const PaginationCursor = z.object({
+  id: z.string().uuid(),
+  createdAt: z.string().datetime(),
+});
 export type PaginationCursor = z.infer<typeof PaginationCursor>;
 
 // API response envelope

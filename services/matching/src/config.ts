@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const configSchema = z.object({
-  PORT: z.coerce.number().int().min(1).max.default,
+  PORT: z.coerce.number().int().default(0),
   SERVICE_NAME: z.string().default("matching"),
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
   DATABASE_URL: z.string().url().optional(),

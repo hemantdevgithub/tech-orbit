@@ -1,5 +1,4 @@
 import pino from "pino";
-import type { pinoHttp } from "pino-http";
 
 export interface LoggerOptions {
   name: string;
@@ -12,8 +11,6 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
-const CORRELATION_ID_HEADER = "x-correlation-id";
-
 export function createLogger(options: LoggerOptions): pino.Logger {
   return pino({
     name: options.name,
@@ -22,45 +19,6 @@ export function createLogger(options: LoggerOptions): pino.Logger {
       service: options.name,
     },
     timestamp: pino.stdTimeFunctions.isoTime,
-  });
-}
-
-export function createRequestLogger(
-  logger: pino.Logger
-): typeof pinoHttp {
-  const pinoHttpModule = require("pino-http") as typeof pinoHttp;
-  return pinoHttpModule({
-    logger,
-    customCorrelationId: (req: { headers: Record<string, string | string[] | undefined> }) => {
-      return req.headers[CORRELATION_ID_HEADER] ?? crypto.randomUUID();
-    },
-    customLogLevel: (_req: unknown, res: { statusCode: number }) => {
-      if (res.statusCode >= 500) return "error";
-      if (res.statusCode >= 400) return "warn";
-      return "info";
-    },
-    customSuccessMessage: (_req: unknown, res: { statusCode: number }) => {
-      return `Request completed with status ${res.statusCode}`;
-    },
-    customErrorMessage: (_req: unknown, res: { statusCode: number }) => {
-      return `Request failed with status ${res.statusCode}`;
-    },
-    serializers: {
-      req: (req: { headers: Record<string, string | string[] | undefined> }) => {
-        const headers = { ...req.headers };
-        delete headers["authorization"];
-        delete headers["cookie"];
-        return {
-          method: (req as { method: string }).method,
-          url: (req as { url: string }).url,
-          headers,
-        };
-      },
-      res: (res: { statusCode: number }) => ({
-        statusCode: res.statusCode,
-      }),
-      err: pino.stdSerializers.err,
-    },
   });
 }
 

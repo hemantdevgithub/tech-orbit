@@ -13,7 +13,7 @@ export interface DbClient {
   $query<T>(query: string, params?: unknown[]): Promise<T>;
 }
 
-let cachedClients = new Map<string, unknown>();
+const cachedClients = new Map<string, unknown>();
 
 export function createPrismaClient<T extends { $connect: () => Promise<void>; $disconnect: () => Promise<void> }>(
   schemaName: string,
@@ -27,7 +27,7 @@ export function createPrismaClient<T extends { $connect: () => Promise<void>; $d
 
   // Dynamic import to support different schemas
   const client = new Proxy({} as T, {
-    get(_target, prop, receiver) {
+    get(_target, prop) {
       return async (...args: unknown[]) => {
         const { PrismaClient } = await import("@prisma/client");
 

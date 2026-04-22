@@ -17,6 +17,11 @@
     "db:seed": "./scripts/seed.sh",
     "clean": "turbo run clean && rm -rf node_modules .turbo"
   },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
   "devDependencies": {
     "@techorbit/config-eslint": "workspace:*",
     "@techorbit/config-prettier": "workspace:*",

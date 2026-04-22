@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import type { FastifyJWT } from "@fastify/jwt";
 import { UnauthorizedError } from "@techorbit/errors";
 
 export const AuthContextSchema = z.object({
@@ -22,6 +21,10 @@ export interface AuthMiddlewareOptions {
 declare module "fastify" {
   interface FastifyRequest {
     auth: AuthContext;
+    authenticate(): Promise<void>;
+  }
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }
 
@@ -40,7 +43,7 @@ export async function createAuthMiddleware(
 
   fastify.decorate(
     "authenticate",
-    async function (request: FastifyRequest, reply: FastifyReply) {
+    async function (request: FastifyRequest, _reply: FastifyReply) {
       try {
         const decoded = await request.jwtVerify<{
           sub: string;
@@ -53,7 +56,7 @@ export async function createAuthMiddleware(
           sessionId: decoded.sessionId,
           roles: decoded.roles ?? [],
         };
-      } catch (err) {
+      } catch {
         throw new UnauthorizedError("Invalid or expired token");
       }
     }
@@ -61,7 +64,7 @@ export async function createAuthMiddleware(
 }
 
 export function requireRole(fastify: FastifyInstance, role: string) {
-  return async function (request: FastifyRequest, reply: FastifyReply) {
+  return async function (request: FastifyRequest, _reply: FastifyReply) {
     await request.authenticate();
 
     if (!request.auth.roles.includes(role)) {
@@ -71,7 +74,7 @@ export function requireRole(fastify: FastifyInstance, role: string) {
 }
 
 export function requireAnyRole(fastify: FastifyInstance, ...roles: string[]) {
-  return async function (request: FastifyRequest, reply: FastifyReply) {
+  return async function (request: FastifyRequest, _reply: FastifyReply) {
     await request.authenticate();
 
     const hasRole = roles.some((role) => request.auth.roles.includes(role));
@@ -82,7 +85,7 @@ export function requireAnyRole(fastify: FastifyInstance, ...roles: string[]) {
 }
 
 export function requireAllRoles(fastify: FastifyInstance, ...roles: string[]) {
-  return async function (request: FastifyRequest, reply: FastifyReply) {
+  return async function (request: FastifyRequest, _reply: FastifyReply) {
     await request.authenticate();
 
     const hasAllRoles = roles.every((role) => request.auth.roles.includes(role));

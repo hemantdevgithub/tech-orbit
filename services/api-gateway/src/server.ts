@@ -1,18 +1,17 @@
-import Fastify, { FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import proxy from "@fastify/http-proxy";
-import { createLogger } from "@techorbit/logger";
+
 import { getConfig, getRoutes } from "./config.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
 
 export async function buildServer(): Promise<FastifyInstance> {
   const config = getConfig();
-  const logger = createLogger({ name: config.SERVICE_NAME, level: config.LOG_LEVEL });
 
   const fastify = Fastify({
-    logger: logger,
+    logger: { level: config.LOG_LEVEL, name: config.SERVICE_NAME, serializers: { req: (req) => ({ url: req.url, method: req.method }), res: (res) => ({ statusCode: res.statusCode }) } },
   });
 
   // Security middleware
@@ -26,13 +25,13 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   // Register proxy routes
   const routes = getRoutes();
-  for (const [path, routeConfig] of Object.entries(routes)) {
+  for (const routeConfig of Object.values(routes)) {
     await fastify.register(proxy, {
       upstream: routeConfig.upstream,
       prefix: routeConfig.prefix,
       replyOptions: {
         onError: (reply, error) => {
-          logger.error({ err: error }, "Proxy error");
+          fastify.log.error({ err: error }, "Proxy error");
           reply.send(error);
         },
       },
@@ -41,7 +40,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   // Global error handler
   fastify.setErrorHandler((error, request, reply) => {
-    logger.error({ err: error, url: request.url }, "Request error");
+    fastify.log.error({ err: error, url: request.url }, "Request error");
     reply.status(500).send({ error: { code: "INTERNAL_ERROR", message: "Internal server error" } });
   });
 
@@ -54,5 +53,5 @@ export async function startServer(fastify: FastifyInstance): Promise<void> {
   const port = config.PORT;
 
   await fastify.listen({ host, port });
-  logger.info({ host, port }, "Server started");
+  fastify.log.info({ host, port }, "Server started");
 }

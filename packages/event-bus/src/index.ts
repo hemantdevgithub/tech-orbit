@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ChannelModel } from "amqplib";
 
 // Event envelope schema
 export const EventEnvelopeSchema = z.object({
@@ -61,8 +62,8 @@ export function createEventBus(
   config: EventBusConfig,
   source: string
 ): EventBus {
-  let connection: Awaited<ReturnType<typeof import("amqplib").connect>> | null = null;
-  let channel: Awaited<ReturnType<Awaited<ReturnType<typeof import("amqplib").connect>>["createChannel"]>> | null = null;
+  let connection: ChannelModel | null = null;
+  let channel: Awaited<ReturnType<ChannelModel["createChannel"]>> | null = null;
   const exchangeName = config.exchange ?? "techorbit.events";
   const subscriptions = new Map<string, EventHandler[]>();
 
@@ -79,7 +80,7 @@ export function createEventBus(
         channel = null;
       });
 
-      connection.on("error", (err) => {
+      connection.on("error", (err: Error) => {
         console.error("RabbitMQ connection error:", err);
       });
     },

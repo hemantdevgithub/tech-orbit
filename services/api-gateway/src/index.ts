@@ -11,4 +11,4 @@ for (const signal of signals) {
   });
 }
 
-await fastify.listen({ host: "0.0.0.0", port: fastify.server.address()?.port ?? 3001 });
+await fastify.listen({ host: "0.0.0.0", port: 3001 });
