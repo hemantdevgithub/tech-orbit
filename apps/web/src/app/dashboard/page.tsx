@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
-import { PageHeader, Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit/ui";
+import { Button } from "@techorbit/ui";
 import { isOnboardingComplete } from "@/lib/auth-guards";
 import type { RoleType } from "@/lib/auth-guards";
 import { useAuth } from "@/lib/auth-hooks";
@@ -15,9 +15,18 @@ import { InterviewerDashboard } from "@/components/dashboard/interviewer-dashboa
 const ROLE_LABELS: Record<RoleType, string> = {
   CUSTOMER: "Customer",
   CANDIDATE: "Candidate",
-  CRM: "CRM (Business Developer)",
-  SRM: "SRM ( recruiter)",
-  MSME: "MSME (Vendor Firm)",
+  CRM: "CRM",
+  SRM: "SRM",
+  MSME: "MSME",
+  INTERVIEWER: "Interviewer",
+};
+
+const ROLE_FULL_LABELS: Record<RoleType, string> = {
+  CUSTOMER: "Customer",
+  CANDIDATE: "Candidate",
+  CRM: "Business Developer",
+  SRM: "Recruiter",
+  MSME: "Vendor Firm",
   INTERVIEWER: "Interviewer",
 };
 
@@ -28,6 +37,33 @@ const ROLE_DESCRIPTIONS: Record<RoleType, string> = {
   SRM: "Source and submit qualified candidates",
   MSME: "Deploy benched consultants to requirements",
   INTERVIEWER: "Conduct technical interviews for candidates",
+};
+
+const ROLE_ICONS: Record<RoleType, string> = {
+  CUSTOMER: "🏢",
+  CANDIDATE: "👤",
+  CRM: "🤝",
+  SRM: "🔍",
+  MSME: "🏗️",
+  INTERVIEWER: "🎯",
+};
+
+const ROLE_COLORS: Record<RoleType, string> = {
+  CUSTOMER: "from-forest-700 to-forest-600",
+  CANDIDATE: "from-info to-sky-500",
+  CRM: "from-forest-600 to-forest-500",
+  SRM: "from-warning to-amber-500",
+  MSME: "from-sage-600 to-sage-500",
+  INTERVIEWER: "from-success to-emerald-500",
+};
+
+const ROLE_ROUTES: Record<RoleType, string> = {
+  CUSTOMER: "/requirements",
+  CANDIDATE: "/requirements",
+  CRM: "/requirements",
+  SRM: "/requirements",
+  MSME: "/requirements",
+  INTERVIEWER: "/interviews",
 };
 
 const ONBOARDING_ROUTES: Partial<Record<RoleType, string>> = {
@@ -45,18 +81,19 @@ export default function DashboardPage() {
   const [addingRole, setAddingRole] = useState<string | null>(null);
   const [roleError, setRoleError] = useState<string | null>(null);
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const complete = isOnboardingComplete(user);
+  const activeRoles = user.roles.filter((r) => r.status === "ACTIVE");
+  const pendingRoles = user.roles.filter((r) => r.status === "PENDING_VERIFICATION");
+  const availableRoles = (["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER"] as RoleType[])
+    .filter((role) => !user.roles.some((r) => r.roleType === role));
 
   async function handleAddRole(role: RoleType) {
     setAddingRole(role);
     setRoleError(null);
     try {
       await addRole(role);
-      // Auto-active roles (CUSTOMER, CANDIDATE) redirect to onboarding
       const route = ONBOARDING_ROUTES[role];
       if (route) router.push(route);
     } catch {
@@ -66,145 +103,148 @@ export default function DashboardPage() {
     }
   }
 
-  const activeRoles = user.roles.filter((r) => r.status === "ACTIVE");
-  const pendingRoles = user.roles.filter((r) => r.status === "PENDING_VERIFICATION");
-
   return (
     <div className="space-y-8">
-      <PageHeader
-        title={`Welcome back, ${user.firstName}!`}
-        subtitle={
-          complete
-            ? "Your account is ready. Explore opportunities below."
-            : "Complete your onboarding to unlock all features."
-        }
-      />
-
-      {/* Pending roles alert */}
-      {pendingRoles.length > 0 && (
-        <Card className="border-sage-300 bg-mint-50">
-          <CardBody>
-            <CardHeader>
-              <CardTitle>Complete your onboarding</CardTitle>
-            </CardHeader>
-            <p className="text-sage-700 mb-4">
-              You have {pendingRoles.length} role{pendingRoles.length > 1 ? "s" : ""} pending verification.
-              Complete the steps below to unlock full access.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {pendingRoles.map((r) => {
-                const route = ONBOARDING_ROUTES[r.roleType as RoleType];
-                return (
-                  <div key={r.id} className="flex items-center gap-2">
-                    <Badge variant="success">
-                      {ROLE_LABELS[r.roleType as RoleType] ?? r.roleType}
-                    </Badge>
-                    {route && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => router.push(route)}
-                      >
-                        Complete profile →
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardBody>
-        </Card>
-      )}
-
-      {/* Active roles */}
-      <section>
-        <h2 className="text-lg font-semibold text-forest-900 mb-4">Your roles</h2>
-        {activeRoles.length === 0 ? (
-          <Card>
-            <CardBody>
-              <p className="text-sage-600">No active roles yet.</p>
-            </CardBody>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {activeRoles.map((r) => (
-              <Card key={r.id}>
-                <CardBody>
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-forest-900">
-                      {ROLE_LABELS[r.roleType as RoleType] ?? r.roleType}
-                    </h3>
-                    <Badge variant="success">Active</Badge>
-                  </div>
-                  <p className="text-sm text-sage-600 mb-4">
-                    {ROLE_DESCRIPTIONS[r.roleType as RoleType]}
-                  </p>
-                  <Button variant="secondary" size="sm" className="w-full">
-                    Open dashboard
-                  </Button>
-                </CardBody>
-              </Card>
+      {/* Hero welcome strip */}
+      <div className="rounded-2xl bg-forest-800 px-7 py-6 flex items-center justify-between overflow-hidden relative">
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: "radial-gradient(circle at 80% 50%, #B2CCBA 0%, transparent 60%)" }} />
+        <div className="relative z-10">
+          <p className="text-mint-200 text-sm font-medium mb-1">
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+          </p>
+          <h1 className="text-2xl font-bold text-cream-100">
+            Welcome back, {user.firstName}!
+          </h1>
+          <p className="text-sage-400 text-sm mt-0.5">
+            {complete ? "Your account is ready to go." : "Complete your onboarding to unlock all features."}
+          </p>
+        </div>
+        {activeRoles.length > 0 && (
+          <div className="relative z-10 hidden md:flex items-center gap-2">
+            {activeRoles.slice(0, 3).map((r) => (
+              <span key={r.id} className="px-3 py-1.5 rounded-full bg-forest-700 text-cream-200 text-xs font-medium border border-forest-600">
+                {ROLE_LABELS[r.roleType as RoleType] ?? r.roleType}
+              </span>
             ))}
           </div>
         )}
-      </section>
+      </div>
+
+      {/* Pending roles banner */}
+      {pendingRoles.length > 0 && (
+        <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 flex items-start gap-3">
+          <span className="text-warning text-xl shrink-0 mt-0.5">⏳</span>
+          <div className="flex-1">
+            <p className="font-semibold text-forest-900 text-sm">
+              {pendingRoles.length} role{pendingRoles.length > 1 ? "s" : ""} pending verification
+            </p>
+            <p className="text-sage-600 text-xs mt-0.5 mb-3">
+              Complete your profile to unlock full access.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {pendingRoles.map((r) => {
+                const route = ONBOARDING_ROUTES[r.roleType as RoleType];
+                return route ? (
+                  <button
+                    key={r.id}
+                    onClick={() => router.push(route)}
+                    className="px-3 py-1 rounded-full bg-warning/15 text-warning text-xs font-medium hover:bg-warning/25 transition-colors border border-warning/30"
+                  >
+                    {ROLE_FULL_LABELS[r.roleType as RoleType]} → Complete profile
+                  </button>
+                ) : null;
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active role cards */}
+      {activeRoles.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Your roles</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {activeRoles.map((r) => {
+              const role = r.roleType as RoleType;
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => router.push(ROLE_ROUTES[role])}
+                  className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${ROLE_COLORS[role]} p-5 text-left hover:shadow-cardHover transition-all hover:-translate-y-0.5`}
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 translate-x-8 -translate-y-8" />
+                  <div className="relative z-10">
+                    <span className="text-2xl block mb-3">{ROLE_ICONS[role]}</span>
+                    <p className="text-white font-semibold text-sm">{ROLE_FULL_LABELS[role]}</p>
+                    <p className="text-white/70 text-xs mt-0.5">{ROLE_DESCRIPTIONS[role]}</p>
+                    <div className="mt-3 flex items-center gap-1 text-white/80 text-xs group-hover:gap-2 transition-all">
+                      <span>Open workspace</span>
+                      <span>→</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Role-specific dashboards */}
       {activeRoles.some((r) => r.roleType === "CANDIDATE") && (
         <section>
-          <h2 className="text-lg font-semibold text-forest-900 mb-4">Candidate workspace</h2>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Candidate workspace</h2>
           <CandidateDashboard />
         </section>
       )}
       {activeRoles.some((r) => r.roleType === "MSME") && (
         <section>
-          <h2 className="text-lg font-semibold text-forest-900 mb-4">MSME workspace</h2>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">MSME workspace</h2>
           <MsmeDashboard />
         </section>
       )}
       {activeRoles.some((r) => r.roleType === "CUSTOMER") && (
         <section>
-          <h2 className="text-lg font-semibold text-forest-900 mb-4">Customer workspace</h2>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Customer workspace</h2>
           <CustomerDashboard />
         </section>
       )}
       {activeRoles.some((r) => r.roleType === "INTERVIEWER") && (
         <section>
-          <h2 className="text-lg font-semibold text-forest-900 mb-4">Interviewer workspace</h2>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Interviewer workspace</h2>
           <InterviewerDashboard />
         </section>
       )}
 
-      {/* Available roles to add */}
-      <section>
-        <h2 className="text-lg font-semibold text-forest-900 mb-4">Add another role</h2>
-        {roleError && (
-          <div className="mb-3 p-3 rounded bg-red-50 text-red-800 text-sm">{roleError}</div>
-        )}
-        <div className="grid gap-4 md:grid-cols-2">
-          {(["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER"] as RoleType[])
-            .filter((role) => !user.roles.some((r) => r.roleType === role))
-            .map((role) => (
-              <Card key={role}>
-                <CardBody>
-                  <h3 className="font-semibold text-forest-900 mb-1">
-                    {ROLE_LABELS[role]}
-                  </h3>
-                  <p className="text-sm text-sage-600 mb-4">{ROLE_DESCRIPTIONS[role]}</p>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="w-full"
-                    disabled={addingRole !== null}
-                    onClick={() => handleAddRole(role)}
-                  >
-                    {addingRole === role ? "Adding…" : "Add role"}
-                  </Button>
-                </CardBody>
-              </Card>
+      {/* Add more roles */}
+      {availableRoles.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">
+            {activeRoles.length === 0 ? "Get started — choose a role" : "Add another role"}
+          </h2>
+          {roleError && (
+            <div className="mb-3 p-3 rounded-lg bg-danger/10 text-danger text-sm border border-danger/20">{roleError}</div>
+          )}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {availableRoles.map((role) => (
+              <div key={role} className="group rounded-xl border border-surface-border bg-surface p-5 hover:border-forest-300 hover:shadow-card transition-all">
+                <span className="text-xl block mb-2">{ROLE_ICONS[role]}</span>
+                <p className="font-semibold text-forest-900 text-sm">{ROLE_FULL_LABELS[role]}</p>
+                <p className="text-sage-500 text-xs mt-0.5 mb-4">{ROLE_DESCRIPTIONS[role]}</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  disabled={addingRole !== null}
+                  onClick={() => handleAddRole(role)}
+                >
+                  {addingRole === role ? "Adding…" : "Add role"}
+                </Button>
+              </div>
             ))}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

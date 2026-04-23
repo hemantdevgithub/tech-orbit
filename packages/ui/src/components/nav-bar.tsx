@@ -1,6 +1,5 @@
 import React from "react";
 import { cn } from "../lib/utils.js";
-import { Avatar } from "./avatar.js";
 
 export interface NavLink {
   label: string;
@@ -16,49 +15,40 @@ export interface NavBarProps extends React.HTMLAttributes<HTMLElement> {
   notificationCount?: number;
 }
 
-function LogoIcon() {
-  return (
-    <div className="w-10 h-10 rounded-md bg-forest-800 text-white flex items-center justify-center font-bold">
-      T
-    </div>
-  );
-}
-
 function NotificationBell({ count = 0 }: { count?: number }) {
   return (
     <button
-      className="relative p-2 rounded-md text-forest-800 hover:bg-mint-100 focus-visible:ring-2 ring-forest-500"
+      className="relative p-2 rounded-lg text-sage-400 hover:text-cream-100 hover:bg-forest-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-300"
       aria-label={`Notifications${count > 0 ? ` (${count} unread)` : ""}`}
     >
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-        />
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+        <path strokeLinecap="round" strokeLinejoin="round"
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
       {count > 0 && (
-        <span className="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-xs rounded-full flex items-center justify-center">
-          {count > 9 ? "9+" : count}
-        </span>
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-warning rounded-full ring-2 ring-forest-800" />
       )}
     </button>
   );
 }
 
-function UserMenu({ name, avatar }: { name?: string; avatar?: string }) {
+function UserMenu({ name }: { name?: string }) {
+  const initials = name
+    ? name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "?";
   return (
     <button
-      className="flex items-center gap-2 p-2 rounded-md hover:bg-mint-100 focus-visible:ring-2 ring-forest-500"
+      className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-lg hover:bg-forest-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-300 group"
       aria-label="User menu"
     >
-      <Avatar name={name ?? "User"} src={avatar} size="sm" />
-      <span className="text-sm font-medium text-forest-800 hidden md:block">
-        {name ?? "User"}
+      <div className="w-7 h-7 rounded-full bg-mint-300 text-forest-800 text-xs font-bold flex items-center justify-center shrink-0">
+        {initials}
+      </div>
+      <span className="text-sm font-medium text-cream-200 hidden md:block max-w-[120px] truncate">
+        {name ?? "Account"}
       </span>
-      <svg className="w-4 h-4 text-sage-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      <svg className="w-3 h-3 text-sage-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
       </svg>
     </button>
   );
@@ -71,7 +61,6 @@ const NavBar = React.forwardRef<HTMLElement, NavBarProps>(
       logoText = "Techorbit",
       links = [],
       userName,
-      userAvatar,
       notificationCount = 0,
       ...props
     },
@@ -80,25 +69,31 @@ const NavBar = React.forwardRef<HTMLElement, NavBarProps>(
     <header
       ref={ref as React.RefObject<HTMLDivElement>}
       className={cn(
-        "sticky top-0 z-40 h-16 bg-surface/95 backdrop-blur border-b border-surface-border",
+        "sticky top-0 z-40 h-14 bg-forest-800 border-b border-forest-700/60",
         className
       )}
       {...props}
     >
-      <div className="h-full max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <LogoIcon />
-          <span className="text-xl font-semibold text-forest-800">{logoText}</span>
-        </div>
+      <div className="h-full max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between gap-4">
+        {/* Logo */}
+        <a href="/dashboard" className="flex items-center gap-2.5 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-mint-200 flex items-center justify-center font-bold text-forest-800 text-sm">
+            T
+          </div>
+          <span className="text-[15px] font-semibold text-cream-100 tracking-tight hidden sm:block">{logoText}</span>
+        </a>
 
-        <nav className="hidden md:flex items-center gap-2" aria-label="Main navigation">
+        {/* Nav links */}
+        <nav className="hidden md:flex items-center gap-0.5 flex-1 px-4" aria-label="Main navigation">
           {links.map((link) => (
             <a
               key={link.href}
               href={link.href}
               className={cn(
-                "px-4 py-2 rounded-md text-base font-medium text-forest-800 hover:bg-mint-100",
-                link.active && "bg-mint-200"
+                "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                link.active
+                  ? "bg-forest-700 text-cream-100"
+                  : "text-sage-400 hover:text-cream-100 hover:bg-forest-700"
               )}
               aria-current={link.active ? "page" : undefined}
             >
@@ -107,9 +102,11 @@ const NavBar = React.forwardRef<HTMLElement, NavBarProps>(
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        {/* Right side */}
+        <div className="flex items-center gap-1">
           <NotificationBell count={notificationCount} />
-          <UserMenu name={userName} avatar={userAvatar} />
+          <div className="w-px h-5 bg-forest-700 mx-1" />
+          <UserMenu name={userName} />
         </div>
       </div>
     </header>

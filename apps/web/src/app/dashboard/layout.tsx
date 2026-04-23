@@ -29,19 +29,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = [
     { label: "Home", href: "/dashboard", active: true },
-    ...(activeRoles.some((r) => r.roleType === "CUSTOMER")
+    ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "SRM", "CRM", "MSME"].includes(r.roleType))
       ? [{ label: "Requirements", href: "/requirements" }]
       : []),
-    ...(activeRoles.some((r) => r.roleType === "CANDIDATE")
-      ? [{ label: "Opportunities", href: "/opportunities" }]
+    ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "INTERVIEWER"].includes(r.roleType))
+      ? [{ label: "Interviews", href: "/interviews" }]
       : []),
-    ...(activeRoles.some((r) => r.roleType === "CRM" || r.roleType === "SRM")
-      ? [{ label: "My Pipeline", href: "/pipeline" }]
+    ...(activeRoles.some((r) => ["CUSTOMER", "CRM"].includes(r.roleType))
+      ? [{ label: "Interviewers", href: "/interviewers" }]
       : []),
   ];
 
   return (
-    <div className="min-h-screen bg-cream-100">
+    <div className="min-h-screen bg-cream-50">
       <NavBar
         logoText="Techorbit"
         userName={user ? `${user.firstName} ${user.lastName}` : undefined}
@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         notificationCount={3}
       />
 
-      <main className="max-w-7xl mx-auto px-6 md:px-12 py-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         {children}
       </main>
     </div>
