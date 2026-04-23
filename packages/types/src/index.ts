@@ -236,3 +236,30 @@ export type {
   InterviewCompletedEvent,
   ScorecardSubmittedEvent,
 } from "./interview.js";
+
+// ─── Placement types (re-exported from placement.ts) ─────────────────────────
+export {
+  CreatePlacementRequestSchema,
+  EndPlacementSchema,
+  PlacementFilterSchema,
+  PlacementResponseSchema,
+  PlacementListResponseSchema,
+  ValueChainResponseSchema,
+  CommissionRuleResponseSchema,
+  CommissionRuleListResponseSchema,
+  PlacementCreatedEventSchema,
+  PlacementEndedEventSchema,
+} from "./placement.js";
+
+export type {
+  CreatePlacementRequest,
+  EndPlacement,
+  PlacementFilter,
+  PlacementResponse,
+  PlacementListResponse,
+  ValueChainResponse,
+  CommissionRuleResponse,
+  CommissionRuleListResponse,
+  PlacementCreatedEvent,
+  PlacementEndedEvent,
+} from "./placement.js";

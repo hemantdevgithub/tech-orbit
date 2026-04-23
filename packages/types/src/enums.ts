@@ -70,10 +70,10 @@ export type InterviewStatus = z.infer<typeof InterviewStatus>;
 
 // Placement status
 export const PlacementStatus = z.enum([
-  "PROBATION",
   "ACTIVE",
-  "PAUSED",
-  "TERMINATED",
+  "ENDED_COMPLETED",
+  "ENDED_EARLY",
+  "SUSPENDED",
 ]);
 export type PlacementStatus = z.infer<typeof PlacementStatus>;
 
@@ -167,6 +167,23 @@ export const Recommendation = z.enum([
   "STRONG_NO",
 ]);
 export type Recommendation = z.infer<typeof Recommendation>;
+
+// Placement enums
+export const EngagementType = z.enum(["W2", "C2C", "IC_1099"]);
+export type EngagementType = z.infer<typeof EngagementType>;
+
+export const CommissionSlot = z.enum([
+  "CRM",
+  "SRM",
+  "MSME",
+  "CANDIDATE_W2",
+  "INTERVIEWER",
+  "PLATFORM",
+]);
+export type CommissionSlot = z.infer<typeof CommissionSlot>;
+
+export const CommissionCalc = z.enum(["PERCENT_OF_BILL", "FLAT_FEE", "RESIDUAL"]);
+export type CommissionCalc = z.infer<typeof CommissionCalc>;
 
 // File enums
 export const FilePurpose = z.enum(["RESUME", "CONTRACT", "W9", "VIDEO_INTRO", "PROFILE_PHOTO"]);

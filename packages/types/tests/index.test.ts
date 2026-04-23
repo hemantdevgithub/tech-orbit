@@ -103,7 +103,7 @@ describe("types", () => {
 
   describe("PlacementStatus", () => {
     it("should validate all placement statuses", () => {
-      const statuses = ["PROBATION", "ACTIVE", "PAUSED", "TERMINATED"] as const;
+      const statuses = ["ACTIVE", "ENDED_COMPLETED", "ENDED_EARLY", "SUSPENDED"] as const;
       for (const status of statuses) {
         expect(PlacementStatus.parse(status)).toBe(status);
       }
