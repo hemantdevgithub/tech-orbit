@@ -1,0 +1,1018 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Placement Service
+  version: 0.1.0
+  description: >-
+    Placement lifecycle (create → active → ended), Value Chain materialization
+    (who contributed to this hire), and rule-based commission calculation.
+
+
+    Commission weights for v1: CRM 8%, SRM 5%, Platform 12% (W-2 residual, C2C
+    fixed), Candidate pay rate percent (W-2), MSME residual (C2C). When a CRM or
+    SRM attribution slot is empty, the share flows to the Platform in W-2
+    (residual calculation) — keeping the 100% sum invariant.
+servers:
+  - url: http://localhost:3008
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    CreatePlacementRequest:
+      type: object
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        engagementType:
+          type: string
+          enum:
+            - W2
+            - C2C
+            - IC_1099
+        billRateUsd:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 10000
+        payRateUsd:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 10000
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        contractDocumentId:
+          type: string
+          format: uuid
+        workOrderId:
+          type: string
+        rtrDocumentId:
+          type: string
+          format: uuid
+      required:
+        - submissionId
+        - engagementType
+        - billRateUsd
+        - startDate
+        - endDate
+    EndPlacement:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+        actualEndDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - ENDED_COMPLETED
+            - ENDED_EARLY
+          default: ENDED_EARLY
+      required:
+        - reason
+    PlacementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        requirementId:
+          type: string
+          format: uuid
+        submissionId:
+          type: string
+          format: uuid
+        candidateId:
+          type: string
+          format: uuid
+        customerCompanyId:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        engagementType:
+          type: string
+          enum:
+            - W2
+            - C2C
+            - IC_1099
+        billRateUsd:
+          type: number
+        payRateUsd:
+          type: number
+          nullable: true
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        actualEndDate:
+          type: string
+          nullable: true
+          format: date-time
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - ENDED_COMPLETED
+            - ENDED_EARLY
+            - SUSPENDED
+        endReason:
+          type: string
+          nullable: true
+        contractDocumentId:
+          type: string
+          nullable: true
+          format: uuid
+        workOrderId:
+          type: string
+          nullable: true
+        rtrDocumentId:
+          type: string
+          nullable: true
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - requirementId
+        - submissionId
+        - candidateId
+        - customerCompanyId
+        - createdByUserId
+        - engagementType
+        - billRateUsd
+        - payRateUsd
+        - startDate
+        - endDate
+        - actualEndDate
+        - status
+        - endReason
+        - contractDocumentId
+        - workOrderId
+        - rtrDocumentId
+        - createdAt
+        - updatedAt
+    PlacementListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              requirementId:
+                type: string
+                format: uuid
+              submissionId:
+                type: string
+                format: uuid
+              candidateId:
+                type: string
+                format: uuid
+              customerCompanyId:
+                type: string
+                format: uuid
+              createdByUserId:
+                type: string
+                format: uuid
+              engagementType:
+                type: string
+                enum:
+                  - W2
+                  - C2C
+                  - IC_1099
+              billRateUsd:
+                type: number
+              payRateUsd:
+                type: number
+                nullable: true
+              startDate:
+                type: string
+                format: date-time
+              endDate:
+                type: string
+                format: date-time
+              actualEndDate:
+                type: string
+                nullable: true
+                format: date-time
+              status:
+                type: string
+                enum:
+                  - ACTIVE
+                  - ENDED_COMPLETED
+                  - ENDED_EARLY
+                  - SUSPENDED
+              endReason:
+                type: string
+                nullable: true
+              contractDocumentId:
+                type: string
+                nullable: true
+                format: uuid
+              workOrderId:
+                type: string
+                nullable: true
+              rtrDocumentId:
+                type: string
+                nullable: true
+                format: uuid
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - requirementId
+              - submissionId
+              - candidateId
+              - customerCompanyId
+              - createdByUserId
+              - engagementType
+              - billRateUsd
+              - payRateUsd
+              - startDate
+              - endDate
+              - actualEndDate
+              - status
+              - endReason
+              - contractDocumentId
+              - workOrderId
+              - rtrDocumentId
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    ValueChainResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          format: uuid
+        customerCompanyId:
+          type: string
+          nullable: true
+          format: uuid
+        attributedCrmId:
+          type: string
+          nullable: true
+          format: uuid
+        attributedSrmId:
+          type: string
+          nullable: true
+          format: uuid
+        attributedMsmeId:
+          type: string
+          nullable: true
+          format: uuid
+        candidateId:
+          type: string
+          nullable: true
+          format: uuid
+        interviewerIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        redactedSlots:
+          type: array
+          items:
+            type: string
+            enum:
+              - CRM
+              - SRM
+              - MSME
+              - CANDIDATE_W2
+              - INTERVIEWER
+              - PLATFORM
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - placementId
+        - customerCompanyId
+        - attributedCrmId
+        - attributedSrmId
+        - attributedMsmeId
+        - candidateId
+        - interviewerIds
+        - redactedSlots
+        - createdAt
+    CommissionRuleListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              placementId:
+                type: string
+                format: uuid
+              slot:
+                type: string
+                enum:
+                  - CRM
+                  - SRM
+                  - MSME
+                  - CANDIDATE_W2
+                  - INTERVIEWER
+                  - PLATFORM
+              beneficiaryUserId:
+                type: string
+                nullable: true
+                format: uuid
+              beneficiaryMsmeId:
+                type: string
+                nullable: true
+                format: uuid
+              calculation:
+                type: string
+                enum:
+                  - PERCENT_OF_BILL
+                  - FLAT_FEE
+                  - RESIDUAL
+              percentOfBillRate:
+                type: number
+                nullable: true
+              flatFeeUsd:
+                type: number
+                nullable: true
+              projectedHourlyUsd:
+                type: number
+                nullable: true
+              notes:
+                type: string
+                nullable: true
+              interviewId:
+                type: string
+                nullable: true
+                format: uuid
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - placementId
+              - slot
+              - beneficiaryUserId
+              - beneficiaryMsmeId
+              - calculation
+              - percentOfBillRate
+              - flatFeeUsd
+              - projectedHourlyUsd
+              - notes
+              - interviewId
+              - createdAt
+      required:
+        - data
+    CreatePlacementResult:
+      type: object
+      properties:
+        placement:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            requirementId:
+              type: string
+              format: uuid
+            submissionId:
+              type: string
+              format: uuid
+            candidateId:
+              type: string
+              format: uuid
+            customerCompanyId:
+              type: string
+              format: uuid
+            createdByUserId:
+              type: string
+              format: uuid
+            engagementType:
+              type: string
+              enum:
+                - W2
+                - C2C
+                - IC_1099
+            billRateUsd:
+              type: number
+            payRateUsd:
+              type: number
+              nullable: true
+            startDate:
+              type: string
+              format: date-time
+            endDate:
+              type: string
+              format: date-time
+            actualEndDate:
+              type: string
+              nullable: true
+              format: date-time
+            status:
+              type: string
+              enum:
+                - ACTIVE
+                - ENDED_COMPLETED
+                - ENDED_EARLY
+                - SUSPENDED
+            endReason:
+              type: string
+              nullable: true
+            contractDocumentId:
+              type: string
+              nullable: true
+              format: uuid
+            workOrderId:
+              type: string
+              nullable: true
+            rtrDocumentId:
+              type: string
+              nullable: true
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+          required:
+            - id
+            - requirementId
+            - submissionId
+            - candidateId
+            - customerCompanyId
+            - createdByUserId
+            - engagementType
+            - billRateUsd
+            - payRateUsd
+            - startDate
+            - endDate
+            - actualEndDate
+            - status
+            - endReason
+            - contractDocumentId
+            - workOrderId
+            - rtrDocumentId
+            - createdAt
+            - updatedAt
+        valueChain:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            placementId:
+              type: string
+              format: uuid
+            customerCompanyId:
+              type: string
+              nullable: true
+              format: uuid
+            attributedCrmId:
+              type: string
+              nullable: true
+              format: uuid
+            attributedSrmId:
+              type: string
+              nullable: true
+              format: uuid
+            attributedMsmeId:
+              type: string
+              nullable: true
+              format: uuid
+            candidateId:
+              type: string
+              nullable: true
+              format: uuid
+            interviewerIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+            redactedSlots:
+              type: array
+              items:
+                type: string
+                enum:
+                  - CRM
+                  - SRM
+                  - MSME
+                  - CANDIDATE_W2
+                  - INTERVIEWER
+                  - PLATFORM
+            createdAt:
+              type: string
+              format: date-time
+          required:
+            - id
+            - placementId
+            - customerCompanyId
+            - attributedCrmId
+            - attributedSrmId
+            - attributedMsmeId
+            - candidateId
+            - interviewerIds
+            - redactedSlots
+            - createdAt
+        rules:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  placementId:
+                    type: string
+                    format: uuid
+                  slot:
+                    type: string
+                    enum:
+                      - CRM
+                      - SRM
+                      - MSME
+                      - CANDIDATE_W2
+                      - INTERVIEWER
+                      - PLATFORM
+                  beneficiaryUserId:
+                    type: string
+                    nullable: true
+                    format: uuid
+                  beneficiaryMsmeId:
+                    type: string
+                    nullable: true
+                    format: uuid
+                  calculation:
+                    type: string
+                    enum:
+                      - PERCENT_OF_BILL
+                      - FLAT_FEE
+                      - RESIDUAL
+                  percentOfBillRate:
+                    type: number
+                    nullable: true
+                  flatFeeUsd:
+                    type: number
+                    nullable: true
+                  projectedHourlyUsd:
+                    type: number
+                    nullable: true
+                  notes:
+                    type: string
+                    nullable: true
+                  interviewId:
+                    type: string
+                    nullable: true
+                    format: uuid
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - placementId
+                  - slot
+                  - beneficiaryUserId
+                  - beneficiaryMsmeId
+                  - calculation
+                  - percentOfBillRate
+                  - flatFeeUsd
+                  - projectedHourlyUsd
+                  - notes
+                  - interviewId
+                  - createdAt
+          required:
+            - data
+      required:
+        - placement
+        - valueChain
+        - rules
+    EndPlacementBody:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+        actualEndDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - ENDED_COMPLETED
+            - ENDED_EARLY
+          default: ENDED_EARLY
+      required:
+        - reason
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/placements:
+    post:
+      tags:
+        - Placements
+      summary: Create a placement (CUSTOMER only)
+      security:
+        - bearerAuth: []
+      description: Materializes the Value Chain (customer → CRM → SRM → candidate/MSME
+        + interviewers) and generates CommissionRules in a single transaction.
+        Attribution is resolved server-side from the submission, requirement,
+        and completed interviews. Submission must be in OFFER status.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePlacementRequest"
+      responses:
+        "201":
+          description: Placement created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatePlacementResult"
+        "400":
+          description: Submission not in OFFER status or invalid engagement config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — only the requirement owner (customer) can create a
+            placement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Submission or requirement not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: A placement already exists for this submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Placements
+      summary: List placements (participant-scoped visibility)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: customerCompanyId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: candidateId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: requirementId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - ACTIVE
+              - ENDED_COMPLETED
+              - ENDED_EARLY
+              - SUSPENDED
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: attributedCrmId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: attributedSrmId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: attributedMsmeId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlacementListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/placements/{id}:
+    get:
+      tags:
+        - Placements
+      summary: Get placement details
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Placement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlacementResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not a participant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/placements/{id}/value-chain:
+    get:
+      tags:
+        - Placements
+      summary: Get the Value Chain (visibility-filtered per viewer role)
+      security:
+        - bearerAuth: []
+      description: >-
+        Returns the attribution graph filtered by the caller's role:
+
+        - CUSTOMER (owner) / ADMIN: sees everything
+
+        - CRM: sees customer + candidate + own slot; SRM/MSME/interviewers
+        hidden
+
+        - SRM: sees customer + candidate + own slot; CRM/MSME hidden
+
+        - MSME: sees customer + candidate + SRM + own residual
+
+        - CANDIDATE: sees customer + own pay rate (W-2) / MSME (C2C)
+
+        - INTERVIEWER: sees customer + candidate + own fee
+
+
+        Hidden slots are returned as `null` and listed in `redactedSlots` so the
+        UI can render 'Confidential' placeholders.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Filtered Value Chain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValueChainResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/placements/{id}/commissions:
+    get:
+      tags:
+        - Placements
+      summary: Get commission rules (visibility-filtered per viewer role)
+      security:
+        - bearerAuth: []
+      description: Commission rules filtered the same way as the Value Chain. Each
+        rule includes a computed `projectedHourlyUsd` for display.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Filtered commission rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommissionRuleListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/placements/{id}/end:
+    post:
+      tags:
+        - Placements
+      summary: End a placement (customer only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EndPlacementBody"
+      responses:
+        "200":
+          description: Ended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlacementResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the customer, or placement not ACTIVE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
