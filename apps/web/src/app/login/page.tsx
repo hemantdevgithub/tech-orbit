@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -18,7 +18,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const { login, status, error, clearError } = useAuth();
 
@@ -32,7 +32,6 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Show success message for redirects
   const registered = searchParams.get("registered") === "true";
   const resetSuccess = searchParams.get("reset") === "true";
 
@@ -109,10 +108,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-end">
-          <Link
-            href="/forgot-password"
-            className="text-sm text-forest-800 hover:underline"
-          >
+          <Link href="/forgot-password" className="text-sm text-forest-800 hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -128,5 +124,19 @@ export default function LoginPage() {
         </Button>
       </form>
     </AuthCard>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-cream-100 flex items-center justify-center">
+          <p className="text-sage-600">Loading…</p>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
