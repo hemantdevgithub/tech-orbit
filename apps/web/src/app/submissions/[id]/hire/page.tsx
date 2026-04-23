@@ -4,10 +4,21 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card, CardBody, CardHeader, CardTitle, Input, Label } from "@techorbit/ui";
-import type { EngagementType, SubmissionResponse } from "@techorbit/types";
+import type { EngagementType, RequirementResponse, SubmissionResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
-import { getMatchingClient, getPlacementClient } from "@/lib/api-client";
+import {
+  getMatchingClient,
+  getPlacementClient,
+  getRequirementClient,
+} from "@/lib/api-client";
+import {
+  CANDIDATE_DEFAULT_PCT,
+  CRM_PCT,
+  PlatformFeeBreakdown,
+  SRM_PCT,
+  computePlatformBreakdown,
+} from "@/components/placement/platform-fee-breakdown";
 
 type EngType = Exclude<EngagementType, "IC_1099">;
 
@@ -33,6 +44,7 @@ export default function HireCandidatePage() {
   const { user } = useAuthStore();
 
   const [submission, setSubmission] = useState<SubmissionResponse | null>(null);
+  const [requirement, setRequirement] = useState<RequirementResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -50,31 +62,58 @@ export default function HireCandidatePage() {
 
   useEffect(() => {
     if (!params?.id) return;
-    getMatchingClient()
-      .getSubmission(params.id)
-      .then(setSubmission)
-      .catch((err) =>
-        setLoadError(err instanceof ApiError ? err.message : "Failed to load submission"),
-      )
-      .finally(() => setLoading(false));
+    (async () => {
+      try {
+        const sub = await getMatchingClient().getSubmission(params.id);
+        setSubmission(sub);
+        // Fetch the requirement to know CRM attribution state — the
+        // commission preview needs this to show the right platform fee.
+        try {
+          const req = await getRequirementClient().getById(sub.requirementId);
+          setRequirement(req);
+        } catch {
+          // non-fatal; preview falls back to "not attributed"
+        }
+      } catch (err) {
+        setLoadError(err instanceof ApiError ? err.message : "Failed to load submission");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [params?.id]);
 
   const isCustomer = user?.roles?.some((r) => r.roleType === "CUSTOMER");
 
-  // Quick commission preview (client-side, for display only — server computes truth)
   const bill = Number(billRate) || 0;
   const pay = Number(payRate) || 0;
-  const previewCrm = (bill * 0.08).toFixed(2);
-  const previewSrm = (bill * 0.05).toFixed(2);
-  const previewCandidate = engagementType === "W2" ? pay.toFixed(2) : "—";
-  const previewPlatform =
-    engagementType === "W2"
-      ? Math.max(0, bill - pay - bill * 0.08 - bill * 0.05).toFixed(2)
-      : (bill * 0.12).toFixed(2);
-  const previewMsme =
-    engagementType === "C2C"
-      ? (bill - bill * 0.08 - bill * 0.05 - bill * 0.12).toFixed(2)
-      : "—";
+
+  // Resolve attribution context from live data (with null fallbacks so the
+  // preview still renders before the network responses land).
+  const crmAttributed = !!requirement?.attributedCrmId;
+  const srmAttributed = !!submission?.attributedSrmId;
+
+  const candidatePct = engagementType === "W2" && bill > 0
+    ? Math.min(pay / bill, CANDIDATE_DEFAULT_PCT + 1)
+    : CANDIDATE_DEFAULT_PCT;
+
+  const platformBreakdown = computePlatformBreakdown({
+    billRateUsd: bill,
+    crmAttributed,
+    srmAttributed,
+    engagementType,
+  });
+
+  // C2C: platform fixed at 12%, MSME gets residual.
+  const c2cMsmeResidual = engagementType === "C2C"
+    ? bill - (crmAttributed ? bill * CRM_PCT : 0) - (srmAttributed ? bill * SRM_PCT : 0) - bill * 0.12
+    : 0;
+
+  const weeklyCost = bill * 40;
+  const fullTermWeeks = Math.max(
+    1,
+    Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400_000 / 7),
+  );
+  const fullTermCost = weeklyCost * fullTermWeeks;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -225,39 +264,79 @@ export default function HireCandidatePage() {
             <CardHeader><CardTitle>Commission preview</CardTitle></CardHeader>
             <CardBody className="space-y-3 text-sm">
               <p className="text-xs text-sage-500 -mt-1 mb-2">
-                Projected hourly breakdown. Final values computed server-side on confirm.
+                Projected hourly breakdown. Final values computed server-side.
               </p>
+
+              {/* CRM */}
               <div className="flex items-center justify-between py-1.5 border-b border-surface-border/50">
-                <span className="text-sage-600">CRM (8%)</span>
-                <span className="font-medium text-forest-900">${previewCrm}</span>
+                <span className="text-sage-600">CRM {crmAttributed && "(8%)"}</span>
+                {crmAttributed ? (
+                  <span className="font-medium text-forest-900">
+                    ${(bill * CRM_PCT).toFixed(2)}
+                  </span>
+                ) : (
+                  <span className="text-sage-500 italic text-xs">None attributed</span>
+                )}
               </div>
+
+              {/* SRM */}
               <div className="flex items-center justify-between py-1.5 border-b border-surface-border/50">
-                <span className="text-sage-600">SRM (5%)</span>
-                <span className="font-medium text-forest-900">${previewSrm}</span>
+                <span className="text-sage-600">SRM {srmAttributed && "(5%)"}</span>
+                {srmAttributed ? (
+                  <span className="font-medium text-forest-900">
+                    ${(bill * SRM_PCT).toFixed(2)}
+                  </span>
+                ) : (
+                  <span className="text-sage-500 italic text-xs">None attributed</span>
+                )}
               </div>
-              {engagementType === "W2" && (
+
+              {/* Candidate / MSME */}
+              {engagementType === "W2" ? (
                 <div className="flex items-center justify-between py-1.5 border-b border-surface-border/50">
                   <span className="text-sage-600">Candidate (W-2)</span>
-                  <span className="font-medium text-forest-900">${previewCandidate}</span>
+                  <span className="font-medium text-forest-900">
+                    ${pay.toFixed(2)} · {(candidatePct * 100).toFixed(0)}%
+                  </span>
                 </div>
-              )}
-              {engagementType === "C2C" && (
+              ) : (
                 <div className="flex items-center justify-between py-1.5 border-b border-surface-border/50">
                   <span className="text-sage-600">MSME (residual)</span>
-                  <span className="font-medium text-forest-900">${previewMsme}</span>
+                  <span className="font-medium text-forest-900">
+                    ${Math.max(0, c2cMsmeResidual).toFixed(2)}
+                  </span>
                 </div>
               )}
-              <div className="flex items-center justify-between py-1.5 border-b border-surface-border/50">
-                <span className="text-sage-600">Platform</span>
-                <span className="font-medium text-forest-900">${previewPlatform}</span>
+
+              {/* Platform with breakdown */}
+              <div className="border-b border-surface-border/50 pb-2">
+                {platformBreakdown ? (
+                  <PlatformFeeBreakdown b={platformBreakdown} />
+                ) : (
+                  <div className="flex items-center justify-between py-1.5">
+                    <span className="text-sage-600">Platform (12%)</span>
+                    <span className="font-medium text-forest-900">${(bill * 0.12).toFixed(2)}</span>
+                  </div>
+                )}
               </div>
+
+              {/* Total */}
               <div className="flex items-center justify-between pt-2 text-base font-semibold">
-                <span className="text-forest-900">Total</span>
-                <span className="text-forest-900">${Number(billRate || 0).toFixed(2)}/hr</span>
+                <span className="text-forest-900">Bill rate</span>
+                <span className="text-forest-900">${bill.toFixed(2)}/hr</span>
               </div>
-              <p className="text-xs text-sage-500 pt-2">
-                If CRM or SRM is not attributed on this placement, their slot flows to Platform as residual.
-              </p>
+
+              {/* Term summary */}
+              <div className="mt-3 pt-3 border-t border-surface-border/50 space-y-1 text-xs text-sage-600">
+                <div className="flex justify-between">
+                  <span>Weekly cost (40hr)</span>
+                  <span className="font-medium text-forest-900">${weeklyCost.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Full-term ({fullTermWeeks}w)</span>
+                  <span className="font-medium text-forest-900">${fullTermCost.toLocaleString()}</span>
+                </div>
+              </div>
             </CardBody>
           </Card>
         </div>

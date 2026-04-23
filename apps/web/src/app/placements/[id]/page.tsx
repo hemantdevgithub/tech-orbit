@@ -14,6 +14,10 @@ import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getPlacementClient } from "@/lib/api-client";
 import { ValueChainGraph } from "./value-chain-graph";
+import {
+  PlatformFeeBreakdown,
+  computePlatformBreakdown,
+} from "@/components/placement/platform-fee-breakdown";
 
 export const dynamic = "force-dynamic";
 
@@ -235,6 +239,33 @@ export default function PlacementDetailPage() {
                     ))}
                   </tbody>
                 </table>
+
+                {(() => {
+                  // Render the explicit Platform breakdown only when the viewer
+                  // can actually see the Value Chain (customer/admin).  We
+                  // know this when valueChain has no redactedSlots.
+                  if (!valueChain || valueChain.redactedSlots.length > 0) return null;
+                  if (placement.engagementType !== "W2") return null;
+                  const breakdown = computePlatformBreakdown({
+                    billRateUsd: placement.billRateUsd,
+                    crmAttributed: !!valueChain.attributedCrmId,
+                    srmAttributed: !!valueChain.attributedSrmId,
+                    engagementType: "W2",
+                  });
+                  if (!breakdown || breakdown.absorbedCrmPct + breakdown.absorbedSrmPct === 0) {
+                    return null;
+                  }
+                  return (
+                    <div className="mt-5 pt-4 border-t border-surface-border/50 bg-warning/5 rounded-lg p-4 -mx-2">
+                      <p className="text-xs font-semibold text-forest-900 mb-2 flex items-center gap-2">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-warning/15 text-warning uppercase tracking-wider">
+                          Why this platform fee?
+                        </span>
+                      </p>
+                      <PlatformFeeBreakdown b={breakdown} />
+                    </div>
+                  );
+                })()}
               </CardBody>
             </Card>
           )}
