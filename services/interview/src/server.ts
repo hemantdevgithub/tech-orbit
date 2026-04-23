@@ -11,6 +11,7 @@ import { createMatchingApi } from "./lib/matching-api.js";
 import { createProfileApi } from "./lib/profile-api.js";
 import { createInterviewService } from "./services/interview.service.js";
 import { interviewRoutes } from "./routes/interview.routes.js";
+import { internalInterviewRoutes } from "./routes/internal.routes.js";
 import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
@@ -55,6 +56,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   const interviewService = createInterviewService({ config, dailyApi, matchingApi });
   await fastify.register(interviewRoutes, { interviewService });
+  await fastify.register(internalInterviewRoutes);
 
   if (config.RABBITMQ_URL) {
     const eventBus = createEventBus(

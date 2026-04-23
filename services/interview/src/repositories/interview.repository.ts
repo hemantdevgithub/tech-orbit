@@ -174,4 +174,19 @@ export const interviewRepository = {
       data: { videoRecordingUrl: url },
     });
   },
+
+  // Service-to-service only: returns interviews for a submission with NO
+  // authz filter.  Used by placement-svc to materialize the Value Chain.
+  async findForSubmissionUnfiltered(
+    submissionId: string,
+    status?: string,
+  ): Promise<Interview[]> {
+    return prisma.interview.findMany({
+      where: {
+        submissionId,
+        ...(status ? { status: status as InterviewStatus } : {}),
+      },
+      orderBy: { scheduledStart: "asc" },
+    });
+  },
 };

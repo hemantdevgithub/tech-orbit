@@ -1,5 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { buildServer } from "../src/server.js";
+import { generateKeyPairSync } from "node:crypto";
+
+const { publicKey, privateKey } = generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+  publicKeyEncoding: { type: "spki", format: "pem" },
+  privateKeyEncoding: { type: "pkcs8", format: "pem" },
+});
+process.env.JWT_PUBLIC_KEY = publicKey;
+process.env.JWT_PRIVATE_KEY = privateKey;
+process.env.DATABASE_URL = "postgresql://unused:unused@localhost:5432/unused";
+process.env.DISABLE_RATE_LIMIT = "1";
+
+const { buildServer } = await import("../src/server.js");
 
 describe("placement smoke tests", () => {
   let server: Awaited<ReturnType<typeof buildServer>>;
