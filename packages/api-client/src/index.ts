@@ -10,3 +10,8 @@ export type {
   AddRoleInput,
 } from "./auth.js";
 export { ProfileApiClient, createProfileApiClient } from "./profile.js";
+export {
+  RequirementApiClient,
+  createRequirementApiClient,
+} from "./requirement.js";
+export type { ClaimAttributionResult } from "./requirement.js";

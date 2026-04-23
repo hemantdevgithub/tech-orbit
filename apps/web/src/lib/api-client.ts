@@ -1,5 +1,14 @@
-import { ApiClient, createAuthApiClient, createProfileApiClient } from "@techorbit/api-client";
-import type { AuthApiClient, ProfileApiClient } from "@techorbit/api-client";
+import {
+  ApiClient,
+  createAuthApiClient,
+  createProfileApiClient,
+  createRequirementApiClient,
+} from "@techorbit/api-client";
+import type {
+  AuthApiClient,
+  ProfileApiClient,
+  RequirementApiClient,
+} from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 
 const IDENTITY_BASE_URL =
@@ -8,12 +17,16 @@ const PROFILE_BASE_URL =
   process.env.NEXT_PUBLIC_PROFILE_URL ?? "http://localhost:3004";
 const FILE_BASE_URL =
   process.env.NEXT_PUBLIC_FILE_URL ?? "http://localhost:3003";
+const REQUIREMENT_BASE_URL =
+  process.env.NEXT_PUBLIC_REQUIREMENT_URL ?? "http://localhost:3005";
 
 let apiClientInstance: ApiClient | null = null;
 let authClientInstance: AuthApiClient | null = null;
 let profileClientInstance: ProfileApiClient | null = null;
 let profileApiClientInstance: ApiClient | null = null;
 let fileApiClientInstance: ApiClient | null = null;
+let requirementApiClientInstance: ApiClient | null = null;
+let requirementClientInstance: RequirementApiClient | null = null;
 
 export function getApiClient(): ApiClient {
   if (!apiClientInstance) {
@@ -84,6 +97,22 @@ export function getProfileClient(): ProfileApiClient {
   return profileClientInstance;
 }
 
+export function getRequirementApiClient(): ApiClient {
+  if (!requirementApiClientInstance) {
+    requirementApiClientInstance = makeServiceClient(REQUIREMENT_BASE_URL);
+  }
+  return requirementApiClientInstance;
+}
+
+export function getRequirementClient(): RequirementApiClient {
+  if (!requirementClientInstance) {
+    requirementClientInstance = createRequirementApiClient(
+      getRequirementApiClient(),
+    );
+  }
+  return requirementClientInstance;
+}
+
 // Singleton reset for server-side / HMR
 export function resetApiClient(): void {
   apiClientInstance = null;
@@ -91,4 +120,6 @@ export function resetApiClient(): void {
   profileClientInstance = null;
   profileApiClientInstance = null;
   fileApiClientInstance = null;
+  requirementApiClientInstance = null;
+  requirementClientInstance = null;
 }
