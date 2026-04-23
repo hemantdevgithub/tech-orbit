@@ -5,6 +5,6 @@ export default defineConfig({
   ...projectConfig,
   test: {
     ...projectConfig.test,
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
   },
 });

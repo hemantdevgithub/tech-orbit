@@ -1,14 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildServer } from "../src/server.js";
 
-const TEST_PORT = 3005;
-
 describe("matching smoke tests", () => {
   let server: Awaited<ReturnType<typeof buildServer>>;
 
   beforeAll(async () => {
     server = await buildServer();
-    await server.listen({ host: "0.0.0.0", port: TEST_PORT });
+    await server.ready();
   });
 
   afterAll(async () => {
@@ -16,11 +14,7 @@ describe("matching smoke tests", () => {
   });
 
   it("should return health status", async () => {
-    const response = await server.inject({
-      method: "GET",
-      url: "/health",
-    });
-
+    const response = await server.inject({ method: "GET", url: "/health" });
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
     expect(body.status).toBe("ok");
