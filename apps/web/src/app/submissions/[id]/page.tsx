@@ -1,5 +1,8 @@
 "use client";
 
+// useSearchParams() forces dynamic rendering.  Opt out of static export.
+export const dynamic = "force-dynamic";
+
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";

@@ -42,6 +42,7 @@ jobs:
           pnpm --filter @techorbit/identity openapi:generate
           pnpm --filter @techorbit/profile openapi:generate
           pnpm --filter @techorbit/requirement openapi:generate
+          pnpm --filter @techorbit/matching openapi:generate
           if [[ -n $(git status --porcelain) ]]; then
             echo "OpenAPI specs are out of sync. Run pnpm openapi:generate in each service and commit."
             git diff
