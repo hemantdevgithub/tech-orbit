@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
+import Link from "next/link";
+import { Button, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -21,29 +22,29 @@ export function InterviewerDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Availability calendar */}
+      {/* Availability card — now links to the full management page */}
       <Card>
         <CardHeader>
-          <CardTitle>Availability — next 7 days</CardTitle>
+          <CardTitle>Your availability</CardTitle>
         </CardHeader>
         <CardBody>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1 mb-4">
             {next7.map(({ label, date }) => (
-              <div
-                key={date.toISOString()}
-                className="flex flex-col items-center gap-1"
-              >
+              <div key={date.toISOString()} className="flex flex-col items-center gap-1">
                 <span className="text-xs text-sage-500">{label.slice(0, 3)}</span>
-                <span className="text-sm font-medium text-forest-800">
-                  {date.getDate()}
-                </span>
+                <span className="text-sm font-medium text-forest-800">{date.getDate()}</span>
                 <div className="w-8 h-8 rounded-full border-2 border-dashed border-sage-300 hover:border-forest-400 cursor-pointer transition-colors" />
               </div>
             ))}
           </div>
-          <p className="text-xs text-sage-400 mt-3 text-center">
-            Full availability editor available in interview profile settings
+          <p className="text-xs text-sage-500 mb-3">
+            Set your available days and hours so customers can book interviews with you.
           </p>
+          <Link href="/dashboard/interviewer">
+            <Button variant="secondary" size="sm" className="w-full">
+              Manage availability
+            </Button>
+          </Link>
         </CardBody>
       </Card>
 
@@ -71,17 +72,21 @@ export function InterviewerDashboard() {
         </CardBody>
       </Card>
 
-      {/* Scheduled interviews placeholder */}
+      {/* Upcoming interviews — now links to the interview list */}
       <Card>
         <CardHeader>
           <CardTitle>Scheduled interviews</CardTitle>
         </CardHeader>
         <CardBody>
-          <div className="text-center py-8 text-sage-500">
-            <p className="text-lg mb-1">🎯</p>
-            <p className="font-medium">Coming in Sprint 5</p>
-            <p className="text-sm">Your upcoming interview schedule will appear here</p>
+          <div className="text-center py-6 text-sage-500">
+            <p className="font-medium text-sm mb-1">No upcoming interviews yet</p>
+            <p className="text-xs">Customers will book interviews once you set availability and are listed on the marketplace.</p>
           </div>
+          <Link href="/interviews">
+            <Button variant="secondary" size="sm" className="w-full mt-2">
+              View all interviews
+            </Button>
+          </Link>
         </CardBody>
       </Card>
     </div>
