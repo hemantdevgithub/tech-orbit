@@ -39,6 +39,7 @@ class ApiClient {
       const response = await fetch(`${this.config.baseUrl}${path}`, {
         ...fetchOptions,
         headers,
+        credentials: "include",
         signal: controller.signal,
       });
 
@@ -53,6 +54,7 @@ class ApiClient {
           const retryResponse = await fetch(`${this.config.baseUrl}${path}`, {
             ...fetchOptions,
             headers,
+            credentials: "include",
           });
 
           return this.parseResponse<T>(retryResponse);

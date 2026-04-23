@@ -138,6 +138,24 @@ export function useAuth() {
     store.setError(null);
   }, []);
 
+  // Add a role then immediately refresh the access token so the new role
+  // appears in the JWT without requiring a logout/re-login cycle.
+  const addRole = useCallback(async (roleType: string) => {
+    store.setError(null);
+    try {
+      const client = getAuthClient();
+      const updatedUser = await client.addRole({ roleType });
+      store.setUser(updatedUser);
+      // Refresh the access token so the new role is in the JWT claims.
+      const refreshed = await client.refreshToken();
+      store.setTokens(refreshed.accessToken, refreshed.expiresIn);
+    } catch (err) {
+      const apiErr = err as ApiError;
+      store.setError(apiErr.message ?? "Failed to add role");
+      throw err;
+    }
+  }, []);
+
   return {
     ...store,
     login,
@@ -147,6 +165,7 @@ export function useAuth() {
     confirmPasswordReset,
     logout,
     fetchMe,
+    addRole,
     clearError,
   };
 }

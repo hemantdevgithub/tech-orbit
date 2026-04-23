@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
 import { PageHeader, Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit/ui";
 import { isOnboardingComplete } from "@/lib/auth-guards";
 import type { RoleType } from "@/lib/auth-guards";
+import { useAuth } from "@/lib/auth-hooks";
 import { CandidateDashboard } from "@/components/dashboard/candidate-dashboard";
 import { MsmeDashboard } from "@/components/dashboard/msme-dashboard";
 import { CustomerDashboard } from "@/components/dashboard/customer-dashboard";
@@ -38,13 +40,31 @@ const ONBOARDING_ROUTES: Partial<Record<RoleType, string>> = {
 export default function DashboardPage() {
   const router = useRouter();
   const store = useAuthStore();
+  const { addRole } = useAuth();
   const user = store.user;
+  const [addingRole, setAddingRole] = useState<string | null>(null);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   if (!user) {
     return null;
   }
 
   const complete = isOnboardingComplete(user);
+
+  async function handleAddRole(role: RoleType) {
+    setAddingRole(role);
+    setRoleError(null);
+    try {
+      await addRole(role);
+      // Auto-active roles (CUSTOMER, CANDIDATE) redirect to onboarding
+      const route = ONBOARDING_ROUTES[role];
+      if (route) router.push(route);
+    } catch {
+      setRoleError("Failed to add role — please try again.");
+    } finally {
+      setAddingRole(null);
+    }
+  }
 
   const activeRoles = user.roles.filter((r) => r.status === "ACTIVE");
   const pendingRoles = user.roles.filter((r) => r.status === "PENDING_VERIFICATION");
@@ -158,6 +178,9 @@ export default function DashboardPage() {
       {/* Available roles to add */}
       <section>
         <h2 className="text-lg font-semibold text-forest-900 mb-4">Add another role</h2>
+        {roleError && (
+          <div className="mb-3 p-3 rounded bg-red-50 text-red-800 text-sm">{roleError}</div>
+        )}
         <div className="grid gap-4 md:grid-cols-2">
           {(["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER"] as RoleType[])
             .filter((role) => !user.roles.some((r) => r.roleType === role))
@@ -172,9 +195,10 @@ export default function DashboardPage() {
                     variant="secondary"
                     size="sm"
                     className="w-full"
-                    disabled={store.status === "loading"}
+                    disabled={addingRole !== null}
+                    onClick={() => handleAddRole(role)}
                   >
-                    Add role
+                    {addingRole === role ? "Adding…" : "Add role"}
                   </Button>
                 </CardBody>
               </Card>
