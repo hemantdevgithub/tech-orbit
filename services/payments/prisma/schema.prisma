@@ -1,0 +1,186 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["payments"]
+}
+
+model Timesheet {
+  id              String          @id @default(uuid())
+  placementId     String          @map("placement_id")
+  candidateId     String          @map("candidate_id")
+  weekStartDate   DateTime        @map("week_start_date") // Monday 00:00:00 UTC
+  weekEndDate     DateTime        @map("week_end_date")   // Sunday 23:59:59 UTC
+  hoursWorked     Decimal         @map("hours_worked") @db.Decimal(5, 2)
+  description     String?         @db.Text
+  status          TimesheetStatus @default(DRAFT)
+  submittedAt     DateTime?       @map("submitted_at")
+  approvedAt      DateTime?       @map("approved_at")
+  approvedBy      String?         @map("approved_by")
+  rejectedAt      DateTime?       @map("rejected_at")
+  rejectedBy      String?         @map("rejected_by")
+  rejectionReason String?         @map("rejection_reason")
+  invoiceId       String?         @map("invoice_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@unique([placementId, weekStartDate])
+  @@index([candidateId, status])
+  @@index([placementId, status])
+  @@index([invoiceId])
+  @@map("timesheet")
+  @@schema("payments")
+}
+
+model Invoice {
+  id                    String             @id @default(uuid())
+  customerCompanyId     String             @map("customer_company_id")
+  placementId           String?            @map("placement_id") // set on INTERVIEWER_FEES invoices; null on WEEKLY_HOURS
+  invoiceType           InvoiceType        @default(WEEKLY_HOURS) @map("invoice_type")
+  billingPeriodStart    DateTime           @map("billing_period_start")
+  billingPeriodEnd      DateTime           @map("billing_period_end")
+  subtotalUsd           Decimal            @map("subtotal_usd") @db.Decimal(10, 2)
+  taxUsd                Decimal            @default(0) @map("tax_usd") @db.Decimal(10, 2)
+  totalUsd              Decimal            @map("total_usd") @db.Decimal(10, 2)
+  status                InvoiceStatus      @default(DRAFT)
+  sentAt                DateTime?          @map("sent_at")
+  dueDate               DateTime?          @map("due_date")
+  paidAt                DateTime?          @map("paid_at")
+  stripeInvoiceId       String?            @map("stripe_invoice_id")
+  stripePaymentIntentId String?            @map("stripe_payment_intent_id")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  lineItems         InvoiceLineItem[]
+  commissionPayouts CommissionPayout[]
+
+  // WEEKLY_HOURS: one invoice per (customer, week).
+  // INTERVIEWER_FEES: one invoice per (customer, placement).  placementId
+  // is included in the unique so both constraints are orthogonal.
+  @@unique([customerCompanyId, invoiceType, billingPeriodStart, placementId])
+  @@index([status, dueDate])
+  @@index([customerCompanyId, status])
+  @@map("invoice")
+  @@schema("payments")
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(uuid())
+  invoiceId   String   @map("invoice_id")
+  placementId String   @map("placement_id")
+  timesheetId String?  @map("timesheet_id") // null for interviewer-fee line items
+  interviewId String?  @map("interview_id") // set only for INTERVIEWER_FEES line items
+  description String
+  hoursWorked Decimal? @map("hours_worked") @db.Decimal(5, 2) // null for flat-fee line items
+  rateUsd     Decimal? @map("rate_usd") @db.Decimal(10, 2)    // null for flat-fee line items
+  amountUsd   Decimal  @map("amount_usd") @db.Decimal(10, 2)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_line_item")
+  @@schema("payments")
+}
+
+model CommissionPayout {
+  id                String       @id @default(uuid())
+  invoiceId         String       @map("invoice_id")
+  placementId       String       @map("placement_id")
+  commissionRuleId  String       @map("commission_rule_id")
+  beneficiaryUserId String?      @map("beneficiary_user_id")
+  beneficiaryMsmeId String?      @map("beneficiary_msme_id")
+  slot              String       // CRM / SRM / MSME / CANDIDATE_W2 / INTERVIEWER / PLATFORM
+  amountUsd         Decimal      @map("amount_usd") @db.Decimal(10, 2)
+  status            PayoutStatus @default(PENDING)
+  processedAt       DateTime?    @map("processed_at")
+  stripeTransferId  String?      @map("stripe_transfer_id")
+  gustoPayrollId    String?      @map("gusto_payroll_id")
+  failureReason     String?      @map("failure_reason")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([beneficiaryUserId, status])
+  @@index([beneficiaryMsmeId, status])
+  @@index([invoiceId, status])
+  @@map("commission_payout")
+  @@schema("payments")
+}
+
+// Idempotency guard for incoming events (e.g. placement.created.v1).
+model ProcessedEvent {
+  eventId     String   @id @map("event_id")
+  eventType   String   @map("event_type")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@map("processed_event")
+  @@schema("payments")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("payments")
+}
+
+enum TimesheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  INVOICED
+
+  @@schema("payments")
+}
+
+enum InvoiceType {
+  WEEKLY_HOURS
+  INTERVIEWER_FEES
+
+  @@schema("payments")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  SETTLED
+
+  @@schema("payments")
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  SETTLED
+
+  @@schema("payments")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("payments")
+}

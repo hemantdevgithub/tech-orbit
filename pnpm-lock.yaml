@@ -872,21 +872,57 @@ importers:
 
   services/payments:
     dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^7.1.1
+        version: 7.3.4(zod@3.25.76)
       '@fastify/cors':
         specifier: ^9.0.1
         version: 9.0.1
       '@fastify/helmet':
         specifier: ^11.1.1
         version: 11.1.1
+      '@fastify/rate-limit':
+        specifier: ^9.1.0
+        version: 9.1.0
+      '@prisma/client':
+        specifier: ^5.14.0
+        version: 5.22.0(prisma@5.22.0)
+      '@techorbit/auth-middleware':
+        specifier: workspace:*
+        version: link:../../packages/auth-middleware
+      '@techorbit/db-client':
+        specifier: workspace:*
+        version: link:../../packages/db-client
       '@techorbit/errors':
         specifier: workspace:*
         version: link:../../packages/errors
+      '@techorbit/event-bus':
+        specifier: workspace:*
+        version: link:../../packages/event-bus
       '@techorbit/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@techorbit/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      decimal.js:
+        specifier: ^10.4.3
+        version: 10.6.0
       fastify:
         specifier: ^4.26.2
         version: 4.29.1
+      jose:
+        specifier: ^5.2.4
+        version: 5.10.0
+      node-cron:
+        specifier: ^3.0.3
+        version: 3.0.3
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
+      yaml:
+        specifier: ^2.4.5
+        version: 2.8.3
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -897,9 +933,24 @@ importers:
       '@techorbit/config-vitest':
         specifier: workspace:*
         version: link:../../packages/config/vitest
+      '@testcontainers/postgresql':
+        specifier: ^10.10.0
+        version: 10.28.0
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
+      prisma:
+        specifier: ^5.14.0
+        version: 5.22.0
+      testcontainers:
+        specifier: ^10.10.0
+        version: 10.28.0
       tsx:
         specifier: ^4.7.2
         version: 4.21.0
@@ -2629,6 +2680,9 @@ packages:
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
+
+  '@types/node-cron@3.0.11':
+    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
 
   '@types/node@18.19.130':
     resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
@@ -4784,6 +4838,10 @@ packages:
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
 
+  node-cron@3.0.3:
+    resolution: {integrity: sha512-dOal67//nohNgYWb+nWmg5dkFdIwDm8EpeGYMekPMrngV3637lqnX0lbUcCtgibHTz6SEz7DAIjKvKDFYCnO1A==}
+    engines: {node: '>=6.0.0'}
+
   node-exports-info@1.6.0:
     resolution: {integrity: sha512-pyFS63ptit/P5WqUkt+UUfe+4oevH+bFeIiPPdfb0pFeYEu/1ELnJu5l+5EcTKYL5M7zaAa7S8ddywgXypqKCw==}
     engines: {node: '>= 0.4'}
@@ -5895,6 +5953,10 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    hasBin: true
+
+  uuid@8.3.2:
+    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
 
   uuid@9.0.1:
@@ -7492,6 +7554,8 @@ snapshots:
   '@types/methods@1.1.4': {}
 
   '@types/ms@2.1.0': {}
+
+  '@types/node-cron@3.0.11': {}
 
   '@types/node@18.19.130':
     dependencies:
@@ -10105,6 +10169,10 @@ snapshots:
 
   node-addon-api@7.1.1: {}
 
+  node-cron@3.0.3:
+    dependencies:
+      uuid: 8.3.2
+
   node-exports-info@1.6.0:
     dependencies:
       array.prototype.flatmap: 1.3.3
@@ -11490,6 +11558,8 @@ snapshots:
       which-typed-array: 1.1.20
 
   uuid@10.0.0: {}
+
+  uuid@8.3.2: {}
 
   uuid@9.0.1: {}
 
