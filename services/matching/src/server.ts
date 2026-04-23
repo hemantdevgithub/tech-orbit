@@ -11,6 +11,7 @@ import { createRequirementApi } from "./lib/requirement-api.js";
 import { registerRequirementPublishedConsumer } from "./consumers/requirement-published.consumer.js";
 import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
 import { submissionRoutes } from "./routes/submission.routes.js";
+import { internalMatchingRoutes } from "./routes/internal.routes.js";
 import { createSubmissionService } from "./services/submission.service.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
@@ -61,6 +62,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   });
 
   await fastify.register(submissionRoutes, { submissionService });
+  await fastify.register(internalMatchingRoutes);
 
   // Event-driven: consume requirement.published.v1 and relay our own
   // outgoing events if RabbitMQ is wired.  In tests without RabbitMQ this
