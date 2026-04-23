@@ -11,6 +11,7 @@ import { createRequirementApi } from "./lib/requirement-api.js";
 import { createInterviewApi } from "./lib/interview-api.js";
 import { createPlacementService } from "./services/placement.service.js";
 import { placementRoutes } from "./routes/placement.routes.js";
+import { internalPlacementRoutes } from "./routes/internal.routes.js";
 import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
@@ -57,6 +58,7 @@ export async function buildServer(): Promise<FastifyInstance> {
     interviewApi,
   });
   await fastify.register(placementRoutes, { placementService });
+  await fastify.register(internalPlacementRoutes);
 
   if (config.RABBITMQ_URL) {
     const eventBus = createEventBus(
