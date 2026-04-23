@@ -202,8 +202,12 @@ export const authService = {
       },
     });
 
-    // Issue access token
-    const accessToken = await issueAccessToken(user.id, session.id, []);
+    // Issue access token — include only ACTIVE roles so pending-verification
+    // roles (CRM, SRM, MSME, INTERVIEWER) don't grant access until approved.
+    const activeRoles = user.roles
+      .filter((r) => r.status === "ACTIVE")
+      .map((r) => r.roleType);
+    const accessToken = await issueAccessToken(user.id, session.id, activeRoles);
 
     return {
       userId: user.id,
@@ -250,7 +254,10 @@ export const authService = {
       },
     });
 
-    const accessToken = await issueAccessToken(user.id, session.id, []);
+    const activeRolesAfter2fa = user.roles
+      .filter((r) => r.status === "ACTIVE")
+      .map((r) => r.roleType);
+    const accessToken = await issueAccessToken(user.id, session.id, activeRolesAfter2fa);
 
     return {
       userId: user.id,
@@ -295,9 +302,11 @@ export const authService = {
       throw new Error("Session replay detected — all sessions revoked");
     }
 
-    // Get user for roles
+    // Get user for roles — only include ACTIVE roles in the new token.
     const user = await userRepository.findByIdOrThrow(ctx, session.userId);
-    const roles = user.roles.map((r) => r.roleType);
+    const roles = user.roles
+      .filter((r) => r.status === "ACTIVE")
+      .map((r) => r.roleType);
 
     // Rotate refresh token
     const newRefreshToken = generateRefreshToken();
