@@ -3,11 +3,13 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import { createAuthMiddleware } from "@techorbit/auth-middleware";
+import { createEventBus } from "@techorbit/event-bus";
 import { getConfig } from "./config.js";
 import { requirementRoutes } from "./routes/requirement.routes.js";
 import { crmAttributionRoutes } from "./routes/crm-attribution.routes.js";
 import { createRequirementService } from "./services/requirement.service.js";
 import { createCrmAttributionService } from "./services/crm-attribution.service.js";
+import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
 
@@ -47,6 +49,25 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   await fastify.register(requirementRoutes, { requirementService });
   await fastify.register(crmAttributionRoutes, { crmAttributionService });
+
+  // Start the outbox relay if RabbitMQ is configured. Without RABBITMQ_URL
+  // (e.g. in local tests that don't need events), the relay stays off and
+  // outgoing_event rows just accumulate until a real bus becomes available.
+  if (config.RABBITMQ_URL) {
+    const eventBus = createEventBus(
+      { url: config.RABBITMQ_URL, exchange: "techorbit.events" },
+      config.SERVICE_NAME,
+    );
+    fastify.addHook("onReady", async () => {
+      await eventBus.connect();
+      startOutboxWorker(eventBus);
+      fastify.log.info("Outbox relay worker started");
+    });
+    fastify.addHook("onClose", async () => {
+      stopOutboxWorker();
+      await eventBus.disconnect();
+    });
+  }
 
   fastify.get("/health", async () => ({
     status: "ok",
