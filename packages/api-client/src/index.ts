@@ -15,3 +15,4 @@ export {
   createRequirementApiClient,
 } from "./requirement.js";
 export type { ClaimAttributionResult } from "./requirement.js";
+export { MatchingApiClient, createMatchingApiClient } from "./matching.js";

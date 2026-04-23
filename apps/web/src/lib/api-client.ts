@@ -1,11 +1,13 @@
 import {
   ApiClient,
   createAuthApiClient,
+  createMatchingApiClient,
   createProfileApiClient,
   createRequirementApiClient,
 } from "@techorbit/api-client";
 import type {
   AuthApiClient,
+  MatchingApiClient,
   ProfileApiClient,
   RequirementApiClient,
 } from "@techorbit/api-client";
@@ -19,6 +21,8 @@ const FILE_BASE_URL =
   process.env.NEXT_PUBLIC_FILE_URL ?? "http://localhost:3003";
 const REQUIREMENT_BASE_URL =
   process.env.NEXT_PUBLIC_REQUIREMENT_URL ?? "http://localhost:3005";
+const MATCHING_BASE_URL =
+  process.env.NEXT_PUBLIC_MATCHING_URL ?? "http://localhost:3006";
 
 let apiClientInstance: ApiClient | null = null;
 let authClientInstance: AuthApiClient | null = null;
@@ -27,6 +31,8 @@ let profileApiClientInstance: ApiClient | null = null;
 let fileApiClientInstance: ApiClient | null = null;
 let requirementApiClientInstance: ApiClient | null = null;
 let requirementClientInstance: RequirementApiClient | null = null;
+let matchingApiClientInstance: ApiClient | null = null;
+let matchingClientInstance: MatchingApiClient | null = null;
 
 export function getApiClient(): ApiClient {
   if (!apiClientInstance) {
@@ -113,6 +119,20 @@ export function getRequirementClient(): RequirementApiClient {
   return requirementClientInstance;
 }
 
+export function getMatchingApiClient(): ApiClient {
+  if (!matchingApiClientInstance) {
+    matchingApiClientInstance = makeServiceClient(MATCHING_BASE_URL);
+  }
+  return matchingApiClientInstance;
+}
+
+export function getMatchingClient(): MatchingApiClient {
+  if (!matchingClientInstance) {
+    matchingClientInstance = createMatchingApiClient(getMatchingApiClient());
+  }
+  return matchingClientInstance;
+}
+
 // Singleton reset for server-side / HMR
 export function resetApiClient(): void {
   apiClientInstance = null;
@@ -122,4 +142,6 @@ export function resetApiClient(): void {
   fileApiClientInstance = null;
   requirementApiClientInstance = null;
   requirementClientInstance = null;
+  matchingApiClientInstance = null;
+  matchingClientInstance = null;
 }

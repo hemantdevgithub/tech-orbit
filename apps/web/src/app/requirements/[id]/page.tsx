@@ -134,8 +134,11 @@ export default function RequirementDetailPage() {
   const isOwner = user?.id === req.createdByUserId;
   const isAttributedCrm = user?.id === req.attributedCrmId;
   const isCrm = user?.roles?.some((r) => r.roleType === "CRM");
-  const isCandidateOrSrm = user?.roles?.some(
-    (r) => r.roleType === "CANDIDATE" || r.roleType === "SRM",
+  const canSubmitCandidates = user?.roles?.some(
+    (r) =>
+      r.roleType === "CANDIDATE" ||
+      r.roleType === "SRM" ||
+      r.roleType === "MSME",
   );
   const locationLabel =
     req.locationType === "REMOTE"
@@ -291,18 +294,30 @@ export default function RequirementDetailPage() {
             </Card>
           )}
 
-          {isCandidateOrSrm && req.status === "OPEN" && (
+          {canSubmitCandidates && req.status === "OPEN" && (
             <Card>
               <CardHeader>
                 <CardTitle>Submit a candidate</CardTitle>
               </CardHeader>
               <CardBody>
-                <Button className="w-full" disabled title="Available in Sprint 4">
-                  Submit candidate
-                </Button>
-                <p className="text-xs text-sage-600 mt-2">
-                  Candidate submissions open in Sprint 4.
-                </p>
+                <Link href={`/requirements/${req.id}/submit`} className="block">
+                  <Button className="w-full">Submit candidate</Button>
+                </Link>
+              </CardBody>
+            </Card>
+          )}
+
+          {isOwner && req.status !== "DRAFT" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Shortlist</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <Link href={`/requirements/${req.id}/shortlist`} className="block">
+                  <Button variant="secondary" className="w-full">
+                    View shortlist
+                  </Button>
+                </Link>
               </CardBody>
             </Card>
           )}
