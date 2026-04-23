@@ -78,9 +78,9 @@ export async function createAuthMiddleware(
 // signing key).  Intentionally strict: SERVICE is not treated as a superset
 // of user roles; a SERVICE token can only hit endpoints explicitly guarded
 // by this middleware.
-export function requireServiceRole(_fastify: FastifyInstance) {
-  return async function (request: FastifyRequest, _reply: FastifyReply) {
-    await request.authenticate();
+export function requireServiceRole(fastify: FastifyInstance) {
+  return async function (request: FastifyRequest, reply: FastifyReply) {
+    await fastify.authenticate(request, reply);
     if (!request.auth.roles.includes("SERVICE")) {
       throw new UnauthorizedError("Service role required");
     }
