@@ -209,3 +209,30 @@ export type {
   SubmissionStatusChangedEvent,
   SubmissionWithdrawnEvent,
 } from "./matching.js";
+
+// ─── Interview types (re-exported from interview.ts) ─────────────────────────
+export {
+  ScheduleInterviewRequestSchema,
+  CancelInterviewSchema,
+  ScorecardRequestSchema,
+  InterviewFilterSchema,
+  InterviewResponseSchema,
+  InterviewListResponseSchema,
+  ScorecardResponseSchema,
+  InterviewScheduledEventSchema,
+  InterviewCompletedEventSchema,
+  ScorecardSubmittedEventSchema,
+} from "./interview.js";
+
+export type {
+  ScheduleInterviewRequest,
+  CancelInterview,
+  ScorecardRequest,
+  InterviewFilter,
+  InterviewResponse,
+  InterviewListResponse,
+  ScorecardResponse,
+  InterviewScheduledEvent,
+  InterviewCompletedEvent,
+  ScorecardSubmittedEvent,
+} from "./interview.js";

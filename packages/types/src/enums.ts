@@ -154,6 +154,20 @@ export const SubmissionStatus = z.enum([
 ]);
 export type SubmissionStatus = z.infer<typeof SubmissionStatus>;
 
+// Interview enums
+export const InterviewerRole = z.enum(["PLATFORM_INTERVIEWER", "CUSTOMER_INTERNAL"]);
+export type InterviewerRole = z.infer<typeof InterviewerRole>;
+
+export const Recommendation = z.enum([
+  "STRONG_YES",
+  "YES",
+  "WEAK_YES",
+  "WEAK_NO",
+  "NO",
+  "STRONG_NO",
+]);
+export type Recommendation = z.infer<typeof Recommendation>;
+
 // File enums
 export const FilePurpose = z.enum(["RESUME", "CONTRACT", "W9", "VIDEO_INTRO", "PROFILE_PHOTO"]);
 export type FilePurpose = z.infer<typeof FilePurpose>;
