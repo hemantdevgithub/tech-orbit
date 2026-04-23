@@ -36,3 +36,14 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Check OpenAPI specs are up to date
+        run: |
+          pnpm --filter @techorbit/identity openapi:generate
+          pnpm --filter @techorbit/profile openapi:generate
+          pnpm --filter @techorbit/requirement openapi:generate
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "OpenAPI specs are out of sync. Run pnpm openapi:generate in each service and commit."
+            git diff
+            exit 1
+          fi

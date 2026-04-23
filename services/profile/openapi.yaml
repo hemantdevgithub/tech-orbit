@@ -1,0 +1,1561 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Profile Service
+  version: 0.1.0
+  description: Candidate, customer company, MSME, and interviewer profile management.
+servers:
+  - url: http://localhost:3004
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    CandidateProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        headline:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        seniority:
+          type: string
+          nullable: true
+          enum:
+            - JUNIOR
+            - MID
+            - SENIOR
+            - STAFF
+            - PRINCIPAL
+            - PARTNER
+        skills:
+          type: array
+          items:
+            type: string
+        workAuthStatus:
+          type: string
+          nullable: true
+          enum:
+            - US_CITIZEN
+            - GREEN_CARD
+            - H1B
+            - L1
+            - OPT
+            - CPT
+            - TN
+            - OTHER
+        workAuthExpiry:
+          type: string
+          nullable: true
+        availableFrom:
+          type: string
+          nullable: true
+        rateMin:
+          type: integer
+          nullable: true
+        rateMax:
+          type: integer
+          nullable: true
+        preferRemote:
+          type: boolean
+        preferHybrid:
+          type: boolean
+        preferOnsite:
+          type: boolean
+        locationPreference:
+          type: string
+          nullable: true
+        resumeFileId:
+          type: string
+          nullable: true
+        backgroundCheckStatus:
+          type: string
+          enum:
+            - NOT_INITIATED
+            - INITIATED
+            - IN_PROGRESS
+            - CLEAR
+            - CONSIDER
+            - FAILED
+        kycVerified:
+          type: boolean
+        averageRating:
+          type: string
+          nullable: true
+        ratingCount:
+          type: integer
+        isProfileComplete:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - headline
+        - bio
+        - location
+        - seniority
+        - skills
+        - workAuthStatus
+        - workAuthExpiry
+        - availableFrom
+        - rateMin
+        - rateMax
+        - preferRemote
+        - preferHybrid
+        - preferOnsite
+        - locationPreference
+        - resumeFileId
+        - backgroundCheckStatus
+        - kycVerified
+        - averageRating
+        - ratingCount
+        - isProfileComplete
+        - createdAt
+        - updatedAt
+    UpdateCandidateProfile:
+      type: object
+      properties:
+        headline:
+          type: string
+          maxLength: 160
+        bio:
+          type: string
+          maxLength: 2000
+        location:
+          type: string
+        seniority:
+          type: string
+          enum:
+            - JUNIOR
+            - MID
+            - SENIOR
+            - STAFF
+            - PRINCIPAL
+            - PARTNER
+        skills:
+          type: array
+          items:
+            type: string
+            maxLength: 60
+          maxItems: 40
+        workAuthStatus:
+          type: string
+          enum:
+            - US_CITIZEN
+            - GREEN_CARD
+            - H1B
+            - L1
+            - OPT
+            - CPT
+            - TN
+            - OTHER
+        workAuthExpiry:
+          type: string
+          nullable: true
+          format: date-time
+        availableFrom:
+          type: string
+          nullable: true
+          format: date-time
+        rateMin:
+          type: integer
+          nullable: true
+          minimum: 0
+        rateMax:
+          type: integer
+          nullable: true
+          minimum: 0
+        preferRemote:
+          type: boolean
+        preferHybrid:
+          type: boolean
+        preferOnsite:
+          type: boolean
+        locationPreference:
+          type: string
+          nullable: true
+    CustomerCompanyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        primaryUserId:
+          type: string
+        legalName:
+          type: string
+        dba:
+          type: string
+          nullable: true
+        hasEin:
+          type: boolean
+        industry:
+          type: string
+          nullable: true
+        companySizeRange:
+          type: string
+          nullable: true
+          enum:
+            - SIZE_1_10
+            - SIZE_11_50
+            - SIZE_51_200
+            - SIZE_201_500
+            - SIZE_501_1000
+            - SIZE_1001_PLUS
+        website:
+          type: string
+          nullable: true
+        billingStreet:
+          type: string
+          nullable: true
+        billingCity:
+          type: string
+          nullable: true
+        billingState:
+          type: string
+          nullable: true
+        billingZip:
+          type: string
+          nullable: true
+        billingCountry:
+          type: string
+          nullable: true
+        defaultNetTerms:
+          type: integer
+        attributedCrmUserId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - PENDING
+            - ACTIVE
+            - SUSPENDED
+        isProfileComplete:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - primaryUserId
+        - legalName
+        - dba
+        - hasEin
+        - industry
+        - companySizeRange
+        - website
+        - billingStreet
+        - billingCity
+        - billingState
+        - billingZip
+        - billingCountry
+        - defaultNetTerms
+        - attributedCrmUserId
+        - status
+        - isProfileComplete
+        - createdAt
+        - updatedAt
+    CreateCustomerCompany:
+      type: object
+      properties:
+        legalName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        dba:
+          type: string
+          maxLength: 200
+        ein:
+          type: string
+          pattern: ^\d{2}-\d{7}$
+        industry:
+          type: string
+        companySizeRange:
+          type: string
+          enum:
+            - SIZE_1_10
+            - SIZE_11_50
+            - SIZE_51_200
+            - SIZE_201_500
+            - SIZE_501_1000
+            - SIZE_1001_PLUS
+        website:
+          type: string
+          format: uri
+        billingStreet:
+          type: string
+        billingCity:
+          type: string
+        billingState:
+          type: string
+        billingZip:
+          type: string
+        billingCountry:
+          type: string
+        defaultNetTerms:
+          type: integer
+          minimum: 0
+          default: 30
+      required:
+        - legalName
+    UpdateCustomerCompany:
+      type: object
+      properties:
+        legalName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        dba:
+          type: string
+          maxLength: 200
+        ein:
+          type: string
+          pattern: ^\d{2}-\d{7}$
+        industry:
+          type: string
+        companySizeRange:
+          type: string
+          enum:
+            - SIZE_1_10
+            - SIZE_11_50
+            - SIZE_51_200
+            - SIZE_201_500
+            - SIZE_501_1000
+            - SIZE_1001_PLUS
+        website:
+          type: string
+          format: uri
+        billingStreet:
+          type: string
+        billingCity:
+          type: string
+        billingState:
+          type: string
+        billingZip:
+          type: string
+        billingCountry:
+          type: string
+        defaultNetTerms:
+          type: integer
+          minimum: 0
+          default: 30
+    AttributeCrm:
+      type: object
+      properties:
+        crmUserId:
+          type: string
+          format: uuid
+      required:
+        - crmUserId
+    MsmeProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerUserId:
+          type: string
+        legalName:
+          type: string
+        dba:
+          type: string
+          nullable: true
+        hasEin:
+          type: boolean
+        gstin:
+          type: string
+          nullable: true
+        countryOfIncorp:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+        yearsInBusiness:
+          type: integer
+          nullable: true
+        totalEmployees:
+          type: integer
+          nullable: true
+        currentBenchSize:
+          type: integer
+        w9FileId:
+          type: string
+          nullable: true
+        primaryContactName:
+          type: string
+          nullable: true
+        primaryContactEmail:
+          type: string
+          nullable: true
+        primaryContactPhone:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - PENDING_VERIFICATION
+            - ACTIVE
+            - SUSPENDED
+        isProfileComplete:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - ownerUserId
+        - legalName
+        - dba
+        - hasEin
+        - gstin
+        - countryOfIncorp
+        - website
+        - yearsInBusiness
+        - totalEmployees
+        - currentBenchSize
+        - w9FileId
+        - primaryContactName
+        - primaryContactEmail
+        - primaryContactPhone
+        - status
+        - isProfileComplete
+        - createdAt
+        - updatedAt
+    CreateMsmeProfile:
+      type: object
+      properties:
+        legalName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        dba:
+          type: string
+          maxLength: 200
+        ein:
+          type: string
+          pattern: ^\d{2}-\d{7}$
+        gstin:
+          type: string
+        countryOfIncorp:
+          type: string
+        website:
+          type: string
+          format: uri
+        yearsInBusiness:
+          type: integer
+          minimum: 0
+        totalEmployees:
+          type: integer
+          minimum: 1
+        primaryContactName:
+          type: string
+        primaryContactEmail:
+          type: string
+          format: email
+        primaryContactPhone:
+          type: string
+      required:
+        - legalName
+    UpdateMsmeProfile:
+      type: object
+      properties:
+        legalName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        dba:
+          type: string
+          maxLength: 200
+        ein:
+          type: string
+          pattern: ^\d{2}-\d{7}$
+        gstin:
+          type: string
+        countryOfIncorp:
+          type: string
+        website:
+          type: string
+          format: uri
+        yearsInBusiness:
+          type: integer
+          minimum: 0
+        totalEmployees:
+          type: integer
+          minimum: 1
+        primaryContactName:
+          type: string
+        primaryContactEmail:
+          type: string
+          format: email
+        primaryContactPhone:
+          type: string
+    BenchEntryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        msmeId:
+          type: string
+        candidateUserId:
+          type: string
+        availability:
+          type: string
+          enum:
+            - AVAILABLE
+            - ENGAGED
+            - NOTICE_PERIOD
+            - UNAVAILABLE
+        expectedRateMin:
+          type: integer
+          nullable: true
+        expectedRateMax:
+          type: integer
+          nullable: true
+        skills:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - msmeId
+        - candidateUserId
+        - availability
+        - expectedRateMin
+        - expectedRateMax
+        - skills
+        - notes
+        - createdAt
+        - updatedAt
+    AddBenchEntry:
+      type: object
+      properties:
+        candidateUserId:
+          type: string
+          format: uuid
+        availability:
+          type: string
+          enum:
+            - AVAILABLE
+            - ENGAGED
+            - NOTICE_PERIOD
+            - UNAVAILABLE
+          default: AVAILABLE
+        expectedRateMin:
+          type: integer
+          minimum: 0
+        expectedRateMax:
+          type: integer
+          minimum: 0
+        skills:
+          type: array
+          items:
+            type: string
+          default: []
+        notes:
+          type: string
+          maxLength: 1000
+      required:
+        - candidateUserId
+    InterviewerProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        headline:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        currentRole:
+          type: string
+          nullable: true
+        currentCompany:
+          type: string
+          nullable: true
+        specializations:
+          type: array
+          items:
+            type: string
+        seniorityLevelsCoverable:
+          type: array
+          items:
+            type: string
+            enum:
+              - JUNIOR
+              - MID
+              - SENIOR
+              - STAFF
+              - PRINCIPAL
+              - PARTNER
+        interviewTypes:
+          type: array
+          items:
+            type: string
+            enum:
+              - TECHNICAL_CODING
+              - SYSTEM_DESIGN
+              - BEHAVIORAL
+              - CASE_STUDY
+              - DOMAIN_SPECIFIC
+        perInterviewFeeUsd:
+          type: integer
+          nullable: true
+        timezone:
+          type: string
+          nullable: true
+        videoIntroFileId:
+          type: string
+          nullable: true
+        linkedinVerified:
+          type: boolean
+        calendarProvider:
+          type: string
+          nullable: true
+          enum:
+            - GOOGLE
+            - OUTLOOK
+        stripeAccountId:
+          type: string
+          nullable: true
+        availabilitySlots:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              startTime:
+                type: string
+              endTime:
+                type: string
+              timezone:
+                type: string
+            required:
+              - date
+              - startTime
+              - endTime
+              - timezone
+        status:
+          type: string
+          enum:
+            - PENDING_VERIFICATION
+            - ACTIVE
+            - SUSPENDED
+        isProfileComplete:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - displayName
+        - headline
+        - bio
+        - currentRole
+        - currentCompany
+        - specializations
+        - seniorityLevelsCoverable
+        - interviewTypes
+        - perInterviewFeeUsd
+        - timezone
+        - videoIntroFileId
+        - linkedinVerified
+        - calendarProvider
+        - stripeAccountId
+        - availabilitySlots
+        - status
+        - isProfileComplete
+        - createdAt
+        - updatedAt
+    CreateInterviewerProfile:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 100
+        headline:
+          type: string
+          maxLength: 160
+        bio:
+          type: string
+          maxLength: 2000
+        currentRole:
+          type: string
+        currentCompany:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: string
+            maxLength: 60
+          maxItems: 20
+          default: []
+        seniorityLevelsCoverable:
+          type: array
+          items:
+            type: string
+            enum:
+              - JUNIOR
+              - MID
+              - SENIOR
+              - STAFF
+              - PRINCIPAL
+              - PARTNER
+          default: []
+        interviewTypes:
+          type: array
+          items:
+            type: string
+            enum:
+              - TECHNICAL_CODING
+              - SYSTEM_DESIGN
+              - BEHAVIORAL
+              - CASE_STUDY
+              - DOMAIN_SPECIFIC
+          default: []
+        perInterviewFeeUsd:
+          type: integer
+          minimum: 0
+        timezone:
+          type: string
+    UpdateInterviewerProfile:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 100
+        headline:
+          type: string
+          maxLength: 160
+        bio:
+          type: string
+          maxLength: 2000
+        currentRole:
+          type: string
+        currentCompany:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: string
+            maxLength: 60
+          maxItems: 20
+          default: []
+        seniorityLevelsCoverable:
+          type: array
+          items:
+            type: string
+            enum:
+              - JUNIOR
+              - MID
+              - SENIOR
+              - STAFF
+              - PRINCIPAL
+              - PARTNER
+          default: []
+        interviewTypes:
+          type: array
+          items:
+            type: string
+            enum:
+              - TECHNICAL_CODING
+              - SYSTEM_DESIGN
+              - BEHAVIORAL
+              - CASE_STUDY
+              - DOMAIN_SPECIFIC
+          default: []
+        perInterviewFeeUsd:
+          type: integer
+          minimum: 0
+        timezone:
+          type: string
+    SetAvailability:
+      type: object
+      properties:
+        slots:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              startTime:
+                type: string
+              endTime:
+                type: string
+              timezone:
+                type: string
+            required:
+              - date
+              - startTime
+              - endTime
+              - timezone
+          maxItems: 100
+      required:
+        - slots
+    FileUploadUrlRequest:
+      type: object
+      properties:
+        filename:
+          type: string
+          minLength: 1
+          maxLength: 255
+        contentType:
+          type: string
+        purpose:
+          type: string
+          enum:
+            - RESUME
+            - CONTRACT
+            - W9
+            - VIDEO_INTRO
+            - PROFILE_PHOTO
+        sizeBytes:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 52428800
+      required:
+        - filename
+        - contentType
+        - purpose
+        - sizeBytes
+    FileUploadUrlResponse:
+      type: object
+      properties:
+        fileId:
+          type: string
+        uploadUrl:
+          type: string
+        method:
+          type: string
+          enum:
+            - PUT
+            - POST
+        expiresAt:
+          type: string
+        isLocal:
+          type: boolean
+      required:
+        - fileId
+        - uploadUrl
+        - method
+        - expiresAt
+        - isLocal
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/candidates/me:
+    get:
+      tags:
+        - Candidate
+      summary: Get own candidate profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CandidateProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Candidate
+      summary: Update own candidate profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCandidateProfile"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CandidateProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/candidates/{userId}:
+    get:
+      tags:
+        - Candidate
+      summary: Get a candidate profile by userId (admin/CRM/SRM)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: userId
+          in: path
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CandidateProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/candidates/me/resume:
+    post:
+      tags:
+        - Candidate
+      summary: Request a presigned URL for resume upload
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FileUploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileUploadUrlResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/candidates/me/kyc/start:
+    post:
+      tags:
+        - Candidate
+      summary: Start KYC identity verification
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: KYC session started
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/customers/me:
+    get:
+      tags:
+        - Customer
+      summary: Get own customer company profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerCompanyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Customer
+      summary: Create customer company profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerCompany"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerCompanyResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Profile already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Customer
+      summary: Update customer company profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCustomerCompany"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerCompanyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/customers/{primaryUserId}:
+    get:
+      tags:
+        - Customer
+      summary: Get a customer profile by primaryUserId (admin/CRM view)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: primaryUserId
+          in: path
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerCompanyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/customers/{primaryUserId}/crm:
+    post:
+      tags:
+        - Customer
+      summary: Attribute a CRM to a customer company
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: primaryUserId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttributeCrm"
+      responses:
+        "200":
+          description: CRM attributed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerCompanyResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/msme/me:
+    get:
+      tags:
+        - MSME
+      summary: Get own MSME profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MsmeProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - MSME
+      summary: Create MSME profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMsmeProfile"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MsmeProfileResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - MSME
+      summary: Update MSME profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMsmeProfile"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MsmeProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/msme/{ownerUserId}:
+    get:
+      tags:
+        - MSME
+      summary: Get MSME profile by owner userId (admin/CRM view)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: ownerUserId
+          in: path
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MsmeProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/msme/me/bench:
+    get:
+      tags:
+        - MSME
+      summary: List bench entries
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Bench entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BenchEntryResponse"
+                required:
+                  - data
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - MSME
+      summary: Add a bench entry
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddBenchEntry"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenchEntryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/msme/me/bench/{entryId}:
+    delete:
+      tags:
+        - MSME
+      summary: Remove a bench entry
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: entryId
+          in: path
+      responses:
+        "200":
+          description: Deleted
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/interviewers/me:
+    get:
+      tags:
+        - Interviewer
+      summary: Get own interviewer profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewerProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Interviewer
+      summary: Create interviewer profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInterviewerProfile"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewerProfileResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Interviewer
+      summary: Update interviewer profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInterviewerProfile"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewerProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/interviewers/{userId}:
+    get:
+      tags:
+        - Interviewer
+      summary: Get interviewer profile by userId
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: userId
+          in: path
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewerProfileResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/interviewers/me/availability:
+    put:
+      tags:
+        - Interviewer
+      summary: Set availability slots
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetAvailability"
+      responses:
+        "200":
+          description: Updated
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
