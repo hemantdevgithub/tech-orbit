@@ -185,6 +185,31 @@ export type CommissionSlot = z.infer<typeof CommissionSlot>;
 export const CommissionCalc = z.enum(["PERCENT_OF_BILL", "FLAT_FEE", "RESIDUAL"]);
 export type CommissionCalc = z.infer<typeof CommissionCalc>;
 
+// Payments enums
+export const TimesheetStatus = z.enum([
+  "DRAFT",
+  "SUBMITTED",
+  "APPROVED",
+  "REJECTED",
+  "INVOICED",
+]);
+export type TimesheetStatus = z.infer<typeof TimesheetStatus>;
+
+export const InvoiceType = z.enum(["WEEKLY_HOURS", "INTERVIEWER_FEES"]);
+export type InvoiceType = z.infer<typeof InvoiceType>;
+
+export const InvoiceStatus = z.enum(["DRAFT", "SENT", "PAID", "OVERDUE", "SETTLED"]);
+export type InvoiceStatus = z.infer<typeof InvoiceStatus>;
+
+export const PayoutStatus = z.enum([
+  "PENDING",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+  "SETTLED",
+]);
+export type PayoutStatus = z.infer<typeof PayoutStatus>;
+
 // File enums
 export const FilePurpose = z.enum(["RESUME", "CONTRACT", "W9", "VIDEO_INTRO", "PROFILE_PHOTO"]);
 export type FilePurpose = z.infer<typeof FilePurpose>;

@@ -263,3 +263,46 @@ export type {
   PlacementCreatedEvent,
   PlacementEndedEvent,
 } from "./placement.js";
+
+// ─── Payments types (re-exported from payments.ts) ───────────────────────────
+export {
+  SubmitTimesheetRequestSchema,
+  UpdateTimesheetSchema,
+  RejectTimesheetSchema,
+  TimesheetFilterSchema,
+  TimesheetResponseSchema,
+  TimesheetListResponseSchema,
+  InvoiceFilterSchema,
+  InvoiceResponseSchema,
+  InvoiceListResponseSchema,
+  InvoiceLineItemResponseSchema,
+  PayoutFilterSchema,
+  CommissionPayoutResponseSchema,
+  CommissionPayoutListResponseSchema,
+  GenerateWeeklyInvoicesRequestSchema,
+  TimesheetSubmittedEventSchema,
+  TimesheetApprovedEventSchema,
+  InvoiceGeneratedEventSchema,
+  PayoutProcessedEventSchema,
+} from "./payments.js";
+
+export type {
+  SubmitTimesheetRequest,
+  UpdateTimesheet,
+  RejectTimesheet,
+  TimesheetFilter,
+  TimesheetResponse,
+  TimesheetListResponse,
+  InvoiceFilter,
+  InvoiceResponse,
+  InvoiceListResponse,
+  InvoiceLineItemResponse,
+  PayoutFilter,
+  CommissionPayoutResponse,
+  CommissionPayoutListResponse,
+  GenerateWeeklyInvoicesRequest,
+  TimesheetSubmittedEvent,
+  TimesheetApprovedEvent,
+  InvoiceGeneratedEvent,
+  PayoutProcessedEvent,
+} from "./payments.js";
