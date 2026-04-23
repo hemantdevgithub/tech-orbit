@@ -92,4 +92,23 @@ export const candidateRepository = {
       data: { isProfileComplete: true },
     });
   },
+
+  // Internal: paginated listing of complete candidate profiles, used by
+  // matching-svc to precompute scores when a requirement is published.
+  // No authz check here — callers gate access via requireServiceRole.
+  async listComplete(
+    cursor: string | null,
+    limit: number,
+  ): Promise<{ data: CandidateProfile[]; nextCursor: string | null; hasMore: boolean }> {
+    const rows = await prisma.candidateProfile.findMany({
+      where: { isProfileComplete: true },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    });
+    const hasMore = rows.length > limit;
+    const data = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore ? (data[data.length - 1]?.id ?? null) : null;
+    return { data, nextCursor, hasMore };
+  },
 };

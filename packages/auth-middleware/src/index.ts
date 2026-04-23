@@ -73,6 +73,20 @@ export async function createAuthMiddleware(
   );
 }
 
+// Role gate for service-to-service endpoints.  The caller must present a
+// SERVICE-role JWT (minted by a trusted sibling service with the shared
+// signing key).  Intentionally strict: SERVICE is not treated as a superset
+// of user roles; a SERVICE token can only hit endpoints explicitly guarded
+// by this middleware.
+export function requireServiceRole(_fastify: FastifyInstance) {
+  return async function (request: FastifyRequest, _reply: FastifyReply) {
+    await request.authenticate();
+    if (!request.auth.roles.includes("SERVICE")) {
+      throw new UnauthorizedError("Service role required");
+    }
+  };
+}
+
 export function requireRole(fastify: FastifyInstance, role: string) {
   return async function (request: FastifyRequest, _reply: FastifyReply) {
     await request.authenticate();

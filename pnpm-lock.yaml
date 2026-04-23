@@ -698,6 +698,9 @@ importers:
       fastify:
         specifier: ^4.26.2
         version: 4.29.1
+      jose:
+        specifier: ^5.2.4
+        version: 5.10.0
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -723,9 +726,6 @@ importers:
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
-      jose:
-        specifier: ^5.2.4
-        version: 5.10.0
       prisma:
         specifier: ^5.14.0
         version: 5.22.0

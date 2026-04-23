@@ -10,6 +10,7 @@ import { candidateRoutes } from "./routes/candidate.routes.js";
 import { msmeRoutes } from "./routes/msme.routes.js";
 import { customerRoutes } from "./routes/customer.routes.js";
 import { interviewerRoutes } from "./routes/interviewer.routes.js";
+import { internalRoutes } from "./routes/internal.routes.js";
 import { createMsmeService } from "./services/msme.service.js";
 import { createCustomerService } from "./services/customer.service.js";
 import { registerUserEventConsumers } from "./consumers/user-events.consumer.js";
@@ -55,6 +56,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await fastify.register(msmeRoutes, { msmeService });
   await fastify.register(customerRoutes, { customerService });
   await fastify.register(interviewerRoutes);
+  await fastify.register(internalRoutes);
 
   // Wire up event consumers if RabbitMQ is configured
   if (config.RABBITMQ_URL) {

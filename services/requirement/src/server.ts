@@ -7,6 +7,7 @@ import { createEventBus } from "@techorbit/event-bus";
 import { getConfig } from "./config.js";
 import { requirementRoutes } from "./routes/requirement.routes.js";
 import { crmAttributionRoutes } from "./routes/crm-attribution.routes.js";
+import { internalRequirementRoutes } from "./routes/internal.routes.js";
 import { createRequirementService } from "./services/requirement.service.js";
 import { createCrmAttributionService } from "./services/crm-attribution.service.js";
 import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
@@ -49,6 +50,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   await fastify.register(requirementRoutes, { requirementService });
   await fastify.register(crmAttributionRoutes, { crmAttributionService });
+  await fastify.register(internalRequirementRoutes);
 
   // Start the outbox relay if RabbitMQ is configured. Without RABBITMQ_URL
   // (e.g. in local tests that don't need events), the relay stays off and
