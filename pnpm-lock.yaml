@@ -628,21 +628,51 @@ importers:
 
   services/interview:
     dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^7.1.1
+        version: 7.3.4(zod@3.25.76)
       '@fastify/cors':
         specifier: ^9.0.1
         version: 9.0.1
       '@fastify/helmet':
         specifier: ^11.1.1
         version: 11.1.1
+      '@fastify/rate-limit':
+        specifier: ^9.1.0
+        version: 9.1.0
+      '@prisma/client':
+        specifier: ^5.14.0
+        version: 5.22.0(prisma@5.22.0)
+      '@techorbit/auth-middleware':
+        specifier: workspace:*
+        version: link:../../packages/auth-middleware
+      '@techorbit/db-client':
+        specifier: workspace:*
+        version: link:../../packages/db-client
       '@techorbit/errors':
         specifier: workspace:*
         version: link:../../packages/errors
+      '@techorbit/event-bus':
+        specifier: workspace:*
+        version: link:../../packages/event-bus
       '@techorbit/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@techorbit/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       fastify:
         specifier: ^4.26.2
         version: 4.29.1
+      jose:
+        specifier: ^5.2.4
+        version: 5.10.0
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
+      yaml:
+        specifier: ^2.4.5
+        version: 2.8.3
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -653,9 +683,21 @@ importers:
       '@techorbit/config-vitest':
         specifier: workspace:*
         version: link:../../packages/config/vitest
+      '@testcontainers/postgresql':
+        specifier: ^10.10.0
+        version: 10.28.0
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
+      prisma:
+        specifier: ^5.14.0
+        version: 5.22.0
+      testcontainers:
+        specifier: ^10.10.0
+        version: 10.28.0
       tsx:
         specifier: ^4.7.2
         version: 4.21.0
