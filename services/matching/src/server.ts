@@ -10,6 +10,8 @@ import { createProfileApi } from "./lib/profile-api.js";
 import { createRequirementApi } from "./lib/requirement-api.js";
 import { registerRequirementPublishedConsumer } from "./consumers/requirement-published.consumer.js";
 import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
+import { submissionRoutes } from "./routes/submission.routes.js";
+import { createSubmissionService } from "./services/submission.service.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
 
@@ -52,9 +54,13 @@ export async function buildServer(): Promise<FastifyInstance> {
     signer,
   );
 
-  // Decorate for later route registration — routes are added in Task 7.
-  fastify.decorate("profileApi", profileApi);
-  fastify.decorate("requirementApi", requirementApi);
+  const submissionService = createSubmissionService({
+    config,
+    profileApi,
+    requirementApi,
+  });
+
+  await fastify.register(submissionRoutes, { submissionService });
 
   // Event-driven: consume requirement.published.v1 and relay our own
   // outgoing events if RabbitMQ is wired.  In tests without RabbitMQ this
@@ -111,9 +117,3 @@ export async function buildServer(): Promise<FastifyInstance> {
   return fastify;
 }
 
-declare module "fastify" {
-  interface FastifyInstance {
-    profileApi: ReturnType<typeof createProfileApi>;
-    requirementApi: ReturnType<typeof createRequirementApi>;
-  }
-}
