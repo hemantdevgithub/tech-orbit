@@ -71,7 +71,15 @@ describe("types", () => {
 
   describe("RequirementStatus", () => {
     it("should validate all requirement statuses", () => {
-      const statuses = ["DRAFT", "OPEN", "FILLED", "CLOSED", "CANCELLED"] as const;
+      const statuses = [
+        "DRAFT",
+        "OPEN",
+        "INTERVIEWING",
+        "OFFER_EXTENDED",
+        "PLACED",
+        "CLOSED",
+        "CANCELLED",
+      ] as const;
       for (const status of statuses) {
         expect(RequirementStatus.parse(status)).toBe(status);
       }

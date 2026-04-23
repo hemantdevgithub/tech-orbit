@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import {
@@ -36,7 +36,6 @@ const STATUS_VARIANT: Record<
 
 export default function RequirementDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const { user } = useAuthStore();
 
   const [req, setReq] = useState<RequirementResponse | null>(null);
@@ -63,7 +62,6 @@ export default function RequirementDetailPage() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.id]);
 
   async function onPublish(): Promise<void> {

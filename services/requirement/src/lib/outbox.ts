@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "../generated/client/index.js";
-import { prisma } from "./prisma.js";
 
 // Event envelope matches packages/types EventEnvelopeSchema used by
 // profile-svc / requirement-svc. The relay worker consumes these rows

@@ -100,7 +100,9 @@ export default function BrowseRequirementsPage() {
   useEffect(() => {
     setCursor(null);
     void load(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deliberately depend on filter primitives + joined techStack so an array
+    // identity change (same values, new ref) doesn't retrigger. load() reads
+    // `rows` and `cursor` via closure but we're replacing both inside it.
   }, [status, seniority, locationType, techStack.join(","), search]);
 
   function toggleTech(skill: string): void {

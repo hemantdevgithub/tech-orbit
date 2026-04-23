@@ -82,8 +82,7 @@ export default function EditRequirementPage() {
       }
     }
     void run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params?.id]);
+  }, [params?.id, reset, router]);
 
   const watchTechStack = watch("techStack") ?? [];
   const watchLocationType = watch("locationType");
