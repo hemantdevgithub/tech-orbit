@@ -41,6 +41,10 @@ export class ProfileApiClient {
     return this.client.post("/api/v1/candidates/me/kyc/start");
   }
 
+  getCandidateByUserId(userId: string): Promise<CandidateProfileResponse> {
+    return this.client.get(`/api/v1/candidates/${userId}`);
+  }
+
   // ─── MSME ────────────────────────────────────────────────────────────────────
 
   getMsmeProfile(): Promise<MsmeProfileResponse> {
