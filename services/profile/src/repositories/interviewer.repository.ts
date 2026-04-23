@@ -102,4 +102,27 @@ export const interviewerRepository = {
       data: { isProfileComplete: true },
     });
   },
+
+  async list(opts: {
+    specializations?: string[];
+    cursor?: string | null;
+    limit: number;
+  }): Promise<{ data: InterviewerProfile[]; nextCursor: string | null; hasMore: boolean }> {
+    const where = {
+      status: "ACTIVE" as const,
+      isProfileComplete: true,
+      ...(opts.specializations?.length
+        ? { specializations: { hasSome: opts.specializations } }
+        : {}),
+    };
+    const rows = await prisma.interviewerProfile.findMany({
+      where,
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: opts.limit + 1,
+      ...(opts.cursor ? { cursor: { id: opts.cursor }, skip: 1 } : {}),
+    });
+    const hasMore = rows.length > opts.limit;
+    const data = hasMore ? rows.slice(0, opts.limit) : rows;
+    return { data, nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null, hasMore };
+  },
 };

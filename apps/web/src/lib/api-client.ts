@@ -1,12 +1,14 @@
 import {
   ApiClient,
   createAuthApiClient,
+  createInterviewApiClient,
   createMatchingApiClient,
   createProfileApiClient,
   createRequirementApiClient,
 } from "@techorbit/api-client";
 import type {
   AuthApiClient,
+  InterviewApiClient,
   MatchingApiClient,
   ProfileApiClient,
   RequirementApiClient,
@@ -23,6 +25,8 @@ const REQUIREMENT_BASE_URL =
   process.env.NEXT_PUBLIC_REQUIREMENT_URL ?? "http://localhost:3005";
 const MATCHING_BASE_URL =
   process.env.NEXT_PUBLIC_MATCHING_URL ?? "http://localhost:3006";
+const INTERVIEW_BASE_URL =
+  process.env.NEXT_PUBLIC_INTERVIEW_URL ?? "http://localhost:3007";
 
 let apiClientInstance: ApiClient | null = null;
 let authClientInstance: AuthApiClient | null = null;
@@ -33,6 +37,8 @@ let requirementApiClientInstance: ApiClient | null = null;
 let requirementClientInstance: RequirementApiClient | null = null;
 let matchingApiClientInstance: ApiClient | null = null;
 let matchingClientInstance: MatchingApiClient | null = null;
+let interviewApiClientInstance: ApiClient | null = null;
+let interviewClientInstance: InterviewApiClient | null = null;
 
 export function getApiClient(): ApiClient {
   if (!apiClientInstance) {
@@ -133,6 +139,20 @@ export function getMatchingClient(): MatchingApiClient {
   return matchingClientInstance;
 }
 
+export function getInterviewApiClient(): ApiClient {
+  if (!interviewApiClientInstance) {
+    interviewApiClientInstance = makeServiceClient(INTERVIEW_BASE_URL);
+  }
+  return interviewApiClientInstance;
+}
+
+export function getInterviewClient(): InterviewApiClient {
+  if (!interviewClientInstance) {
+    interviewClientInstance = createInterviewApiClient(getInterviewApiClient());
+  }
+  return interviewClientInstance;
+}
+
 // Singleton reset for server-side / HMR
 export function resetApiClient(): void {
   apiClientInstance = null;
@@ -144,4 +164,6 @@ export function resetApiClient(): void {
   requirementClientInstance = null;
   matchingApiClientInstance = null;
   matchingClientInstance = null;
+  interviewApiClientInstance = null;
+  interviewClientInstance = null;
 }

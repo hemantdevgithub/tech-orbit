@@ -8,6 +8,25 @@ import {
 import { interviewerService } from "../services/interviewer.service.js";
 
 export async function interviewerRoutes(fastify: FastifyInstance): Promise<void> {
+  // GET /api/v1/interviewers — browse active, complete interviewer profiles
+  fastify.get(
+    "/api/v1/interviewers",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const query = z.object({
+        specializations: z.string().optional(),
+        cursor: z.string().uuid().optional(),
+        limit: z.coerce.number().int().min(1).max(50).default(20),
+      }).parse(request.query);
+      const result = await interviewerService.listInterviewers({
+        specializations: query.specializations ? query.specializations.split(",") : undefined,
+        cursor: query.cursor,
+        limit: query.limit,
+      });
+      return reply.status(200).send(result);
+    },
+  );
+
   // GET /api/v1/interviewers/me
   fastify.get(
     "/api/v1/interviewers/me",

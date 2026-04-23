@@ -95,4 +95,25 @@ export const interviewerService = {
     if (!profile) return null;
     return toResponse(profile);
   },
+
+  async listInterviewers(opts: {
+    specializations?: string[];
+    cursor?: string;
+    limit: number;
+  }): Promise<{
+    data: InterviewerProfileResponse[];
+    nextCursor: string | null;
+    hasMore: boolean;
+  }> {
+    const result = await interviewerRepository.list({
+      specializations: opts.specializations,
+      cursor: opts.cursor ?? null,
+      limit: opts.limit,
+    });
+    return {
+      data: result.data.map(toResponse),
+      nextCursor: result.nextCursor,
+      hasMore: result.hasMore,
+    };
+  },
 };

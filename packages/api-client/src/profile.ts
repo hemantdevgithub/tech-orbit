@@ -103,6 +103,23 @@ export class ProfileApiClient {
     return this.client.put("/api/v1/interviewers/me/availability", data);
   }
 
+  listInterviewers(opts?: {
+    specializations?: string[];
+    cursor?: string;
+    limit?: number;
+  }): Promise<{ data: InterviewerProfileResponse[]; nextCursor: string | null; hasMore: boolean }> {
+    const params = new URLSearchParams();
+    if (opts?.specializations?.length) params.set("specializations", opts.specializations.join(","));
+    if (opts?.cursor) params.set("cursor", opts.cursor);
+    if (opts?.limit) params.set("limit", String(opts.limit));
+    const q = params.toString() ? `?${params.toString()}` : "";
+    return this.client.get(`/api/v1/interviewers${q}`);
+  }
+
+  getInterviewerByUserId(userId: string): Promise<InterviewerProfileResponse> {
+    return this.client.get(`/api/v1/interviewers/${userId}`);
+  }
+
   // ─── Files ───────────────────────────────────────────────────────────────────
 
   requestUploadUrl(data: FileUploadUrlRequest): Promise<FileUploadUrlResponse> {

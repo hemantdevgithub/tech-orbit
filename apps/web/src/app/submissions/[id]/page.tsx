@@ -369,6 +369,21 @@ export default function SubmissionDetailPage(): JSX.Element {
         </div>
 
         <div className="space-y-4">
+          {isOwner && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Interview</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <Link href={`/submissions/${submission.id}/schedule-interview`} className="block">
+                  <Button className="w-full" variant="primary">
+                    Schedule interview
+                  </Button>
+                </Link>
+              </CardBody>
+            </Card>
+          )}
+
           {isOwner && nextStatuses.length > 0 && (
             <Card>
               <CardHeader>
