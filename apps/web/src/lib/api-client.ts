@@ -3,6 +3,7 @@ import {
   createAuthApiClient,
   createInterviewApiClient,
   createMatchingApiClient,
+  createPlacementApiClient,
   createProfileApiClient,
   createRequirementApiClient,
 } from "@techorbit/api-client";
@@ -10,6 +11,7 @@ import type {
   AuthApiClient,
   InterviewApiClient,
   MatchingApiClient,
+  PlacementApiClient,
   ProfileApiClient,
   RequirementApiClient,
 } from "@techorbit/api-client";
@@ -27,6 +29,8 @@ const MATCHING_BASE_URL =
   process.env.NEXT_PUBLIC_MATCHING_URL ?? "http://localhost:3006";
 const INTERVIEW_BASE_URL =
   process.env.NEXT_PUBLIC_INTERVIEW_URL ?? "http://localhost:3007";
+const PLACEMENT_BASE_URL =
+  process.env.NEXT_PUBLIC_PLACEMENT_URL ?? "http://localhost:3008";
 
 let apiClientInstance: ApiClient | null = null;
 let authClientInstance: AuthApiClient | null = null;
@@ -39,6 +43,8 @@ let matchingApiClientInstance: ApiClient | null = null;
 let matchingClientInstance: MatchingApiClient | null = null;
 let interviewApiClientInstance: ApiClient | null = null;
 let interviewClientInstance: InterviewApiClient | null = null;
+let placementApiClientInstance: ApiClient | null = null;
+let placementClientInstance: PlacementApiClient | null = null;
 
 export function getApiClient(): ApiClient {
   if (!apiClientInstance) {
@@ -153,6 +159,20 @@ export function getInterviewClient(): InterviewApiClient {
   return interviewClientInstance;
 }
 
+export function getPlacementApiClient(): ApiClient {
+  if (!placementApiClientInstance) {
+    placementApiClientInstance = makeServiceClient(PLACEMENT_BASE_URL);
+  }
+  return placementApiClientInstance;
+}
+
+export function getPlacementClient(): PlacementApiClient {
+  if (!placementClientInstance) {
+    placementClientInstance = createPlacementApiClient(getPlacementApiClient());
+  }
+  return placementClientInstance;
+}
+
 // Singleton reset for server-side / HMR
 export function resetApiClient(): void {
   apiClientInstance = null;
@@ -166,4 +186,6 @@ export function resetApiClient(): void {
   matchingClientInstance = null;
   interviewApiClientInstance = null;
   interviewClientInstance = null;
+  placementApiClientInstance = null;
+  placementClientInstance = null;
 }

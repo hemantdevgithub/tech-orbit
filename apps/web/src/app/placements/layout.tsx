@@ -6,7 +6,7 @@ import { NavBar } from "@techorbit/ui";
 import { useAuthStore } from "@/store/auth.store";
 import { useAuth } from "@/lib/auth-hooks";
 
-export default function RequirementsLayout({ children }: { children: React.ReactNode }) {
+export default function PlacementsLayout({ children }: { children: React.ReactNode }) {
   const { user, status } = useAuthStore();
   const { fetchMe } = useAuth();
   const router = useRouter();
@@ -22,23 +22,16 @@ export default function RequirementsLayout({ children }: { children: React.React
   const activeRoles = user.roles.filter((r) => r.status === "ACTIVE");
   const navLinks = [
     { label: "Home", href: "/dashboard" },
-    { label: "Requirements", href: "/requirements", active: true },
+    { label: "Requirements", href: "/requirements" },
+    { label: "Placements", href: "/placements", active: true },
     ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "INTERVIEWER"].includes(r.roleType))
       ? [{ label: "Interviews", href: "/interviews" }]
-      : []),
-    { label: "Placements", href: "/placements" },
-    ...(activeRoles.some((r) => r.roleType === "CUSTOMER" || r.roleType === "CRM")
-      ? [{ label: "Interviewers", href: "/interviewers" }]
       : []),
   ];
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <NavBar
-        logoText="Techorbit"
-        userName={`${user.firstName} ${user.lastName}`}
-        links={navLinks}
-      />
+      <NavBar logoText="Techorbit" userName={`${user.firstName} ${user.lastName}`} links={navLinks} />
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">{children}</div>
     </div>
   );

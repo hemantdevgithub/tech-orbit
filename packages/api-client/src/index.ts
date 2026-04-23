@@ -17,3 +17,5 @@ export {
 export type { ClaimAttributionResult } from "./requirement.js";
 export { MatchingApiClient, createMatchingApiClient } from "./matching.js";
 export { InterviewApiClient, createInterviewApiClient } from "./interview.js";
+export { PlacementApiClient, createPlacementApiClient } from "./placement.js";
+export type { CreatePlacementResult } from "./placement.js";

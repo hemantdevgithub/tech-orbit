@@ -35,6 +35,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "INTERVIEWER"].includes(r.roleType))
       ? [{ label: "Interviews", href: "/interviews" }]
       : []),
+    ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"].includes(r.roleType))
+      ? [{ label: "Placements", href: "/placements" }]
+      : []),
     ...(activeRoles.some((r) => ["CUSTOMER", "CRM"].includes(r.roleType))
       ? [{ label: "Interviewers", href: "/interviewers" }]
       : []),

@@ -369,7 +369,25 @@ export default function SubmissionDetailPage(): JSX.Element {
         </div>
 
         <div className="space-y-4">
-          {isOwner && (
+          {isOwner && submission.status === "OFFER" && (
+            <Card className="border-success/30 bg-success/5">
+              <CardHeader>
+                <CardTitle>Ready to hire</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <p className="text-xs text-sage-600 mb-3">
+                  This candidate is at OFFER stage. Create the placement to activate the contract.
+                </p>
+                <Link href={`/submissions/${submission.id}/hire`} className="block">
+                  <Button className="w-full">
+                    Hire candidate →
+                  </Button>
+                </Link>
+              </CardBody>
+            </Card>
+          )}
+
+          {isOwner && submission.status !== "OFFER" && (
             <Card>
               <CardHeader>
                 <CardTitle>Interview</CardTitle>
