@@ -1,0 +1,117 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["matching"]
+}
+
+model Submission {
+  id                String           @id @default(uuid())
+  // No DB-level FK: requirement-svc and profile-svc own their data in separate
+  // schemas/services. Integrity enforced at the service layer.
+  requirementId     String           @map("requirement_id")
+  candidateId       String           @map("candidate_id")
+  submittedByUserId String           @map("submitted_by_user_id")
+  submitterRole     SubmitterRole    @map("submitter_role")
+  attributedSrmId   String?          @map("attributed_srm_id")
+  attributedMsmeId  String?          @map("attributed_msme_id")
+  status            SubmissionStatus @default(SUBMITTED)
+  matchScore        Int?             @map("match_score")
+  coverNote         String?          @map("cover_note") @db.Text
+  proposedBillRate  Decimal?         @map("proposed_bill_rate") @db.Decimal(10, 2)
+  withdrawnAt       DateTime?        @map("withdrawn_at")
+  withdrawnReason   String?          @map("withdrawn_reason")
+  rejectedAt        DateTime?        @map("rejected_at")
+  rejectionReason   String?          @map("rejection_reason")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  @@unique([requirementId, candidateId])
+  @@index([status, createdAt])
+  @@index([requirementId, status])
+  @@index([candidateId])
+  @@index([attributedSrmId])
+  @@index([attributedMsmeId])
+  @@map("submission")
+  @@schema("matching")
+}
+
+model MatchingSignal {
+  id              String   @id @default(uuid())
+  requirementId   String   @map("requirement_id")
+  candidateId     String   @map("candidate_id")
+  skillOverlap    Int      @map("skill_overlap")
+  seniorityMatch  Boolean  @map("seniority_match")
+  locationMatch   Boolean  @map("location_match")
+  workAuthMatch   Boolean  @map("work_auth_match")
+  candidateRating Decimal  @map("candidate_rating") @db.Decimal(3, 2)
+  matchScore      Int      @map("match_score")
+  computedAt      DateTime @default(now()) @map("computed_at")
+
+  @@unique([requirementId, candidateId])
+  @@index([requirementId, matchScore])
+  @@index([candidateId])
+  @@map("matching_signal")
+  @@schema("matching")
+}
+
+// Idempotency guard for event consumers: the first time we see an eventId,
+// we write a row; a duplicate delivery fails the unique constraint and the
+// handler can skip safely.
+model ProcessedEvent {
+  eventId     String   @id @map("event_id")
+  eventType   String   @map("event_type")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@map("processed_event")
+  @@schema("matching")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("matching")
+}
+
+enum SubmitterRole {
+  CANDIDATE_SELF
+  SRM
+  MSME
+
+  @@schema("matching")
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  SCREENING
+  INTERVIEWING
+  OFFER
+  PLACED
+  REJECTED
+  WITHDRAWN
+
+  @@schema("matching")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("matching")
+}
