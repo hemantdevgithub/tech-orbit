@@ -139,6 +139,21 @@ export type InterviewerStatus = z.infer<typeof InterviewerStatus>;
 export const MsmeStatus = z.enum(["PENDING_VERIFICATION", "ACTIVE", "SUSPENDED"]);
 export type MsmeStatus = z.infer<typeof MsmeStatus>;
 
+// Matching / submission enums
+export const SubmitterRole = z.enum(["CANDIDATE_SELF", "SRM", "MSME"]);
+export type SubmitterRole = z.infer<typeof SubmitterRole>;
+
+export const SubmissionStatus = z.enum([
+  "SUBMITTED",
+  "SCREENING",
+  "INTERVIEWING",
+  "OFFER",
+  "PLACED",
+  "REJECTED",
+  "WITHDRAWN",
+]);
+export type SubmissionStatus = z.infer<typeof SubmissionStatus>;
+
 // File enums
 export const FilePurpose = z.enum(["RESUME", "CONTRACT", "W9", "VIDEO_INTRO", "PROFILE_PHOTO"]);
 export type FilePurpose = z.infer<typeof FilePurpose>;

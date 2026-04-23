@@ -180,3 +180,32 @@ export type {
   RequirementPublishedEvent,
   RequirementClosedEvent,
 } from "./requirement.js";
+
+// ─── Matching / submission types (re-exported from matching.ts) ──────────────
+export {
+  SubmissionRequestSchema,
+  UpdateSubmissionStatusSchema,
+  WithdrawSubmissionSchema,
+  SubmissionFilterSchema,
+  SubmissionResponseSchema,
+  SubmissionListResponseSchema,
+  MatchingSignalResponseSchema,
+  MatchingSignalListResponseSchema,
+  SubmissionCreatedEventSchema,
+  SubmissionStatusChangedEventSchema,
+  SubmissionWithdrawnEventSchema,
+} from "./matching.js";
+
+export type {
+  SubmissionRequest,
+  UpdateSubmissionStatus,
+  WithdrawSubmission,
+  SubmissionFilter,
+  SubmissionResponse,
+  SubmissionListResponse,
+  MatchingSignalResponse,
+  MatchingSignalListResponse,
+  SubmissionCreatedEvent,
+  SubmissionStatusChangedEvent,
+  SubmissionWithdrawnEvent,
+} from "./matching.js";
