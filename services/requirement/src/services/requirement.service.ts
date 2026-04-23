@@ -10,7 +10,6 @@ import type { AuthContext } from "@techorbit/auth-middleware";
 import { ForbiddenError, NotFoundError, ValidationError } from "@techorbit/errors";
 import { prisma } from "../lib/prisma.js";
 import {
-  requirementAuth,
   requirementRepository,
 } from "../repositories/requirement.repository.js";
 import {
@@ -35,20 +34,11 @@ export function createRequirementService(config: Config) {
     ): Promise<RequirementResponse> {
       requireCustomerRole(ctx);
 
-      // Customers can only post requirements for their own company.
-      // Admins can post on behalf of any company.
-      const isAdmin = requirementAuth.hasAdminRole(ctx);
-      if (!isAdmin && body.customerCompanyId !== ctx.userId) {
-        throw new ForbiddenError(
-          "Cannot post requirements for another company",
-        );
-      }
-
-      // Validate the customer has a profile (and grab attributedCrmUserId
-      // for auto-attribution).
+      // Fetch the caller's CustomerCompanyProfile to get the canonical
+      // CustomerCompanyProfile.id (not User.id) for the FK.
       const customer = await getCustomerCompanyByUser(
         config.PROFILE_SVC_URL,
-        body.customerCompanyId,
+        ctx.userId,
         bearerToken,
       );
       if (!customer) {
@@ -58,7 +48,7 @@ export function createRequirementService(config: Config) {
       }
 
       const created = await requirementRepository.create({
-        customerCompanyId: body.customerCompanyId,
+        customerCompanyId: customer.id,
         createdByUserId: ctx.userId,
         attributedCrmId: customer.attributedCrmUserId,
         title: body.title,

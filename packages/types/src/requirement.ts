@@ -28,12 +28,12 @@ const BaseRequirementFieldsSchema = z.object({
   blindPosting: z.boolean().default(false),
 });
 
-export const CreateRequirementSchema = BaseRequirementFieldsSchema.extend({
-  customerCompanyId: z.string().uuid(),
-}).refine((data) => data.billRateMaxUsd >= data.billRateMinUsd, {
-  message: "billRateMaxUsd must be >= billRateMinUsd",
-  path: ["billRateMaxUsd"],
-});
+// customerCompanyId is NOT in the request body — the server derives it from
+// the caller's CustomerCompanyProfile.id via profile-svc.
+export const CreateRequirementSchema = BaseRequirementFieldsSchema.refine(
+  (data) => data.billRateMaxUsd >= data.billRateMinUsd,
+  { message: "billRateMaxUsd must be >= billRateMinUsd", path: ["billRateMaxUsd"] },
+);
 export type CreateRequirement = z.infer<typeof CreateRequirementSchema>;
 
 // Updating a draft: every field is optional. Zod's .partial() drops the

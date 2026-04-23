@@ -24,7 +24,7 @@ async function seedPublishedRequirement(
     method: "POST",
     url: "/api/v1/requirements",
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-    payload: JSON.stringify(buildRequirementPayload({ customerCompanyId: CUSTOMER })),
+    payload: JSON.stringify(buildRequirementPayload()),
   });
   const { id } = create.json() as { id: string };
   await server.inject({

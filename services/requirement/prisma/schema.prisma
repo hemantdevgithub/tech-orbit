@@ -12,6 +12,9 @@ datasource db {
 
 model Requirement {
   id                 String           @id @default(uuid())
+  // Stores CustomerCompanyProfile.id from profile-svc (not User.id).
+  // No DB-level FK because profile-svc lives in public schema (not a separate
+  // Postgres schema); constraint enforced at the service layer.
   customerCompanyId  String           @map("customer_company_id")
   createdByUserId    String           @map("created_by_user_id")
   attributedCrmId    String?          @map("attributed_crm_id")

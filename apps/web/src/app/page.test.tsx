@@ -1,10 +1,21 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import HomePage from './page';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render } from '@testing-library/react';
+import RootPage from './page';
 
-describe('HomePage', () => {
-  it('renders welcome message', () => {
-    render(<HomePage />);
-    expect(screen.getByText('Welcome to Techorbit')).toBeDefined();
+// Root page is a pure redirect — mock the deps it uses.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn() }),
+}));
+
+vi.mock('@/store/auth.store', () => ({
+  useAuthStore: () => ({ status: 'unauthenticated', user: null }),
+}));
+
+describe('RootPage', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('renders without crashing (returns null while redirecting)', () => {
+    const { container } = render(<RootPage />);
+    expect(container.firstChild).toBeNull();
   });
 });

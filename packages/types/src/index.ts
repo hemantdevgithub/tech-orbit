@@ -147,6 +147,8 @@ export type {
   FileResponse,
 } from "./profile.js";
 
+export { registry } from "./openapi-registry.js";
+
 export { TECH_STACK_OPTIONS } from "./tech-stack.js";
 export type { TechStack } from "./tech-stack.js";
 

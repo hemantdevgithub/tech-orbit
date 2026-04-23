@@ -73,16 +73,20 @@ export async function makeBearerToken(
 // Pass `attributedCrmUserId` to simulate a customer who already has a CRM
 // linked (triggers the auto-attribute branch).
 export function stubProfileCustomer(opts: {
+  id?: string;           // CustomerCompanyProfile.id; defaults to a deterministic UUID
   primaryUserId: string;
   attributedCrmUserId?: string | null;
   isProfileComplete?: boolean;
 }): ReturnType<typeof vi.spyOn> {
+  // Default company id: replace leading bytes of primaryUserId with "cc" prefix
+  // to make it a distinct but readable UUID in test output.
+  const companyId = opts.id ?? opts.primaryUserId.replace(/^.{8}/, "cccccccc");
   return vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
     const url = typeof input === "string" ? input : input.toString();
     if (url.includes("/api/v1/customers/")) {
       return new Response(
         JSON.stringify({
-          id: "customer-profile-" + opts.primaryUserId,
+          id: companyId,
           primaryUserId: opts.primaryUserId,
           attributedCrmUserId: opts.attributedCrmUserId ?? null,
           isProfileComplete: opts.isProfileComplete ?? true,
@@ -95,9 +99,10 @@ export function stubProfileCustomer(opts: {
 }
 
 // Minimal valid CreateRequirement payload — tests override specific fields.
+// Note: customerCompanyId is NOT in the payload; it is derived server-side
+// from the caller's CustomerCompanyProfile.id (Sprint 3.5 semantic fix).
 export function buildRequirementPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    customerCompanyId: "11111111-1111-1111-1111-111111111111",
     title: "Senior Java Developer",
     description: "Build and scale our payments platform. Java, Spring, AWS.",
     techStack: ["Java", "AWS"],

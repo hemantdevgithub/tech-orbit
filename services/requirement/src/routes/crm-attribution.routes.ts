@@ -36,8 +36,11 @@ export async function crmAttributionRoutes(
     "/api/v1/crm-attribution-requests",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
+      const bearerToken =
+        request.headers.authorization?.replace(/^bearer /i, "") ?? "";
       const response = await crmAttributionService.listPendingForCustomer(
         request.auth,
+        bearerToken,
       );
       return reply.status(200).send({ data: response });
     },

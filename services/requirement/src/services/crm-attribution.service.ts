@@ -12,12 +12,14 @@ import {
   toCrmAttributionResponse,
   toRequirementResponse,
 } from "../lib/response-mappers.js";
+import { getCustomerCompanyByUser } from "../lib/profile-api.js";
+import type { Config } from "../config.js";
 
 type AttributeCrmResult =
   | { kind: "attributed"; requirement: RequirementResponse }
   | { kind: "pending"; request: CrmAttributionRequestResponse };
 
-export function createCrmAttributionService() {
+export function createCrmAttributionService(config: Config) {
   return {
     // A CRM claims attribution on a published requirement.
     //
@@ -110,11 +112,21 @@ export function createCrmAttributionService() {
 
     async listPendingForCustomer(
       ctx: AuthContext,
+      bearerToken: string,
     ): Promise<CrmAttributionRequestResponse[]> {
-      // Customer viewing their own pending queue.
+      const company = await getCustomerCompanyByUser(
+        config.PROFILE_SVC_URL,
+        ctx.userId,
+        bearerToken,
+      );
+      if (!company) {
+        throw new ForbiddenError(
+          "Cannot list attribution requests without a customer company profile",
+        );
+      }
       const records = await crmAttributionRepository.listForCustomer(
         ctx,
-        ctx.userId,
+        company.id,
         "PENDING",
       );
       return records.map(toCrmAttributionResponse);

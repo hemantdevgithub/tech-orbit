@@ -45,7 +45,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   });
 
   const requirementService = createRequirementService(config);
-  const crmAttributionService = createCrmAttributionService();
+  const crmAttributionService = createCrmAttributionService(config);
 
   await fastify.register(requirementRoutes, { requirementService });
   await fastify.register(crmAttributionRoutes, { crmAttributionService });

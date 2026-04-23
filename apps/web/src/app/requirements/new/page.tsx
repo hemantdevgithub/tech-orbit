@@ -22,7 +22,6 @@ import {
 import type { LocationType, Seniority, WorkAuthStatus } from "@techorbit/types";
 import { getRequirementClient } from "@/lib/api-client";
 import { ApiError } from "@techorbit/api-client";
-import { useAuthStore } from "@/store/auth.store";
 
 type FormData = z.infer<typeof CreateRequirementSchema>;
 
@@ -53,7 +52,6 @@ const WORK_AUTH_OPTIONS: { value: WorkAuthStatus; label: string }[] = [
 
 export default function NewRequirementPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
   const [serverError, setServerError] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [techInput, setTechInput] = useState("");
@@ -70,7 +68,6 @@ export default function NewRequirementPage() {
   } = useForm<FormData>({
     resolver: zodResolver(CreateRequirementSchema),
     defaultValues: {
-      customerCompanyId: user?.id ?? "",
       techStack: [],
       workAuthPrefs: [],
       openings: 1,
