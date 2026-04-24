@@ -18,7 +18,15 @@ export async function timesheetRoutes(
 
   fastify.post(
     "/api/v1/timesheets",
-    { preHandler: [fastify.authenticate] },
+    {
+      preHandler: [fastify.authenticate],
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: "1 minute",
+        },
+      },
+    },
     async (request, reply) => {
       const body = SubmitTimesheetRequestSchema.parse(request.body);
       const result = await timesheetService.submitTimesheet(request.auth, body);
@@ -48,7 +56,15 @@ export async function timesheetRoutes(
 
   fastify.patch(
     "/api/v1/timesheets/:id",
-    { preHandler: [fastify.authenticate] },
+    {
+      preHandler: [fastify.authenticate],
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: "1 minute",
+        },
+      },
+    },
     async (request, reply) => {
       const { id } = IdParams.parse(request.params);
       const body = UpdateTimesheetSchema.parse(request.body);
@@ -59,7 +75,15 @@ export async function timesheetRoutes(
 
   fastify.post(
     "/api/v1/timesheets/:id/approve",
-    { preHandler: [fastify.authenticate] },
+    {
+      preHandler: [fastify.authenticate],
+      config: {
+        rateLimit: {
+          max: 120,
+          timeWindow: "1 minute",
+        },
+      },
+    },
     async (request, reply) => {
       const { id } = IdParams.parse(request.params);
       const result = await timesheetService.approveTimesheet(request.auth, id);
@@ -69,7 +93,15 @@ export async function timesheetRoutes(
 
   fastify.post(
     "/api/v1/timesheets/:id/reject",
-    { preHandler: [fastify.authenticate] },
+    {
+      preHandler: [fastify.authenticate],
+      config: {
+        rateLimit: {
+          max: 120,
+          timeWindow: "1 minute",
+        },
+      },
+    },
     async (request, reply) => {
       const { id } = IdParams.parse(request.params);
       const body = RejectTimesheetSchema.parse(request.body);

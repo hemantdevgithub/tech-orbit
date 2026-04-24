@@ -33,7 +33,15 @@ export async function invoiceRoutes(
 
   fastify.post(
     "/api/v1/invoices/:id/mark-paid",
-    { preHandler: [fastify.authenticate] },
+    {
+      preHandler: [fastify.authenticate],
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: "1 minute",
+        },
+      },
+    },
     async (request, reply) => {
       const { id } = IdParams.parse(request.params);
       const result = await invoiceService.markInvoicePaid(request.auth, id);
