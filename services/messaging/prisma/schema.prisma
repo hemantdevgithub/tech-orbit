@@ -1,0 +1,77 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["messaging"]
+}
+
+model Thread {
+  id             String            @id @default(uuid())
+  contextType    ThreadContextType @map("context_type")
+  contextId      String            @map("context_id")
+  participantIds String[]          @map("participant_ids")
+  subject        String?
+  lastMessageAt  DateTime          @default(now()) @map("last_message_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  messages Message[]
+
+  @@index([contextType, contextId])
+  @@index([lastMessageAt])
+  @@map("thread")
+  @@schema("messaging")
+}
+
+model Message {
+  id           String   @id @default(uuid())
+  threadId     String   @map("thread_id")
+  senderUserId String   @map("sender_user_id")
+  content      String   @db.Text
+  readBy       String[] @default([]) @map("read_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+  @@map("message")
+  @@schema("messaging")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("messaging")
+}
+
+enum ThreadContextType {
+  REQUIREMENT
+  SUBMISSION
+  INTERVIEW
+  PLACEMENT
+  GENERAL
+
+  @@schema("messaging")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("messaging")
+}

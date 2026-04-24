@@ -8,4 +8,6 @@ export { InfoStrip } from "./components/info-strip.js";
 export { ProgressCard } from "./components/progress-card.js";
 export { NavBar } from "./components/nav-bar.js";
 export { PageHeader } from "./components/page-header.js";
+export { StarRating } from "./components/star-rating.js";
+export type { StarRatingProps } from "./components/star-rating.js";
 export { cn } from "./lib/utils.js";

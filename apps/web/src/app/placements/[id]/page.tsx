@@ -18,6 +18,7 @@ import {
   PlatformFeeBreakdown,
   computePlatformBreakdown,
 } from "@/components/placement/platform-fee-breakdown";
+import { UserRatingsPanel } from "@/components/user-ratings-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -313,8 +314,40 @@ export default function PlacementDetailPage() {
               </Link>
             </CardBody>
           </Card>
+
+          {placement.status === "ENDED_COMPLETED" &&
+            (user?.id === placement.createdByUserId || user?.id === placement.candidateId) && (
+              <Card>
+                <CardHeader><CardTitle>Rate this placement</CardTitle></CardHeader>
+                <CardBody className="text-sm space-y-2">
+                  <p className="text-sage-600">
+                    Share how the engagement went. Public on their profile.
+                  </p>
+                  <Link
+                    href={`/placements/${placement.id}/rate`}
+                    className="inline-block text-forest-700 font-semibold hover:underline"
+                  >
+                    Rate {user?.id === placement.createdByUserId ? "candidate" : "customer"} →
+                  </Link>
+                </CardBody>
+              </Card>
+            )}
         </div>
       </div>
+
+      {/* Counterparty ratings */}
+      {(user?.id === placement.createdByUserId || user?.id === placement.candidateId) && (
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <UserRatingsPanel
+            userId={placement.candidateId}
+            title={user?.id === placement.candidateId ? "Your ratings" : "Candidate ratings"}
+          />
+          <UserRatingsPanel
+            userId={placement.createdByUserId}
+            title={user?.id === placement.createdByUserId ? "Your ratings" : "Customer ratings"}
+          />
+        </div>
+      )}
     </div>
   );
 }

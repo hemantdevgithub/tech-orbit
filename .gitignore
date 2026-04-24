@@ -8,6 +8,16 @@ build/
 .env
 .env.local
 .env.*.local
+.env.production
+
+# Prisma generated clients (regenerated on build)
+services/*/src/generated/
+
+# Vitest stray temp files
+**/vitest.config.ts.timestamp-*.mjs
+
+# Claude Code local settings (per-machine overrides)
+.claude/settings.local.json
 
 # Next.js
 .next/

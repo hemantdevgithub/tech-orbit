@@ -1,0 +1,244 @@
+# Production compose. 14 services + web + postgres + redis + rabbitmq + nginx.
+#
+# Usage (single-host):
+#   cp .env.production.example .env.production
+#   # fill in every CHANGE_ME
+#   docker compose -f docker-compose.prod.yml --env-file .env.production build
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+#
+# The shared service config (image-build + env + restart policy + depends_on)
+# lives in two YAML anchors (*svc-base and *node-service) to keep the file DRY.
+
+x-svc-base: &svc-base
+  restart: unless-stopped
+  networks: [techorbit]
+  depends_on:
+    postgres: { condition: service_healthy }
+    rabbitmq: { condition: service_healthy }
+
+x-node-env: &node-env
+  NODE_ENV: production
+  DATABASE_URL: ${DATABASE_URL}
+  RABBITMQ_URL: ${RABBITMQ_URL}
+  JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+  JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+
+networks:
+  techorbit:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+
+services:
+  # ─── Infrastructure ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [techorbit]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks: [techorbit]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks: [techorbit]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    networks: [techorbit]
+    # Dev-mode mock for outbound email. In prod, remove this and point
+    # SENDGRID_API_KEY / SMTP_URL at a real provider.
+
+  # ─── Application services ──────────────────────────────────────────────────
+  identity:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/identity/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3002
+      FIELD_ENCRYPTION_KEK_V1: ${FIELD_ENCRYPTION_KEK_V1}
+
+  profile:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/profile/Dockerfile.prod }
+    environment: { <<: *node-env, PORT: 3004 }
+
+  file:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/file/Dockerfile.prod }
+    environment: { <<: *node-env, PORT: 3003 }
+
+  requirement:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/requirement/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3005
+      PROFILE_SVC_URL: http://profile:3004
+
+  matching:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/matching/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3006
+      PROFILE_SVC_URL: http://profile:3004
+      REQUIREMENT_SVC_URL: http://requirement:3005
+
+  interview:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/interview/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3007
+      MATCHING_SVC_URL: http://matching:3006
+      REQUIREMENT_SVC_URL: http://requirement:3005
+
+  placement:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/placement/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3008
+      PROFILE_SVC_URL: http://profile:3004
+      REQUIREMENT_SVC_URL: http://requirement:3005
+      MATCHING_SVC_URL: http://matching:3006
+      INTERVIEW_SVC_URL: http://interview:3007
+
+  payments:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/payments/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3009
+      PROFILE_SVC_URL: http://profile:3004
+      PLACEMENT_SVC_URL: http://placement:3008
+      INTERVIEW_SVC_URL: http://interview:3007
+      ENABLE_CRON_JOBS: "true"
+
+  messaging:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/messaging/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3010
+      PLACEMENT_SVC_URL: http://placement:3008
+      REQUIREMENT_SVC_URL: http://requirement:3005
+      MATCHING_SVC_URL: http://matching:3006
+      INTERVIEW_SVC_URL: http://interview:3007
+
+  notification:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/notification/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3011
+      EMAIL_FROM: ${EMAIL_FROM}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+
+  rating:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/rating/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3012
+      PLACEMENT_SVC_URL: http://placement:3008
+
+  audit:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/audit/Dockerfile.prod }
+    environment: { <<: *node-env, PORT: 3013 }
+
+  admin:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/admin/Dockerfile.prod }
+    environment:
+      <<: *node-env
+      PORT: 3014
+      IDENTITY_SVC_URL: http://identity:3002
+      PLACEMENT_SVC_URL: http://placement:3008
+      PAYMENTS_SVC_URL: http://payments:3009
+
+  api-gateway:
+    <<: *svc-base
+    build: { context: ., dockerfile: services/api-gateway/Dockerfile.prod }
+    environment: { <<: *node-env, PORT: 3001 }
+
+  # ─── Web app ───────────────────────────────────────────────────────────────
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile.prod }
+    restart: unless-stopped
+    networks: [techorbit]
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_IDENTITY_URL: ${NEXT_PUBLIC_IDENTITY_URL}
+      NEXT_PUBLIC_PROFILE_URL: ${NEXT_PUBLIC_PROFILE_URL}
+      NEXT_PUBLIC_FILE_URL: ${NEXT_PUBLIC_FILE_URL}
+      NEXT_PUBLIC_REQUIREMENT_URL: ${NEXT_PUBLIC_REQUIREMENT_URL}
+      NEXT_PUBLIC_MATCHING_URL: ${NEXT_PUBLIC_MATCHING_URL}
+      NEXT_PUBLIC_INTERVIEW_URL: ${NEXT_PUBLIC_INTERVIEW_URL}
+      NEXT_PUBLIC_PLACEMENT_URL: ${NEXT_PUBLIC_PLACEMENT_URL}
+      NEXT_PUBLIC_PAYMENTS_URL: ${NEXT_PUBLIC_PAYMENTS_URL}
+      NEXT_PUBLIC_MESSAGING_URL: ${NEXT_PUBLIC_MESSAGING_URL}
+      NEXT_PUBLIC_NOTIFICATION_URL: ${NEXT_PUBLIC_NOTIFICATION_URL}
+      NEXT_PUBLIC_RATING_URL: ${NEXT_PUBLIC_RATING_URL}
+      NEXT_PUBLIC_ADMIN_URL: ${NEXT_PUBLIC_ADMIN_URL}
+    depends_on:
+      - identity
+      - profile
+      - requirement
+      - matching
+      - interview
+      - placement
+      - payments
+      - messaging
+      - notification
+      - rating
+      - admin
+
+  # ─── Reverse proxy (TLS termination) ───────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks: [techorbit]
+    depends_on: [web]

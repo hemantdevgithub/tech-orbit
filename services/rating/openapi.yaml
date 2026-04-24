@@ -1,0 +1,337 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Rating Service
+  version: 0.1.0
+  description: Post-placement ratings (customer ↔ candidate). Emits
+    rating.submitted.v1 via the transactional outbox.
+servers:
+  - url: http://localhost:3012
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    SubmitRatingRequest:
+      type: object
+      properties:
+        placementId:
+          type: string
+          format: uuid
+        ratedUserId:
+          type: string
+          format: uuid
+        overallScore:
+          type: integer
+          minimum: 1
+          maximum: 5
+        technicalScore:
+          type: integer
+          minimum: 1
+          maximum: 5
+        communicationScore:
+          type: integer
+          minimum: 1
+          maximum: 5
+        professionalismScore:
+          type: integer
+          minimum: 1
+          maximum: 5
+        feedback:
+          type: string
+          maxLength: 500
+      required:
+        - placementId
+        - ratedUserId
+        - overallScore
+    RatingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          format: uuid
+        ratedUserId:
+          type: string
+          format: uuid
+        raterUserId:
+          type: string
+          format: uuid
+        raterRole:
+          type: string
+          enum:
+            - CUSTOMER
+            - CANDIDATE
+        overallScore:
+          type: integer
+          minimum: 1
+          maximum: 5
+        technicalScore:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+        communicationScore:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+        professionalismScore:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+        feedback:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - placementId
+        - ratedUserId
+        - raterUserId
+        - raterRole
+        - overallScore
+        - technicalScore
+        - communicationScore
+        - professionalismScore
+        - feedback
+        - createdAt
+    RatingListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              placementId:
+                type: string
+                format: uuid
+              ratedUserId:
+                type: string
+                format: uuid
+              raterUserId:
+                type: string
+                format: uuid
+              raterRole:
+                type: string
+                enum:
+                  - CUSTOMER
+                  - CANDIDATE
+              overallScore:
+                type: integer
+                minimum: 1
+                maximum: 5
+              technicalScore:
+                type: integer
+                nullable: true
+                minimum: 1
+                maximum: 5
+              communicationScore:
+                type: integer
+                nullable: true
+                minimum: 1
+                maximum: 5
+              professionalismScore:
+                type: integer
+                nullable: true
+                minimum: 1
+                maximum: 5
+              feedback:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - placementId
+              - ratedUserId
+              - raterUserId
+              - raterRole
+              - overallScore
+              - technicalScore
+              - communicationScore
+              - professionalismScore
+              - feedback
+              - createdAt
+        averageOverall:
+          type: number
+          nullable: true
+        averageTechnical:
+          type: number
+          nullable: true
+        averageCommunication:
+          type: number
+          nullable: true
+        averageProfessionalism:
+          type: number
+          nullable: true
+        totalCount:
+          type: integer
+          minimum: 0
+      required:
+        - data
+        - averageOverall
+        - averageTechnical
+        - averageCommunication
+        - averageProfessionalism
+        - totalCount
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/ratings:
+    post:
+      tags:
+        - Ratings
+      summary: Submit a rating on a completed placement
+      security:
+        - bearerAuth: []
+      description: Only the customer (creator) or candidate on the placement can rate
+        their counterpart. Placement must be ENDED_COMPLETED. One rating per
+        placement per rater (unique constraint).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitRatingRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatingResponse"
+        "400":
+          description: Validation error (self-rating, wrong target, placement not ended)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Caller is not a participant on the placement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Placement not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Already rated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Ratings
+      summary: List ratings for a user or placement
+      security:
+        - bearerAuth: []
+      description: Exactly one of userId or placementId must be provided. userId
+        response includes aggregate averages.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: userId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: placementId
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List with aggregates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatingListResponse"
+        "400":
+          description: Validation error — userId or placementId required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"

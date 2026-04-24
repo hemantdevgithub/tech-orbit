@@ -1,0 +1,503 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Messaging Service
+  version: 0.1.0
+  description: In-platform messaging with context-aware participant resolution
+    (requirements, submissions, interviews, placements, general). Emits
+    message.sent.v1 via the transactional outbox for notification fan-out.
+servers:
+  - url: http://localhost:3010
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    CreateThreadRequest:
+      type: object
+      properties:
+        contextType:
+          type: string
+          enum:
+            - REQUIREMENT
+            - SUBMISSION
+            - INTERVIEW
+            - PLACEMENT
+            - GENERAL
+        contextId:
+          type: string
+          format: uuid
+        subject:
+          type: string
+          maxLength: 200
+        initialMessage:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - contextType
+        - contextId
+        - initialMessage
+    SendMessageRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+      required:
+        - content
+    ThreadWithMessagesResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        contextType:
+          type: string
+          enum:
+            - REQUIREMENT
+            - SUBMISSION
+            - INTERVIEW
+            - PLACEMENT
+            - GENERAL
+        contextId:
+          type: string
+          format: uuid
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        subject:
+          type: string
+          nullable: true
+        lastMessageAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        unreadCount:
+          type: integer
+          minimum: 0
+        lastMessagePreview:
+          type: string
+          nullable: true
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              threadId:
+                type: string
+                format: uuid
+              senderUserId:
+                type: string
+                format: uuid
+              content:
+                type: string
+              readBy:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - threadId
+              - senderUserId
+              - content
+              - readBy
+              - createdAt
+      required:
+        - id
+        - contextType
+        - contextId
+        - participantIds
+        - subject
+        - lastMessageAt
+        - createdAt
+        - unreadCount
+        - lastMessagePreview
+        - messages
+    ThreadListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              contextType:
+                type: string
+                enum:
+                  - REQUIREMENT
+                  - SUBMISSION
+                  - INTERVIEW
+                  - PLACEMENT
+                  - GENERAL
+              contextId:
+                type: string
+                format: uuid
+              participantIds:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+              subject:
+                type: string
+                nullable: true
+              lastMessageAt:
+                type: string
+                format: date-time
+              createdAt:
+                type: string
+                format: date-time
+              unreadCount:
+                type: integer
+                minimum: 0
+              lastMessagePreview:
+                type: string
+                nullable: true
+            required:
+              - id
+              - contextType
+              - contextId
+              - participantIds
+              - subject
+              - lastMessageAt
+              - createdAt
+              - unreadCount
+              - lastMessagePreview
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        threadId:
+          type: string
+          format: uuid
+        senderUserId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        readBy:
+          type: array
+          items:
+            type: string
+            format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - threadId
+        - senderUserId
+        - content
+        - readBy
+        - createdAt
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/threads:
+    post:
+      tags:
+        - Threads
+      summary: Create a new thread
+      security:
+        - bearerAuth: []
+      description: Participants are resolved from the context. For domain contexts
+        (REQUIREMENT/SUBMISSION/INTERVIEW/PLACEMENT) the participants are the
+        caller plus primary parties on the resource. For GENERAL the caller
+        supplies participantIds.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateThreadRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadWithMessagesResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Caller is not a participant for this context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Context not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Threads
+      summary: List threads the current user participates in
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - REQUIREMENT
+              - SUBMISSION
+              - INTERVIEW
+              - PLACEMENT
+              - GENERAL
+          required: false
+          name: contextType
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: contextId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/threads/{id}:
+    get:
+      tags:
+        - Threads
+      summary: Get a thread with its messages
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadWithMessagesResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a participant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/threads/{id}/messages:
+    post:
+      tags:
+        - Threads
+      summary: Send a message to a thread
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "201":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a participant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/threads/{id}/mark-read:
+    post:
+      tags:
+        - Threads
+      summary: Mark every message in the thread as read for the current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Updated count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedCount:
+                    type: integer
+                required:
+                  - updatedCount
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a participant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"

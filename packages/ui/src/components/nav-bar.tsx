@@ -13,6 +13,12 @@ export interface NavBarProps extends React.HTMLAttributes<HTMLElement> {
   userName?: string;
   userAvatar?: string;
   notificationCount?: number;
+  // Render a live widget (e.g. NotificationBell with unread count) in place of the
+  // default static bell. When provided, replaces the built-in NotificationBell slot.
+  rightSlot?: React.ReactNode;
+  // Replace the user-menu button with a live widget (dropdown, auth-aware).
+  // When provided, takes the place of the default static UserMenu.
+  userSlot?: React.ReactNode;
 }
 
 function NotificationBell({ count = 0 }: { count?: number }) {
@@ -62,6 +68,8 @@ const NavBar = React.forwardRef<HTMLElement, NavBarProps>(
       links = [],
       userName,
       notificationCount = 0,
+      rightSlot,
+      userSlot,
       ...props
     },
     ref
@@ -104,9 +112,9 @@ const NavBar = React.forwardRef<HTMLElement, NavBarProps>(
 
         {/* Right side */}
         <div className="flex items-center gap-1">
-          <NotificationBell count={notificationCount} />
+          {rightSlot ?? <NotificationBell count={notificationCount} />}
           <div className="w-px h-5 bg-forest-700 mx-1" />
-          <UserMenu name={userName} />
+          {userSlot ?? <UserMenu name={userName} />}
         </div>
       </div>
     </header>

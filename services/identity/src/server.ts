@@ -26,6 +26,7 @@ import {
   meRoutes,
 } from "./routes/auth.routes.js";
 import { googleOAuthRoutes, linkedinOAuthRoutes } from "./routes/oauth.routes.js";
+import { internalIdentityRoutes } from "./routes/internal.routes.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
 
@@ -94,6 +95,9 @@ export async function buildServer(): Promise<FastifyInstance> {
   // OAuth routes
   await fastify.register(googleOAuthRoutes);
   await fastify.register(linkedinOAuthRoutes);
+
+  // Internal (SERVICE-role) routes for admin-svc
+  await fastify.register(internalIdentityRoutes);
 
   // Health endpoint
   fastify.get("/health", async () => {

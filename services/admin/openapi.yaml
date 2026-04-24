@@ -1,0 +1,1308 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Admin Service
+  version: 0.1.0
+  description: "Admin console backend: role-application approval/rejection,
+    dispute resolution, user management, audit logs, dashboard metrics."
+servers:
+  - url: http://localhost:3014
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    RoleApplicationRequest:
+      type: object
+      properties:
+        requestedRole:
+          type: string
+          enum:
+            - CRM
+            - SRM
+            - MSME
+            - INTERVIEWER
+        applicationData:
+          type: object
+          additionalProperties:
+            nullable: true
+          default: {}
+      required:
+        - requestedRole
+    ApproveApplication:
+      type: object
+      properties:
+        reviewNotes:
+          type: string
+          maxLength: 2000
+    RejectApplication:
+      type: object
+      properties:
+        reviewNotes:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - reviewNotes
+    RoleApplicationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        requestedRole:
+          type: string
+          enum:
+            - CRM
+            - SRM
+            - MSME
+            - INTERVIEWER
+        status:
+          type: string
+          enum:
+            - PENDING
+            - APPROVED
+            - REJECTED
+        applicationData:
+          type: object
+          additionalProperties:
+            nullable: true
+        reviewedBy:
+          type: string
+          nullable: true
+          format: uuid
+        reviewedAt:
+          type: string
+          nullable: true
+          format: date-time
+        reviewNotes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - requestedRole
+        - status
+        - applicationData
+        - reviewedBy
+        - reviewedAt
+        - reviewNotes
+        - createdAt
+        - updatedAt
+    RoleApplicationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              userId:
+                type: string
+                format: uuid
+              requestedRole:
+                type: string
+                enum:
+                  - CRM
+                  - SRM
+                  - MSME
+                  - INTERVIEWER
+              status:
+                type: string
+                enum:
+                  - PENDING
+                  - APPROVED
+                  - REJECTED
+              applicationData:
+                type: object
+                additionalProperties:
+                  nullable: true
+              reviewedBy:
+                type: string
+                nullable: true
+                format: uuid
+              reviewedAt:
+                type: string
+                nullable: true
+                format: date-time
+              reviewNotes:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - userId
+              - requestedRole
+              - status
+              - applicationData
+              - reviewedBy
+              - reviewedAt
+              - reviewNotes
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    CreateDisputeRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - TIMESHEET
+            - COMMISSION
+            - PAYMENT
+            - CONDUCT
+            - OTHER
+        contextType:
+          type: string
+          minLength: 1
+          maxLength: 40
+        contextId:
+          type: string
+          format: uuid
+        respondent:
+          type: string
+          format: uuid
+        description:
+          type: string
+          minLength: 10
+          maxLength: 4000
+      required:
+        - type
+        - contextType
+        - contextId
+        - description
+    ResolveDispute:
+      type: object
+      properties:
+        resolution:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required:
+        - resolution
+    AddDisputeNote:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required:
+        - content
+    DisputeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - TIMESHEET
+            - COMMISSION
+            - PAYMENT
+            - CONDUCT
+            - OTHER
+        contextType:
+          type: string
+        contextId:
+          type: string
+          format: uuid
+        raisedBy:
+          type: string
+          format: uuid
+        respondent:
+          type: string
+          nullable: true
+          format: uuid
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - OPEN
+            - UNDER_REVIEW
+            - RESOLVED
+            - CLOSED
+        resolution:
+          type: string
+          nullable: true
+        resolvedBy:
+          type: string
+          nullable: true
+          format: uuid
+        resolvedAt:
+          type: string
+          nullable: true
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        notes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              disputeId:
+                type: string
+                format: uuid
+              authorId:
+                type: string
+                format: uuid
+              content:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - disputeId
+              - authorId
+              - content
+              - createdAt
+          default: []
+      required:
+        - id
+        - type
+        - contextType
+        - contextId
+        - raisedBy
+        - respondent
+        - description
+        - status
+        - resolution
+        - resolvedBy
+        - resolvedAt
+        - createdAt
+        - updatedAt
+    DisputeNoteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        disputeId:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - disputeId
+        - authorId
+        - content
+        - createdAt
+    DisputeListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              type:
+                type: string
+                enum:
+                  - TIMESHEET
+                  - COMMISSION
+                  - PAYMENT
+                  - CONDUCT
+                  - OTHER
+              contextType:
+                type: string
+              contextId:
+                type: string
+                format: uuid
+              raisedBy:
+                type: string
+                format: uuid
+              respondent:
+                type: string
+                nullable: true
+                format: uuid
+              description:
+                type: string
+              status:
+                type: string
+                enum:
+                  - OPEN
+                  - UNDER_REVIEW
+                  - RESOLVED
+                  - CLOSED
+              resolution:
+                type: string
+                nullable: true
+              resolvedBy:
+                type: string
+                nullable: true
+                format: uuid
+              resolvedAt:
+                type: string
+                nullable: true
+                format: date-time
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - type
+              - contextType
+              - contextId
+              - raisedBy
+              - respondent
+              - description
+              - status
+              - resolution
+              - resolvedBy
+              - resolvedAt
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    SuspendUser:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        duration:
+          type: string
+          enum:
+            - SEVEN_DAYS
+            - THIRTY_DAYS
+            - NINETY_DAYS
+            - INDEFINITE
+      required:
+        - reason
+        - duration
+    BanUser:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - reason
+    UserSearchResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              email:
+                type: string
+              firstName:
+                type: string
+                nullable: true
+              lastName:
+                type: string
+                nullable: true
+              status:
+                type: string
+                enum:
+                  - ACTIVE
+                  - SUSPENDED
+                  - BANNED
+                  - DELETED
+              roles:
+                type: array
+                items:
+                  type: string
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - email
+              - firstName
+              - lastName
+              - status
+              - roles
+              - createdAt
+      required:
+        - data
+    AuditLogListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              action:
+                type: string
+              performedBy:
+                type: string
+                format: uuid
+              targetId:
+                type: string
+                nullable: true
+              targetType:
+                type: string
+                nullable: true
+              metadata:
+                type: object
+                nullable: true
+                additionalProperties:
+                  nullable: true
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - action
+              - performedBy
+              - targetId
+              - targetType
+              - metadata
+              - createdAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    DashboardMetricsResponse:
+      type: object
+      properties:
+        pendingApplications:
+          type: integer
+        openDisputes:
+          type: integer
+        activeUsers:
+          type: integer
+        totalPlacements:
+          type: integer
+        gmvThisMonthUsd:
+          type: number
+      required:
+        - pendingApplications
+        - openDisputes
+        - activeUsers
+        - totalPlacements
+        - gmvThisMonthUsd
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/role-applications:
+    post:
+      tags:
+        - Role Applications
+      summary: Submit a role application
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleApplicationRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleApplicationResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Role Applications
+      summary: "List applications (admin: all, user: own)"
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - PENDING
+              - APPROVED
+              - REJECTED
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            enum:
+              - CRM
+              - SRM
+              - MSME
+              - INTERVIEWER
+          required: false
+          name: requestedRole
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: userId
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleApplicationListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/role-applications/{id}:
+    get:
+      tags:
+        - Role Applications
+      summary: Get an application
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleApplicationResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/role-applications/{id}/approve:
+    post:
+      tags:
+        - Role Applications
+      summary: Approve a pending application (ADMIN)
+      security:
+        - bearerAuth: []
+      description: Calls identity-svc internal endpoint to grant the role, then writes
+        audit log and emits role.approved.v1.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveApplication"
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleApplicationResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not in PENDING status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/role-applications/{id}/reject:
+    post:
+      tags:
+        - Role Applications
+      summary: Reject a pending application (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectApplication"
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleApplicationResponse"
+        "400":
+          description: Review notes required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not in PENDING status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/disputes:
+    post:
+      tags:
+        - Disputes
+      summary: Create a dispute
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDisputeRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisputeResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Disputes
+      summary: "List disputes (admin: all, user: own)"
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - OPEN
+              - UNDER_REVIEW
+              - RESOLVED
+              - CLOSED
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            enum:
+              - TIMESHEET
+              - COMMISSION
+              - PAYMENT
+              - CONDUCT
+              - OTHER
+          required: false
+          name: type
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: raisedBy
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisputeListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/disputes/{id}:
+    get:
+      tags:
+        - Disputes
+      summary: Get a dispute with notes
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Dispute
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisputeResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/disputes/{id}/notes:
+    post:
+      tags:
+        - Disputes
+      summary: Add a note to a dispute
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddDisputeNote"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisputeNoteResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a participant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Dispute resolved/closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/disputes/{id}/resolve:
+    post:
+      tags:
+        - Disputes
+      summary: Resolve a dispute (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveDispute"
+      responses:
+        "200":
+          description: Resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisputeResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Already resolved/closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/admin/users/{userId}/suspend:
+    post:
+      tags:
+        - User Management
+      summary: Suspend a user (ADMIN)
+      security:
+        - bearerAuth: []
+      description: Calls identity-svc to flip User.status=SUSPENDED and revoke active
+        sessions.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: userId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuspendUser"
+      responses:
+        "200":
+          description: Suspended
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/admin/users/{userId}/ban:
+    post:
+      tags:
+        - User Management
+      summary: Ban a user (ADMIN)
+      security:
+        - bearerAuth: []
+      description: Same effect as suspend at the auth layer; the distinction is
+        preserved in the audit log and user.banned.v1 event.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: userId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanUser"
+      responses:
+        "200":
+          description: Banned
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/admin/users/{userId}/reset-password:
+    post:
+      tags:
+        - User Management
+      summary: Trigger password reset email (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: userId
+          in: path
+      responses:
+        "200":
+          description: Email sent
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/admin/users/search:
+    get:
+      tags:
+        - User Management
+      summary: Search users by email/name (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          required: true
+          name: q
+          in: query
+      responses:
+        "200":
+          description: Results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSearchResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/admin/audit-logs:
+    get:
+      tags:
+        - Audit
+      summary: List audit log entries (ADMIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+          required: false
+          name: action
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: performedBy
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: targetId
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: from
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: to
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/admin/dashboard/metrics:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard metrics (ADMIN)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardMetricsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"

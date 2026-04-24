@@ -29,7 +29,8 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.45.0",
+    "@next/bundle-analyzer": "^16.2.4",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/typography": "^0.5.19",
     "@techorbit/config-eslint": "workspace:*",
     "@techorbit/config-tsconfig": "workspace:*",

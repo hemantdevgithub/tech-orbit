@@ -1,0 +1,41 @@
+# Production build for @techorbit/web (Next.js 14 App Router).
+#
+# Uses Next's standalone output (configured in next.config.js) so the runtime
+# image only carries the server entry + .next/static + public/ + a trimmed
+# node_modules — no pnpm, no workspace, no source tree.
+
+# syntax=docker/dockerfile:1
+
+ARG NODE_VERSION=20-alpine
+
+FROM node:${NODE_VERSION} AS deps
+WORKDIR /repo
+RUN corepack enable pnpm
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc* ./
+COPY packages ./packages
+COPY services ./services
+COPY apps ./apps
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS builder
+WORKDIR /repo
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm --filter @techorbit/web build
+
+FROM node:${NODE_VERSION} AS runtime
+RUN apk add --no-cache tini && addgroup -g 1001 -S app && adduser -S app -u 1001
+WORKDIR /app
+# Next standalone emits at .next/standalone (root ./server.js + trimmed node_modules)
+# and keeps .next/static as a separate directory that must be copied to the same
+# relative path inside the runtime image.
+COPY --from=builder --chown=app:app /repo/apps/web/.next/standalone ./
+COPY --from=builder --chown=app:app /repo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=app:app /repo/apps/web/public ./apps/web/public
+USER app
+EXPOSE 3000
+ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:'+process.env.PORT+'/login', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "apps/web/server.js"]

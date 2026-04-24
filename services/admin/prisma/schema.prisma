@@ -1,0 +1,149 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["admin"]
+}
+
+model RoleApplication {
+  id              String            @id @default(uuid())
+  userId          String            @map("user_id")
+  requestedRole   ApplicationRole   @map("requested_role")
+  status          ApplicationStatus @default(PENDING)
+  applicationData Json              @map("application_data")
+  reviewedBy      String?           @map("reviewed_by")
+  reviewedAt      DateTime?         @map("reviewed_at")
+  reviewNotes     String?           @map("review_notes") @db.Text
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([requestedRole, status])
+  @@map("role_application")
+  @@schema("admin")
+}
+
+model Dispute {
+  id          String        @id @default(uuid())
+  type        DisputeType
+  contextType String        @map("context_type") // "TIMESHEET", "COMMISSION_PAYOUT", "PLACEMENT", etc.
+  contextId   String        @map("context_id")
+  raisedBy    String        @map("raised_by")
+  respondent  String?
+  description String        @db.Text
+  status      DisputeStatus @default(OPEN)
+  resolution  String?       @db.Text
+  resolvedBy  String?       @map("resolved_by")
+  resolvedAt  DateTime?     @map("resolved_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  notes DisputeNote[]
+
+  @@index([status, createdAt])
+  @@index([raisedBy])
+  @@index([respondent])
+  @@index([contextType, contextId])
+  @@map("dispute")
+  @@schema("admin")
+}
+
+model DisputeNote {
+  id        String   @id @default(uuid())
+  disputeId String   @map("dispute_id")
+  authorId  String   @map("author_id")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  @@index([disputeId, createdAt])
+  @@map("dispute_note")
+  @@schema("admin")
+}
+
+// Append-only audit log for admin actions. Rows are never updated or deleted;
+// enforced at the service layer (no update/delete methods exist in the repo).
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  performedBy String   @map("performed_by")
+  targetId    String?  @map("target_id")
+  targetType  String?  @map("target_type")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([performedBy, createdAt])
+  @@index([targetId])
+  @@index([action, createdAt])
+  @@map("audit_log")
+  @@schema("admin")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("admin")
+}
+
+// Application roles a user can apply for. Excludes CUSTOMER/CANDIDATE
+// (self-serve at signup) and ADMIN (seeded, not applied for).
+enum ApplicationRole {
+  CRM
+  SRM
+  MSME
+  INTERVIEWER
+
+  @@schema("admin")
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("admin")
+}
+
+enum DisputeType {
+  TIMESHEET
+  COMMISSION
+  PAYMENT
+  CONDUCT
+  OTHER
+
+  @@schema("admin")
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+
+  @@schema("admin")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("admin")
+}

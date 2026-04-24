@@ -1,10 +1,13 @@
 "use client";
 
 import { Card, CardBody, CardHeader, CardTitle, Button } from "@techorbit/ui";
+import { CustomerEarningsCards } from "./earnings-cards";
 
 export function CustomerDashboard() {
   return (
     <div className="space-y-6">
+      <CustomerEarningsCards />
+
       {/* Post requirement */}
       <Card>
         <CardHeader>

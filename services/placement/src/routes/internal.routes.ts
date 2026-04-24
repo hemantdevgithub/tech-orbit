@@ -83,4 +83,14 @@ export async function internalPlacementRoutes(
       });
     },
   );
+
+  // GET /api/v1/internal/metrics/total-placements — for the admin dashboard
+  fastify.get(
+    "/api/v1/internal/metrics/total-placements",
+    { preHandler: [gate] },
+    async (_request, reply) => {
+      const value = await prisma.placement.count();
+      return reply.status(200).send({ value });
+    },
+  );
 }

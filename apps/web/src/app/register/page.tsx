@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +10,24 @@ import { Button } from "@techorbit/ui";
 import { AuthCard } from "@/components/auth/auth-card";
 import { FormField } from "@/components/auth/form-field";
 import { useAuth } from "@/lib/auth-hooks";
+
+type Role = "CUSTOMER" | "CANDIDATE" | "CRM" | "SRM" | "MSME" | "INTERVIEWER";
+
+const ROLES: { value: Role; label: string; description: string; icon: string }[] = [
+  { value: "CUSTOMER", label: "Customer", description: "I'm hiring IT consultants for my company.", icon: "🏢" },
+  { value: "CANDIDATE", label: "Candidate", description: "I'm a consultant looking for work.", icon: "👤" },
+  { value: "CRM", label: "Client Relationship Manager", description: "I bring clients to the platform.", icon: "🤝" },
+  { value: "SRM", label: "Senior Recruitment Manager", description: "I source and submit candidates.", icon: "🔍" },
+  { value: "MSME", label: "Vendor (MSME)", description: "I manage a team of benched consultants.", icon: "🏗" },
+  { value: "INTERVIEWER", label: "Interviewer", description: "I conduct technical interviews.", icon: "🎯" },
+];
+
+const ONBOARDING_ROUTES: Partial<Record<Role, string>> = {
+  CUSTOMER: "/onboarding/customer",
+  CANDIDATE: "/onboarding/candidate",
+  MSME: "/onboarding/msme",
+  INTERVIEWER: "/onboarding/interviewer",
+};
 
 const registerSchema = z
   .object({
@@ -26,6 +45,11 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [roleError, setRoleError] = useState<string | null>(null);
+  const [addingRole, setAddingRole] = useState(false);
+  const router = useRouter();
+
   const { register: registerField, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
@@ -34,9 +58,25 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data: RegisterFormData) => {
+    if (!selectedRole) {
+      setRoleError("Please select a role to continue.");
+      return;
+    }
+    setRoleError(null);
     auth.clearError();
     try {
       await auth.register(data.email, data.password, data.firstName, data.lastName);
+      // Auto-add the chosen role and push into role-specific onboarding.
+      setAddingRole(true);
+      try {
+        await auth.addRole(selectedRole);
+      } catch {
+        // If role add fails, user is still registered — let them add via profile.
+      } finally {
+        setAddingRole(false);
+      }
+      const nextRoute = ONBOARDING_ROUTES[selectedRole] ?? "/dashboard";
+      router.replace(nextRoute);
     } catch {
       // Error handled in store
     }
@@ -45,7 +85,7 @@ export default function RegisterPage() {
   return (
     <AuthCard
       title="Create account"
-      subtitle="Join Techorbit to connect with IT opportunities"
+      subtitle="Join Techorbit — pick the role that fits what you want to do."
       footer={
         <p className="text-sm text-sage-600 text-center">
           Already have an account?{" "}
@@ -60,6 +100,38 @@ export default function RegisterPage() {
           {auth.error}
         </div>
       )}
+      {roleError && (
+        <div className="mb-4 p-3 rounded-lg bg-warning/10 text-warning text-sm border border-warning/30" role="alert">
+          {roleError}
+        </div>
+      )}
+
+      {/* Role picker */}
+      <div className="mb-6">
+        <label className="text-sm font-medium text-forest-800 block mb-2">I&apos;m joining as…</label>
+        <div className="grid grid-cols-2 gap-2">
+          {ROLES.map((r) => (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => { setSelectedRole(r.value); setRoleError(null); }}
+              className={`text-left rounded-lg border p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-forest-500/40 ${
+                selectedRole === r.value
+                  ? "border-forest-700 bg-forest-50 ring-1 ring-forest-700"
+                  : "border-surface-border bg-surface hover:border-forest-300"
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                <span className="text-lg shrink-0">{r.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-forest-900">{r.label}</p>
+                  <p className="text-[11px] text-sage-600 mt-0.5 leading-snug">{r.description}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="grid grid-cols-2 gap-4">
@@ -69,7 +141,6 @@ export default function RegisterPage() {
             type="text"
             placeholder="Jane"
             autoComplete="given-name"
-            autoFocus
             required
             register={registerField}
             errors={errors}
@@ -135,9 +206,13 @@ export default function RegisterPage() {
           variant="primary"
           size="lg"
           className="w-full"
-          disabled={auth.status === "loading" || isSubmitting}
+          disabled={auth.status === "loading" || isSubmitting || addingRole}
         >
-          {auth.status === "loading" ? "Creating account..." : "Create account"}
+          {addingRole
+            ? "Setting up your role…"
+            : auth.status === "loading"
+              ? "Creating account..."
+              : `Create account${selectedRole ? ` as ${ROLES.find((r) => r.value === selectedRole)?.label}` : ""}`}
         </Button>
       </form>
     </AuthCard>

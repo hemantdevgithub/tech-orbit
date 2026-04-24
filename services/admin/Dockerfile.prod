@@ -1,0 +1,45 @@
+# Production build for @techorbit/admin.
+#
+# Multi-stage: deps → build (with prisma generate + tsc) → deploy (pnpm deploy
+# produces a self-contained service artifact) → runtime (minimal alpine + tini).
+
+# syntax=docker/dockerfile:1
+
+ARG NODE_VERSION=20-alpine
+
+# ─── Stage 1: install all workspace deps ─────────────────────────────────────
+FROM node:${NODE_VERSION} AS deps
+WORKDIR /repo
+RUN corepack enable pnpm
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc* ./
+# Copy every package.json so pnpm resolves the full workspace graph.
+COPY packages ./packages
+COPY services ./services
+COPY apps ./apps
+RUN pnpm install --frozen-lockfile
+
+# ─── Stage 2: build the service (prisma generate + tsc) ──────────────────────
+FROM deps AS builder
+WORKDIR /repo
+# Source files (node_modules already present from deps stage)
+COPY . .
+RUN pnpm --filter @techorbit/admin exec prisma generate \
+ && pnpm --filter @techorbit/admin build
+
+# ─── Stage 3: produce a minimal deployable artifact ──────────────────────────
+FROM builder AS deploy
+WORKDIR /repo
+RUN pnpm --filter @techorbit/admin --prod deploy /out
+
+# ─── Stage 4: runtime ────────────────────────────────────────────────────────
+FROM node:${NODE_VERSION} AS runtime
+RUN apk add --no-cache tini && addgroup -g 1001 -S app && adduser -S app -u 1001
+WORKDIR /app
+COPY --from=deploy --chown=app:app /out ./
+USER app
+EXPOSE 3014
+ENV NODE_ENV=production PORT=3014
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:'+process.env.PORT+'/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/index.js"]

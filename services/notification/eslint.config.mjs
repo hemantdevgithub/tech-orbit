@@ -18,5 +18,5 @@ export default [
       "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
     },
   },
-  { ignores: ["dist/", "node_modules/", "build/", ".next/", "coverage/", "*.stories.*"] },
+  { ignores: ["dist/", "node_modules/", "build/", ".next/", "coverage/", "*.stories.*", "src/generated/"] },
 ];

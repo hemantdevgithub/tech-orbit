@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit/ui";
 import type { BenchEntryResponse } from "@techorbit/types";
 import { getProfileClient } from "@/lib/api-client";
+import { VendorEarningsCards } from "./earnings-cards";
 
 const AVAILABILITY_LABELS: Record<string, string> = {
   AVAILABLE: "Available",
@@ -26,6 +27,8 @@ export function MsmeDashboard() {
 
   return (
     <div className="space-y-6">
+      <VendorEarningsCards />
+
       {/* Bench roster */}
       <Card>
         <CardHeader>

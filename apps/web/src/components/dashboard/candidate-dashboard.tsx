@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardBody, CardHeader, CardTitle, Button } from "@techorbit/ui";
 import { getProfileClient } from "@/lib/api-client";
+import { CandidateEarningsCards } from "./earnings-cards";
 
 export function CandidateDashboard() {
   const [toggling, setToggling] = useState(false);
@@ -23,6 +24,8 @@ export function CandidateDashboard() {
 
   return (
     <div className="space-y-6">
+      <CandidateEarningsCards />
+
       {/* Availability toggle */}
       <Card>
         <CardHeader>

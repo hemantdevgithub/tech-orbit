@@ -1,18 +1,28 @@
 import {
   ApiClient,
+  createAdminApiClient,
   createAuthApiClient,
   createInterviewApiClient,
   createMatchingApiClient,
+  createMessagingApiClient,
+  createNotificationApiClient,
+  createPaymentsApiClient,
   createPlacementApiClient,
   createProfileApiClient,
+  createRatingApiClient,
   createRequirementApiClient,
 } from "@techorbit/api-client";
 import type {
+  AdminApiClient,
   AuthApiClient,
   InterviewApiClient,
   MatchingApiClient,
+  MessagingApiClient,
+  NotificationApiClient,
+  PaymentsApiClient,
   PlacementApiClient,
   ProfileApiClient,
+  RatingApiClient,
   RequirementApiClient,
 } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
@@ -31,6 +41,16 @@ const INTERVIEW_BASE_URL =
   process.env.NEXT_PUBLIC_INTERVIEW_URL ?? "http://localhost:3007";
 const PLACEMENT_BASE_URL =
   process.env.NEXT_PUBLIC_PLACEMENT_URL ?? "http://localhost:3008";
+const PAYMENTS_BASE_URL =
+  process.env.NEXT_PUBLIC_PAYMENTS_URL ?? "http://localhost:3009";
+const MESSAGING_BASE_URL =
+  process.env.NEXT_PUBLIC_MESSAGING_URL ?? "http://localhost:3010";
+const NOTIFICATION_BASE_URL =
+  process.env.NEXT_PUBLIC_NOTIFICATION_URL ?? "http://localhost:3011";
+const RATING_BASE_URL =
+  process.env.NEXT_PUBLIC_RATING_URL ?? "http://localhost:3012";
+const ADMIN_BASE_URL =
+  process.env.NEXT_PUBLIC_ADMIN_URL ?? "http://localhost:3014";
 
 let apiClientInstance: ApiClient | null = null;
 let authClientInstance: AuthApiClient | null = null;
@@ -45,6 +65,16 @@ let interviewApiClientInstance: ApiClient | null = null;
 let interviewClientInstance: InterviewApiClient | null = null;
 let placementApiClientInstance: ApiClient | null = null;
 let placementClientInstance: PlacementApiClient | null = null;
+let paymentsApiClientInstance: ApiClient | null = null;
+let paymentsClientInstance: PaymentsApiClient | null = null;
+let messagingApiClientInstance: ApiClient | null = null;
+let messagingClientInstance: MessagingApiClient | null = null;
+let notificationApiClientInstance: ApiClient | null = null;
+let notificationClientInstance: NotificationApiClient | null = null;
+let ratingApiClientInstance: ApiClient | null = null;
+let ratingClientInstance: RatingApiClient | null = null;
+let adminApiClientInstance: ApiClient | null = null;
+let adminClientInstance: AdminApiClient | null = null;
 
 export function getApiClient(): ApiClient {
   if (!apiClientInstance) {
@@ -173,6 +203,76 @@ export function getPlacementClient(): PlacementApiClient {
   return placementClientInstance;
 }
 
+export function getPaymentsApiClient(): ApiClient {
+  if (!paymentsApiClientInstance) {
+    paymentsApiClientInstance = makeServiceClient(PAYMENTS_BASE_URL);
+  }
+  return paymentsApiClientInstance;
+}
+
+export function getPaymentsClient(): PaymentsApiClient {
+  if (!paymentsClientInstance) {
+    paymentsClientInstance = createPaymentsApiClient(getPaymentsApiClient());
+  }
+  return paymentsClientInstance;
+}
+
+export function getMessagingApiClient(): ApiClient {
+  if (!messagingApiClientInstance) {
+    messagingApiClientInstance = makeServiceClient(MESSAGING_BASE_URL);
+  }
+  return messagingApiClientInstance;
+}
+
+export function getMessagingClient(): MessagingApiClient {
+  if (!messagingClientInstance) {
+    messagingClientInstance = createMessagingApiClient(getMessagingApiClient());
+  }
+  return messagingClientInstance;
+}
+
+export function getNotificationApiClient(): ApiClient {
+  if (!notificationApiClientInstance) {
+    notificationApiClientInstance = makeServiceClient(NOTIFICATION_BASE_URL);
+  }
+  return notificationApiClientInstance;
+}
+
+export function getNotificationClient(): NotificationApiClient {
+  if (!notificationClientInstance) {
+    notificationClientInstance = createNotificationApiClient(getNotificationApiClient());
+  }
+  return notificationClientInstance;
+}
+
+export function getRatingApiClient(): ApiClient {
+  if (!ratingApiClientInstance) {
+    ratingApiClientInstance = makeServiceClient(RATING_BASE_URL);
+  }
+  return ratingApiClientInstance;
+}
+
+export function getRatingClient(): RatingApiClient {
+  if (!ratingClientInstance) {
+    ratingClientInstance = createRatingApiClient(getRatingApiClient());
+  }
+  return ratingClientInstance;
+}
+
+export function getAdminApiClient(): ApiClient {
+  if (!adminApiClientInstance) {
+    adminApiClientInstance = makeServiceClient(ADMIN_BASE_URL);
+  }
+  return adminApiClientInstance;
+}
+
+export function getAdminClient(): AdminApiClient {
+  if (!adminClientInstance) {
+    adminClientInstance = createAdminApiClient(getAdminApiClient());
+  }
+  return adminClientInstance;
+}
+
 // Singleton reset for server-side / HMR
 export function resetApiClient(): void {
   apiClientInstance = null;
@@ -188,4 +288,14 @@ export function resetApiClient(): void {
   interviewClientInstance = null;
   placementApiClientInstance = null;
   placementClientInstance = null;
+  paymentsApiClientInstance = null;
+  paymentsClientInstance = null;
+  messagingApiClientInstance = null;
+  messagingClientInstance = null;
+  notificationApiClientInstance = null;
+  notificationClientInstance = null;
+  ratingApiClientInstance = null;
+  ratingClientInstance = null;
+  adminApiClientInstance = null;
+  adminClientInstance = null;
 }

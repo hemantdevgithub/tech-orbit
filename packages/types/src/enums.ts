@@ -87,14 +87,14 @@ export const PaymentStatus = z.enum([
 ]);
 export type PaymentStatus = z.infer<typeof PaymentStatus>;
 
-// Notification type
-export const NotificationType = z.enum([
+// Notification delivery channel (email/SMS/push/in-app)
+export const NotificationChannel = z.enum([
   "EMAIL",
   "SMS",
   "PUSH",
   "IN_APP",
 ]);
-export type NotificationType = z.infer<typeof NotificationType>;
+export type NotificationChannel = z.infer<typeof NotificationChannel>;
 
 // Rating type
 export const RatingType = z.enum([
@@ -216,3 +216,69 @@ export type FilePurpose = z.infer<typeof FilePurpose>;
 
 export const FileStatus = z.enum(["PENDING", "CONFIRMED", "VIRUS_DETECTED", "DELETED"]);
 export type FileStatus = z.infer<typeof FileStatus>;
+
+// Sprint 8 — communications enums
+export const ThreadContextType = z.enum([
+  "REQUIREMENT",
+  "SUBMISSION",
+  "INTERVIEW",
+  "PLACEMENT",
+  "GENERAL",
+]);
+export type ThreadContextType = z.infer<typeof ThreadContextType>;
+
+export const NotificationType = z.enum([
+  "REQUIREMENT_PUBLISHED",
+  "SUBMISSION_RECEIVED",
+  "INTERVIEW_SCHEDULED",
+  "TIMESHEET_SUBMITTED",
+  "TIMESHEET_APPROVED",
+  "INVOICE_GENERATED",
+  "PAYOUT_COMPLETED",
+  "MESSAGE_RECEIVED",
+  "RATING_RECEIVED",
+]);
+export type NotificationType = z.infer<typeof NotificationType>;
+
+export const RaterRole = z.enum(["CUSTOMER", "CANDIDATE"]);
+export type RaterRole = z.infer<typeof RaterRole>;
+
+// Sprint 9 — admin enums
+export const ApplicationRole = z.enum(["CRM", "SRM", "MSME", "INTERVIEWER"]);
+export type ApplicationRole = z.infer<typeof ApplicationRole>;
+
+export const ApplicationStatus = z.enum(["PENDING", "APPROVED", "REJECTED"]);
+export type ApplicationStatus = z.infer<typeof ApplicationStatus>;
+
+export const DisputeType = z.enum([
+  "TIMESHEET",
+  "COMMISSION",
+  "PAYMENT",
+  "CONDUCT",
+  "OTHER",
+]);
+export type DisputeType = z.infer<typeof DisputeType>;
+
+export const DisputeStatus = z.enum([
+  "OPEN",
+  "UNDER_REVIEW",
+  "RESOLVED",
+  "CLOSED",
+]);
+export type DisputeStatus = z.infer<typeof DisputeStatus>;
+
+export const UserStatus = z.enum([
+  "ACTIVE",
+  "SUSPENDED",
+  "BANNED",
+  "DELETED",
+]);
+export type UserStatus = z.infer<typeof UserStatus>;
+
+export const SuspendDuration = z.enum([
+  "SEVEN_DAYS",
+  "THIRTY_DAYS",
+  "NINETY_DAYS",
+  "INDEFINITE",
+]);
+export type SuspendDuration = z.infer<typeof SuspendDuration>;

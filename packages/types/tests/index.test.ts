@@ -7,6 +7,7 @@ import {
   InterviewStatus,
   PlacementStatus,
   PaymentStatus,
+  NotificationChannel,
   NotificationType,
   RatingType,
 } from "../src/index.ts";
@@ -125,11 +126,30 @@ describe("types", () => {
     });
   });
 
+  describe("NotificationChannel", () => {
+    it("should validate all delivery channels", () => {
+      const channels = ["EMAIL", "SMS", "PUSH", "IN_APP"] as const;
+      for (const ch of channels) {
+        expect(NotificationChannel.parse(ch)).toBe(ch);
+      }
+    });
+  });
+
   describe("NotificationType", () => {
-    it("should validate all notification types", () => {
-      const types = ["EMAIL", "SMS", "PUSH", "IN_APP"] as const;
-      for (const type of types) {
-        expect(NotificationType.parse(type)).toBe(type);
+    it("should validate all notification categories", () => {
+      const types = [
+        "REQUIREMENT_PUBLISHED",
+        "SUBMISSION_RECEIVED",
+        "INTERVIEW_SCHEDULED",
+        "TIMESHEET_SUBMITTED",
+        "TIMESHEET_APPROVED",
+        "INVOICE_GENERATED",
+        "PAYOUT_COMPLETED",
+        "MESSAGE_RECEIVED",
+        "RATING_RECEIVED",
+      ] as const;
+      for (const t of types) {
+        expect(NotificationType.parse(t)).toBe(t);
       }
     });
   });

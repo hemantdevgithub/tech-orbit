@@ -1,0 +1,63 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["notification"]
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  message   String           @db.Text
+  linkUrl   String?          @map("link_url")
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@map("notification")
+  @@schema("notification")
+}
+
+model NotificationPreference {
+  id           String   @id @default(uuid())
+  userId       String   @unique @map("user_id")
+  emailEnabled Boolean  @default(true) @map("email_enabled")
+  smsEnabled   Boolean  @default(false) @map("sms_enabled")
+  preferences  Json     @default("{}") // per-type toggles keyed by NotificationType
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_preference")
+  @@schema("notification")
+}
+
+model ProcessedEvent {
+  eventId     String   @id @map("event_id")
+  eventType   String   @map("event_type")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@map("processed_event")
+  @@schema("notification")
+}
+
+enum NotificationType {
+  REQUIREMENT_PUBLISHED
+  SUBMISSION_RECEIVED
+  INTERVIEW_SCHEDULED
+  TIMESHEET_SUBMITTED
+  TIMESHEET_APPROVED
+  INVOICE_GENERATED
+  PAYOUT_COMPLETED
+  MESSAGE_RECEIVED
+  RATING_RECEIVED
+
+  @@schema("notification")
+}
