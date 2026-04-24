@@ -12,6 +12,7 @@ import {
   SearchIcon,
   UserIcon,
 } from "@/components/icons";
+import { useDisplayName } from "@/lib/display-names";
 
 type Props = {
   valueChain: ValueChainResponse;
@@ -94,6 +95,11 @@ export function ValueChainGraph({
   const msmeRedacted = vc.redactedSlots.includes("MSME");
   const interviewerRedacted = vc.redactedSlots.includes("INTERVIEWER");
 
+  // Note: vc.customerCompanyId is the COMPANY id, not the primary user id —
+  // we don't have a company-by-id name endpoint, so the customer node still
+  // shows the short id. Candidate uses their user id which does resolve.
+  const candidateName = useDisplayName(vc.candidateId ?? null, "candidate");
+
   const crmRule = ruleFor(rules, "CRM", vc.attributedCrmId);
   const srmRule = ruleFor(rules, "SRM", vc.attributedSrmId);
   const candidateRule = ruleFor(rules, "CANDIDATE_W2", vc.candidateId);
@@ -110,7 +116,7 @@ export function ValueChainGraph({
       }
     : {
         icon: <UserIcon size={20} />,
-        label: vc.candidateId ? displayUserId(vc.candidateId) : "Candidate",
+        label: vc.candidateId ? candidateName : "Candidate",
         sublabel: candidateRule ? `Candidate · ${hourlyLabel(candidateRule)}` : "Candidate",
       };
 

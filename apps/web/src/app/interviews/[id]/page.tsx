@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
-import type { InterviewResponse, InterviewStatus, ScorecardResponse } from "@techorbit/types";
+import type { InterviewResponse, InterviewStatus, ScorecardResponse, UserProfile } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getInterviewClient } from "@/lib/api-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { useDisplayName } from "@/lib/display-names";
 
 // useSearchParams requires Suspense in App Router (static export guard)
 export const dynamic = "force-dynamic";
@@ -82,6 +83,29 @@ export default function InterviewDetailPage() {
   }
   if (!iv) return <p>Not found.</p>;
 
+  return <InterviewDetailInner iv={iv} scorecard={scorecard} notice={notice} error={error} working={working} onCancel={onCancel} user={user} />;
+}
+
+function InterviewDetailInner({
+  iv,
+  scorecard,
+  notice,
+  error,
+  working,
+  onCancel,
+  user,
+}: {
+  iv: InterviewResponse;
+  scorecard: ScorecardResponse | null;
+  notice: string | null;
+  error: string | null;
+  working: boolean;
+  onCancel: () => Promise<void>;
+  user: UserProfile | null;
+}): JSX.Element {
+  const candidateName = useDisplayName(iv.candidateId, "candidate");
+  const interviewerName = useDisplayName(iv.interviewerUserId ?? null, "interviewer");
+
   const isScheduler = user?.id === iv.scheduledByUserId;
   const isInterviewer = user?.id === iv.interviewerUserId;
   const isCandidate = user?.id === iv.candidateId;
@@ -146,7 +170,7 @@ export default function InterviewDetailPage() {
                     href={`/candidates/${iv.candidateId}`}
                     className="text-forest-700 hover:underline"
                   >
-                    #{iv.candidateId.slice(0, 8)}
+                    {candidateName}
                   </Link>
                 </dd>
                 <dt className="text-sage-600">Interviewer</dt>
@@ -156,7 +180,7 @@ export default function InterviewDetailPage() {
                       href={`/interviewers/${iv.interviewerUserId}`}
                       className="text-forest-700 hover:underline"
                     >
-                      #{iv.interviewerUserId.slice(0, 8)}
+                      {interviewerName}
                     </Link>
                   ) : (
                     "Self-conducted"

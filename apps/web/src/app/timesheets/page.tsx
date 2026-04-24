@@ -8,6 +8,7 @@ import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getPaymentsClient } from "@/lib/api-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { useDisplayName } from "@/lib/display-names";
 
 export const dynamic = "force-dynamic";
 
@@ -131,42 +132,71 @@ export default function TimesheetsPage() {
       ) : (
         <div className="space-y-2">
           {rows.map((t) => (
-            <Card key={t.id} className="hover:border-forest-300 transition-colors">
-              <CardBody className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-forest-900">
-                    Week of {new Date(t.weekStartDate).toUTCString().slice(5, 16)} · {t.hoursWorked} hrs
-                  </p>
-                  <p className="text-xs text-sage-500 mt-0.5">
-                    Placement #{t.placementId.slice(0, 8)}
-                    {t.candidateId !== user?.id && <> · Candidate #{t.candidateId.slice(0, 8)}</>}
-                    {t.submittedAt && <> · Submitted {new Date(t.submittedAt).toLocaleDateString()}</>}
-                    {t.rejectionReason && <> · <span className="text-danger">Rejected: {t.rejectionReason}</span></>}
-                  </p>
-                  {t.description && (
-                    <p className="text-xs text-sage-600 mt-1 italic">{t.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[t.status]}`}>
-                    {t.status}
-                  </span>
-                  {isCustomer && t.status === "SUBMITTED" && (
-                    <>
-                      <Button size="sm" onClick={() => approve(t.id)} disabled={working === t.id}>
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={() => reject(t.id)} disabled={working === t.id}>
-                        Reject
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
+            <TimesheetRow
+              key={t.id}
+              t={t}
+              isOwnCandidate={t.candidateId === user?.id}
+              isCustomer={!!isCustomer}
+              working={working}
+              onApprove={approve}
+              onReject={reject}
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function TimesheetRow({
+  t,
+  isOwnCandidate,
+  isCustomer,
+  working,
+  onApprove,
+  onReject,
+}: {
+  t: TimesheetResponse;
+  isOwnCandidate: boolean;
+  isCustomer: boolean;
+  working: string | null;
+  onApprove: (id: string) => void | Promise<void>;
+  onReject: (id: string) => void | Promise<void>;
+}) {
+  const candidateName = useDisplayName(isOwnCandidate ? null : t.candidateId, "candidate");
+  return (
+    <Card className="hover:border-forest-300 transition-colors">
+      <CardBody className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-forest-900">
+            Week of {new Date(t.weekStartDate).toUTCString().slice(5, 16)} · {t.hoursWorked} hrs
+          </p>
+          <p className="text-xs text-sage-500 mt-0.5">
+            Placement #{t.placementId.slice(0, 8)}
+            {!isOwnCandidate && <> · {candidateName}</>}
+            {t.submittedAt && <> · Submitted {new Date(t.submittedAt).toLocaleDateString()}</>}
+            {t.rejectionReason && <> · <span className="text-danger">Rejected: {t.rejectionReason}</span></>}
+          </p>
+          {t.description && (
+            <p className="text-xs text-sage-600 mt-1 italic">{t.description}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[t.status]}`}>
+            {t.status}
+          </span>
+          {isCustomer && t.status === "SUBMITTED" && (
+            <>
+              <Button size="sm" onClick={() => onApprove(t.id)} disabled={working === t.id}>
+                Approve
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => onReject(t.id)} disabled={working === t.id}>
+                Reject
+              </Button>
+            </>
+          )}
+        </div>
+      </CardBody>
+    </Card>
   );
 }

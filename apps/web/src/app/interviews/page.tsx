@@ -7,6 +7,7 @@ import type { InterviewResponse, InterviewStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getInterviewClient } from "@/lib/api-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { useDisplayName } from "@/lib/display-names";
 
 const STATUS_VARIANT: Record<InterviewStatus, "mint" | "cream" | "muted" | "success" | "warning" | "danger"> = {
   SCHEDULED: "mint",
@@ -15,6 +16,33 @@ const STATUS_VARIANT: Record<InterviewStatus, "mint" | "cream" | "muted" | "succ
   NO_SHOW: "danger",
   CANCELLED: "muted",
 };
+
+function InterviewRow({ iv }: { iv: InterviewResponse }): JSX.Element {
+  const candidateName = useDisplayName(iv.candidateId, "candidate");
+  const date = new Date(iv.scheduledStart);
+  return (
+    <Link href={`/interviews/${iv.id}`} className="block">
+      <Card className="hover:border-forest-300 transition-colors">
+        <CardBody className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-forest-900">
+              {date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+              {" · "}
+              {date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+            </p>
+            <p className="text-xs text-sage-600 mt-0.5">
+              {iv.conductedByRole.replace("_", " ")} interview · {candidateName}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={STATUS_VARIANT[iv.status]}>{iv.status}</Badge>
+            <span className="text-sage-400 text-sm">→</span>
+          </div>
+        </CardBody>
+      </Card>
+    </Link>
+  );
+}
 
 export default function InterviewsPage() {
   const [interviews, setInterviews] = useState<InterviewResponse[]>([]);
@@ -63,30 +91,9 @@ export default function InterviewsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {interviews.map((iv) => {
-            const date = new Date(iv.scheduledStart);
-            return (
-              <Link key={iv.id} href={`/interviews/${iv.id}`} className="block">
-                <Card className="hover:border-forest-300 transition-colors">
-                  <CardBody className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-forest-900">
-                        {date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}{" "}
-                        · {date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-                      </p>
-                      <p className="text-xs text-sage-600 mt-0.5">
-                        {iv.conductedByRole.replace("_", " ")} interview · Candidate #{iv.candidateId.slice(0, 8)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={STATUS_VARIANT[iv.status]}>{iv.status}</Badge>
-                      <span className="text-sage-400 text-sm">→</span>
-                    </div>
-                  </CardBody>
-                </Card>
-              </Link>
-            );
-          })}
+          {interviews.map((iv) => (
+            <InterviewRow key={iv.id} iv={iv} />
+          ))}
         </div>
       )}
     </div>
