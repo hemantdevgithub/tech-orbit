@@ -6,16 +6,7 @@ import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import { useAuthStore } from "@/store/auth.store";
 import { UserRatingsPanel } from "@/components/user-ratings-panel";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-
-const ROLE_ICONS: Record<string, string> = {
-  CUSTOMER: "🏢",
-  CANDIDATE: "👤",
-  CRM: "🤝",
-  SRM: "🔍",
-  MSME: "🏗️",
-  INTERVIEWER: "🎯",
-  ADMIN: "🛡️",
-};
+import { ROLE_ICON_COMPONENT } from "@/components/icons";
 
 // Maps a role to a deep-link for the role-specific public profile page. Only
 // CANDIDATE + CUSTOMER have dedicated pages today; the rest fall back to this
@@ -56,11 +47,17 @@ export default function UserProfilePage() {
         <p className="text-sage-500 text-xs mt-1 font-mono">{id}</p>
         {selfRoles.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
-            {selfRoles.map((role) => (
-              <Badge key={role} variant="mint">
-                {ROLE_ICONS[role] ?? ""} {role}
-              </Badge>
-            ))}
+            {selfRoles.map((role) => {
+              const RoleIcon = ROLE_ICON_COMPONENT[role];
+              return (
+                <Badge key={role} variant="mint">
+                  <span className="inline-flex items-center gap-1.5">
+                    {RoleIcon && <RoleIcon size={11} />}
+                    {role}
+                  </span>
+                </Badge>
+              );
+            })}
           </div>
         )}
       </div>
@@ -80,13 +77,14 @@ export default function UserProfilePage() {
                 .filter((r) => ROLE_PROFILE_ROUTES[r])
                 .map((role) => {
                   const route = ROLE_PROFILE_ROUTES[role]!(id);
+                  const RoleIcon = ROLE_ICON_COMPONENT[role];
                   return (
                     <Link
                       key={role}
                       href={route}
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-forest-300 bg-forest-50 text-forest-800 text-sm hover:bg-forest-100"
                     >
-                      <span>{ROLE_ICONS[role]}</span>
+                      {RoleIcon && <RoleIcon size={14} />}
                       <span>View as {role.toLowerCase()}</span>
                       <span className="text-forest-500">→</span>
                     </Link>

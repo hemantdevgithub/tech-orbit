@@ -13,6 +13,7 @@ import { CustomerDashboard } from "@/components/dashboard/customer-dashboard";
 import { InterviewerDashboard } from "@/components/dashboard/interviewer-dashboard";
 import { CrmDashboard } from "@/components/dashboard/crm-dashboard";
 import { SrmDashboard } from "@/components/dashboard/srm-dashboard";
+import { ROLE_ICON_COMPONENT } from "@/components/icons";
 
 const ROLE_LABELS: Record<RoleType, string> = {
   CUSTOMER: "Customer",
@@ -41,14 +42,7 @@ const ROLE_DESCRIPTIONS: Record<RoleType, string> = {
   INTERVIEWER: "Conduct technical interviews for candidates",
 };
 
-const ROLE_ICONS: Record<RoleType, string> = {
-  CUSTOMER: "🏢",
-  CANDIDATE: "👤",
-  CRM: "🤝",
-  SRM: "🔍",
-  MSME: "🏗️",
-  INTERVIEWER: "🎯",
-};
+// Icon components are looked up from ROLE_ICON_COMPONENT (see components/icons.tsx).
 
 const ROLE_COLORS: Record<RoleType, string> = {
   CUSTOMER: "from-forest-700 to-forest-600",
@@ -184,7 +178,12 @@ export default function DashboardPage() {
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 translate-x-8 -translate-y-8" />
                   <div className="relative z-10">
-                    <span className="text-2xl block mb-3">{ROLE_ICONS[role]}</span>
+                    {(() => {
+                      const RoleIcon = ROLE_ICON_COMPONENT[role];
+                      return RoleIcon ? (
+                        <div className="mb-3 text-white"><RoleIcon size={24} /></div>
+                      ) : null;
+                    })()}
                     <p className="text-white font-semibold text-sm">{ROLE_FULL_LABELS[role]}</p>
                     <p className="text-white/70 text-xs mt-0.5">{ROLE_DESCRIPTIONS[role]}</p>
                     <div className="mt-3 flex items-center gap-1 text-white/80 text-xs group-hover:gap-2 transition-all">
@@ -249,7 +248,12 @@ export default function DashboardPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {availableRoles.map((role) => (
               <div key={role} className="group rounded-xl border border-surface-border bg-surface p-5 hover:border-forest-300 hover:shadow-card transition-all">
-                <span className="text-xl block mb-2">{ROLE_ICONS[role]}</span>
+                {(() => {
+                  const RoleIcon = ROLE_ICON_COMPONENT[role];
+                  return RoleIcon ? (
+                    <div className="mb-2 text-forest-700"><RoleIcon size={20} /></div>
+                  ) : null;
+                })()}
                 <p className="font-semibold text-forest-900 text-sm">{ROLE_FULL_LABELS[role]}</p>
                 <p className="text-sage-500 text-xs mt-0.5 mb-4">{ROLE_DESCRIPTIONS[role]}</p>
                 <Button

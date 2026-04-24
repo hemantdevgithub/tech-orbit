@@ -7,18 +7,26 @@ import { useAuthStore } from "@/store/auth.store";
 import { useAuth } from "@/lib/auth-hooks";
 import { useAuthGuard } from "@/lib/use-auth-guard";
 import { NotificationBell } from "@/components/notification-bell";
+import {
+  ArrowRightIcon,
+  BellIcon,
+  BriefcaseIcon,
+  CalendarIcon,
+  ClockIcon,
+  DollarIcon,
+  HandshakeIcon,
+  HomeIcon,
+  MessageIcon,
+  PlusIcon,
+  ReceiptIcon,
+  ROLE_ICON_COMPONENT,
+  SearchIcon,
+  ShieldIcon,
+  TargetIcon,
+} from "@/components/icons";
 
 type RoleType = "CUSTOMER" | "CANDIDATE" | "CRM" | "SRM" | "MSME" | "INTERVIEWER" | "ADMIN";
-
-const ROLE_ICON: Record<string, string> = {
-  CUSTOMER: "🏢",
-  CANDIDATE: "👤",
-  CRM: "🤝",
-  SRM: "🔍",
-  MSME: "🏗️",
-  INTERVIEWER: "🎯",
-  ADMIN: "🛡️",
-};
+type IconComp = (p: { size?: number; className?: string }) => JSX.Element;
 
 const ROLE_LABEL: Record<string, string> = {
   CUSTOMER: "Customer",
@@ -31,29 +39,29 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 // Primary CTA per role — the single most common action that role takes.
-type Cta = { label: string; href: string; icon: string };
+type Cta = { label: string; href: string; Icon: IconComp };
 const PRIMARY_CTA: Partial<Record<RoleType, Cta>> = {
-  CUSTOMER: { label: "Post a requirement", href: "/requirements/new", icon: "+" },
-  CANDIDATE: { label: "Browse opportunities", href: "/requirements", icon: "→" },
-  CRM: { label: "Claim a requirement", href: "/requirements", icon: "→" },
-  SRM: { label: "Find requirements to fill", href: "/requirements", icon: "→" },
-  MSME: { label: "Submit a consultant", href: "/requirements", icon: "→" },
-  INTERVIEWER: { label: "Set availability", href: "/settings/profile", icon: "📅" },
-  ADMIN: { label: "Admin console", href: "/admin", icon: "🛡️" },
+  CUSTOMER: { label: "Post a requirement", href: "/requirements/new", Icon: PlusIcon },
+  CANDIDATE: { label: "Browse opportunities", href: "/requirements", Icon: ArrowRightIcon },
+  CRM: { label: "Claim a requirement", href: "/requirements", Icon: ArrowRightIcon },
+  SRM: { label: "Find requirements to fill", href: "/requirements", Icon: ArrowRightIcon },
+  MSME: { label: "Submit a consultant", href: "/requirements", Icon: ArrowRightIcon },
+  INTERVIEWER: { label: "Set availability", href: "/settings/profile", Icon: CalendarIcon },
+  ADMIN: { label: "Admin console", href: "/admin", Icon: ShieldIcon },
 };
 
-type NavItem = { label: string; href: string; icon: string; roles: RoleType[] };
+type NavItem = { label: string; href: string; Icon: IconComp; roles: RoleType[] };
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home", href: "/dashboard", icon: "🏠", roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER", "ADMIN"] },
-  { label: "Requirements", href: "/requirements", icon: "📋", roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
-  { label: "Interviewers", href: "/interviewers", icon: "🎯", roles: ["CUSTOMER", "CRM"] },
-  { label: "Interviews", href: "/interviews", icon: "📅", roles: ["CUSTOMER", "CANDIDATE", "INTERVIEWER"] },
-  { label: "Placements", href: "/placements", icon: "🤝", roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
-  { label: "Timesheets", href: "/timesheets", icon: "⏱️", roles: ["CUSTOMER", "CANDIDATE"] },
-  { label: "Invoices", href: "/invoices", icon: "🧾", roles: ["CUSTOMER"] },
-  { label: "Payouts", href: "/payouts", icon: "💰", roles: ["CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER"] },
-  { label: "Messages", href: "/messages", icon: "💬", roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER", "ADMIN"] },
-  { label: "Notifications", href: "/notifications", icon: "🔔", roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER", "ADMIN"] },
+  { label: "Home", href: "/dashboard", Icon: HomeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER", "ADMIN"] },
+  { label: "Requirements", href: "/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
+  { label: "Interviewers", href: "/interviewers", Icon: TargetIcon, roles: ["CUSTOMER", "CRM"] },
+  { label: "Interviews", href: "/interviews", Icon: CalendarIcon, roles: ["CUSTOMER", "CANDIDATE", "INTERVIEWER"] },
+  { label: "Placements", href: "/placements", Icon: HandshakeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
+  { label: "Timesheets", href: "/timesheets", Icon: ClockIcon, roles: ["CUSTOMER", "CANDIDATE"] },
+  { label: "Invoices", href: "/invoices", Icon: ReceiptIcon, roles: ["CUSTOMER"] },
+  { label: "Payouts", href: "/payouts", Icon: DollarIcon, roles: ["CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER"] },
+  { label: "Messages", href: "/messages", Icon: MessageIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER", "ADMIN"] },
+  { label: "Notifications", href: "/notifications", Icon: BellIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER", "ADMIN"] },
 ];
 
 // Three search prompts per role. Each submits to a list page with ?search=X.
@@ -119,8 +127,8 @@ function SearchRow({ field }: { field: SearchField }) {
   }
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sage-400 pointer-events-none text-sm">
-        🔍
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sage-400 pointer-events-none">
+        <SearchIcon size={14} />
       </span>
       <input
         type="text"
@@ -194,11 +202,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="text-sm font-semibold truncate">
                   {user.firstName} {user.lastName}
                 </p>
-                {primaryRole && (
-                  <p className="text-xs text-sage-400 truncate">
-                    {ROLE_ICON[primaryRole]} {ROLE_LABEL[primaryRole]}
-                  </p>
-                )}
+                {primaryRole && (() => {
+                  const RoleIcon = ROLE_ICON_COMPONENT[primaryRole];
+                  return (
+                    <p className="text-xs text-sage-400 truncate flex items-center gap-1.5">
+                      {RoleIcon && <RoleIcon size={12} />}
+                      {ROLE_LABEL[primaryRole]}
+                    </p>
+                  );
+                })()}
               </div>
             </Link>
           </div>
@@ -211,7 +223,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href={cta.href}
               className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg bg-mint-300 text-forest-900 text-sm font-semibold hover:bg-mint-200 transition-colors"
             >
-              <span>{cta.icon}</span>
+              <cta.Icon size={16} />
               <span>{cta.label}</span>
             </Link>
           </div>
@@ -250,7 +262,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         : "text-sage-300 hover:text-cream-100 hover:bg-forest-700/60"
                     }`}
                   >
-                    <span className="w-5 text-center shrink-0">{item.icon}</span>
+                    <span className="shrink-0">
+                      <item.Icon size={16} />
+                    </span>
                     <span className="truncate">{item.label}</span>
                   </Link>
                 </li>
