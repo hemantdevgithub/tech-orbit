@@ -8,6 +8,8 @@ import type { PlacementResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getPlacementClient, getRatingClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { useDisplayName } from "@/lib/display-names";
 
 export default function RatePlacementPage() {
   const params = useParams<{ id: string }>();
@@ -107,15 +109,18 @@ export default function RatePlacementPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-8 space-y-6">
-      <div>
-        <Link href={`/placements/${placement.id}`} className="text-sm text-forest-700 hover:underline">
-          ← Back to placement
-        </Link>
-        <h1 className="text-2xl font-bold text-forest-900 mt-2">Rate this {raterRoleLabel}</h1>
-        <p className="text-sage-500 text-sm mt-0.5">
-          Your rating is public. Stars are required; the rest is optional.
-        </p>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Placements", href: "/placements" },
+          { label: "Placement", href: `/placements/${placement.id}` },
+          { label: "Rate" },
+        ]}
+      />
+      <RateHeader placement={placement} isCustomer={!!isCustomer} raterRoleLabel={raterRoleLabel} />
+      <p className="text-sage-500 text-sm">
+        Your rating is public. Stars are required; the rest is optional.
+      </p>
 
       {error && <div className="p-3 rounded-lg bg-danger/10 text-danger text-sm border border-danger/20">{error}</div>}
 
@@ -163,6 +168,29 @@ export default function RatePlacementPage() {
           {submitting ? "Submitting…" : "Submit rating"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function RateHeader({
+  placement,
+  isCustomer,
+  raterRoleLabel,
+}: {
+  placement: PlacementResponse;
+  isCustomer: boolean;
+  raterRoleLabel: string;
+}) {
+  const candidateName = useDisplayName(isCustomer ? placement.candidateId : null, "candidate");
+  const customerName = useDisplayName(
+    !isCustomer ? placement.customerCompanyId : null,
+    "customerByCompany",
+  );
+  const subjectName = isCustomer ? candidateName : customerName;
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-forest-900">Rate this {raterRoleLabel}</h1>
+      <p className="text-sage-700 text-sm mt-1">{subjectName}</p>
     </div>
   );
 }

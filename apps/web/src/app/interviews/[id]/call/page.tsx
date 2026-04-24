@@ -8,6 +8,7 @@ import type { InterviewResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getInterviewClient } from "@/lib/api-client";
+import { useDisplayName } from "@/lib/display-names";
 
 export default function VideoCallPage() {
   const params = useParams<{ id: string }>();
@@ -118,30 +119,34 @@ export default function VideoCallPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-forest-950">
-      {/* Top bar */}
-      <div className="flex items-center justify-between bg-forest-900 px-4 py-2 text-cream-100">
-        <div>
-          <p className="text-sm font-semibold">
-            Interview · {new Date(iv.scheduledStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-          </p>
-          <p className="text-xs text-sage-400">
-            {new Date(iv.scheduledStart).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} –{" "}
-            {new Date(iv.scheduledEnd).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-            {" · Candidate #"}{iv.candidateId.slice(0, 8)}
-          </p>
-        </div>
-        <Link href={`/interviews/${iv.id}`} className="text-xs text-sage-400 hover:text-cream-100">
-          ← Details
-        </Link>
-      </div>
+    <div className="rounded-2xl overflow-hidden border border-surface-border bg-forest-900 flex flex-col" style={{ minHeight: "70vh" }}>
+      <CallTopBar iv={iv} />
 
-      {/* Video iframe */}
+
+      {/* Video iframe — or a friendly placeholder when the room is a Daily.co
+          mock URL (so the demo doesn't show a broken "meeting not found" page) */}
       {!joined ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-forest-950 text-cream-100">
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-forest-900 text-cream-100 py-12">
           <p className="text-lg font-semibold">Ready to join?</p>
           <p className="text-sm text-sage-400">Camera and microphone will be requested by Daily.co.</p>
           <Button onClick={onJoin}>Join now</Button>
+        </div>
+      ) : iv.videoRoomUrl?.includes("mock.daily.co") ? (
+        <div className="flex flex-1 flex-col items-center justify-center bg-forest-900 text-cream-100 gap-3 px-6 text-center py-12">
+          <div className="w-20 h-20 rounded-full bg-forest-800 border-2 border-forest-700 flex items-center justify-center text-3xl">
+            🎥
+          </div>
+          <p className="text-lg font-semibold">Mock video session</p>
+          <p className="text-sm text-sage-400 max-w-md">
+            The platform is using the Daily.co mock provider. In production this
+            embeds the real Daily.co room. For the demo, treat the meeting as
+            in progress — when you click <strong className="text-cream-100">End call</strong> the
+            backend marks the interview as completed and the scorecard becomes
+            available.
+          </p>
+          <p className="text-xs text-sage-500 font-mono mt-2 break-all max-w-lg">
+            {iv.videoRoomUrl}
+          </p>
         </div>
       ) : (
         <iframe
@@ -160,6 +165,30 @@ export default function VideoCallPage() {
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+function CallTopBar({ iv }: { iv: InterviewResponse }) {
+  const candidateName = useDisplayName(iv.candidateId, "candidate");
+  const interviewerName = useDisplayName(iv.interviewerUserId ?? null, "interviewer");
+  return (
+    <div className="flex items-center justify-between bg-forest-900 px-4 py-2 text-cream-100">
+      <div>
+        <p className="text-sm font-semibold">
+          {candidateName}
+          {iv.interviewerUserId && <> ↔ {interviewerName}</>}
+        </p>
+        <p className="text-xs text-sage-400">
+          {new Date(iv.scheduledStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          {" · "}
+          {new Date(iv.scheduledStart).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} –{" "}
+          {new Date(iv.scheduledEnd).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+        </p>
+      </div>
+      <Link href={`/interviews/${iv.id}`} className="text-xs text-sage-400 hover:text-cream-100">
+        ← Details
+      </Link>
     </div>
   );
 }

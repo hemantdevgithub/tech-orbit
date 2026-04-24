@@ -137,20 +137,40 @@ export default function InvoiceDetailPage() {
           {inv.status === "SENT" && (
             <Card>
               <CardHeader><CardTitle>Pay invoice</CardTitle></CardHeader>
-              <CardBody>
+              <CardBody className="space-y-3">
+                <div className="rounded-lg bg-mint-50 border border-mint-200 px-3 py-2">
+                  <p className="text-xs text-forest-800 leading-relaxed">
+                    {inv.dueDate
+                      ? <>Due <strong>{new Date(inv.dueDate).toLocaleDateString()}</strong>. </>
+                      : null}
+                    Commissions auto-disburse to consultants and brokers within
+                    1 business day of receipt.
+                  </p>
+                </div>
                 {inv.stripeInvoiceId ? (
-                  <a href={`https://invoice.stripe.test/mock/${inv.id}`} target="_blank" rel="noreferrer">
-                    <Button className="w-full">Open Stripe invoice →</Button>
-                  </a>
+                  <>
+                    <a href={`https://invoice.stripe.test/mock/${inv.id}`} target="_blank" rel="noreferrer" className="block">
+                      <Button className="w-full">Pay with card / ACH (Stripe) →</Button>
+                    </a>
+                    <p className="text-[11px] text-sage-500 text-center">
+                      Mock provider in this environment — no real charge.
+                    </p>
+                  </>
                 ) : (
                   <p className="text-xs text-sage-500">
                     Payment link will appear once the invoice is processed. Pay via ACH or your account manager.
                   </p>
                 )}
                 {isAdmin && (
-                  <Button variant="secondary" size="sm" className="w-full mt-2" onClick={markPaid} disabled={working}>
-                    {working ? "Working…" : "Mark paid (admin)"}
-                  </Button>
+                  <div className="pt-2 border-t border-sage-100">
+                    <Button variant="secondary" size="sm" className="w-full" onClick={markPaid} disabled={working}>
+                      {working ? "Working…" : "Mark paid (admin override)"}
+                    </Button>
+                    <p className="text-[11px] text-sage-500 mt-1">
+                      Records payment without a Stripe charge. Use only for ACH /
+                      check or to demo the post-payment flow.
+                    </p>
+                  </div>
                 )}
               </CardBody>
             </Card>
