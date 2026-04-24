@@ -90,6 +90,11 @@ export default function DashboardPage() {
   const complete = isOnboardingComplete(user);
   const activeRoles = user.roles.filter((r) => r.status === "ACTIVE");
   const pendingRoles = user.roles.filter((r) => r.status === "PENDING_VERIFICATION");
+  // Workspace panels show for pending roles too — the data is read-only, and
+  // hiding it leaves pending users with nowhere to see their activity.
+  const workspaceRoles = user.roles.filter(
+    (r) => r.status === "ACTIVE" || r.status === "PENDING_VERIFICATION",
+  );
   const availableRoles = (["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER"] as RoleType[])
     .filter((role) => !user.roles.some((r) => r.roleType === role));
 
@@ -195,37 +200,37 @@ export default function DashboardPage() {
       )}
 
       {/* Role-specific dashboards */}
-      {activeRoles.some((r) => r.roleType === "CANDIDATE") && (
+      {workspaceRoles.some((r) => r.roleType === "CANDIDATE") && (
         <section>
           <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Candidate workspace</h2>
           <CandidateDashboard />
         </section>
       )}
-      {activeRoles.some((r) => r.roleType === "MSME") && (
+      {workspaceRoles.some((r) => r.roleType === "MSME") && (
         <section>
           <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">MSME workspace</h2>
           <MsmeDashboard />
         </section>
       )}
-      {activeRoles.some((r) => r.roleType === "CUSTOMER") && (
+      {workspaceRoles.some((r) => r.roleType === "CUSTOMER") && (
         <section>
           <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Customer workspace</h2>
           <CustomerDashboard />
         </section>
       )}
-      {activeRoles.some((r) => r.roleType === "INTERVIEWER") && (
+      {workspaceRoles.some((r) => r.roleType === "INTERVIEWER") && (
         <section>
           <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Interviewer workspace</h2>
           <InterviewerDashboard />
         </section>
       )}
-      {activeRoles.some((r) => r.roleType === "CRM") && (
+      {workspaceRoles.some((r) => r.roleType === "CRM") && (
         <section>
           <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">CRM workspace</h2>
           <CrmDashboard />
         </section>
       )}
-      {activeRoles.some((r) => r.roleType === "SRM") && (
+      {workspaceRoles.some((r) => r.roleType === "SRM") && (
         <section>
           <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">SRM workspace</h2>
           <SrmDashboard />

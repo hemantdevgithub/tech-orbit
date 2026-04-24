@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { NavBar } from "@techorbit/ui";
 import { NotificationBell } from "@/components/notification-bell";
@@ -13,34 +13,51 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { fetchMe } = useAuth();
   const router = useRouter();
 
-  // Fetch user on mount if not loaded
+  // Zustand persist rehydrates from localStorage after the first render. Until
+  // that finishes, store.status reads "unauthenticated" even for a logged-in
+  // user, which would bounce them to /login on every hard reload. Track
+  // hydration explicitly and skip the guard until we know we're reading real
+  // state.
+  const [hydrated, setHydrated] = useState(() => useAuthStore.persist.hasHydrated());
   useEffect(() => {
+    const unsub = useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+    if (useAuthStore.persist.hasHydrated()) setHydrated(true);
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     if (store.status === "unauthenticated") {
       router.replace("/login");
     } else if (!store.user && store.accessToken) {
       void fetchMe();
     }
-  }, [store.status, store.user, store.accessToken, router, fetchMe]);
+  }, [hydrated, store.status, store.user, store.accessToken, router, fetchMe]);
 
-  if (store.status === "unauthenticated" || store.status === "requires2FA") {
-    return null;
-  }
+  if (!hydrated) return null;
+  if (store.status === "requires2FA") return null;
+  if (store.status === "unauthenticated") return null;
 
   const user = store.user;
-  const activeRoles = user?.roles.filter((r) => r.status === "ACTIVE") ?? [];
+  // Pending-verification roles get nav too — their workspace renders on the
+  // dashboard, so they need the links to navigate around it.
+  const navRoles =
+    user?.roles?.filter(
+      (r) => r.status === "ACTIVE" || r.status === "PENDING_VERIFICATION",
+    ) ?? [];
 
   const navLinks = [
     { label: "Home", href: "/dashboard", active: true },
-    ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "SRM", "CRM", "MSME"].includes(r.roleType))
+    ...(navRoles.some((r) => ["CUSTOMER", "CANDIDATE", "SRM", "CRM", "MSME"].includes(r.roleType))
       ? [{ label: "Requirements", href: "/requirements" }]
       : []),
-    ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "INTERVIEWER"].includes(r.roleType))
+    ...(navRoles.some((r) => ["CUSTOMER", "CANDIDATE", "INTERVIEWER"].includes(r.roleType))
       ? [{ label: "Interviews", href: "/interviews" }]
       : []),
-    ...(activeRoles.some((r) => ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"].includes(r.roleType))
+    ...(navRoles.some((r) => ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"].includes(r.roleType))
       ? [{ label: "Placements", href: "/placements" }]
       : []),
-    ...(activeRoles.some((r) => ["CUSTOMER", "CRM"].includes(r.roleType))
+    ...(navRoles.some((r) => ["CUSTOMER", "CRM"].includes(r.roleType))
       ? [{ label: "Interviewers", href: "/interviewers" }]
       : []),
   ];

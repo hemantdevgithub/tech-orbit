@@ -1,25 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { NavBar } from "@techorbit/ui";
 import { useAuthStore } from "@/store/auth.store";
-import { useAuth } from "@/lib/auth-hooks";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 import { NotificationBell } from "@/components/notification-bell";
 import { UserMenu } from "@/components/user-menu";
 
 export default function CustomersLayout({ children }: { children: React.ReactNode }) {
-  const { user, status } = useAuthStore();
-  const { fetchMe } = useAuth();
-  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const { ready } = useAuthGuard();
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!user && status === "unauthenticated") router.replace("/login");
-    else if (!user && status === "authenticated") void fetchMe();
-  }, [user, status, router, fetchMe]);
-
-  if (!user) return null;
+  if (!ready) return null;
 
   const navLinks = [
     { label: "Home", href: "/dashboard" },
@@ -32,7 +23,7 @@ export default function CustomersLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-cream-50">
       <NavBar
         logoText="Techorbit"
-        userName={`${user.firstName} ${user.lastName}`}
+        userName={user ? `${user.firstName} ${user.lastName}` : undefined}
         links={navLinks}
         rightSlot={<NotificationBell />}
         userSlot={<UserMenu />}
