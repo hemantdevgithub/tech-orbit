@@ -2,6 +2,8 @@
 
 This file is read automatically by Claude Code at the start of every session. It encodes the non-negotiable conventions for this repository. **Follow these exactly unless explicitly overridden by the task prompt.**
 
+> **Starting a new session?** Read [`HANDOFF.md`](HANDOFF.md) first — it has the current state of the codebase, how to run the app (there are non-obvious gotchas around Next.js file watchers and per-service `.env` files), demo accounts, and what's unfinished. Per-sprint detail lives in `SPRINT_N_SUMMARY.md` files.
+
 ---
 
 ## Product context
