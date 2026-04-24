@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { PlacementResponse, PlacementStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getPlacementClient } from "@/lib/api-client";
+import { ViewToggle, useViewMode } from "@/components/view-toggle";
 
 const STATUS_STYLES: Record<PlacementStatus, string> = {
   ACTIVE:          "bg-success/10 text-success border-success/30",
@@ -18,6 +19,7 @@ export default function PlacementsListPage() {
   const [rows, setRows] = useState<PlacementResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useViewMode("placements-view", "list");
 
   useEffect(() => {
     getPlacementClient()
@@ -31,11 +33,14 @@ export default function PlacementsListPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-forest-900">My placements</h1>
-        <p className="text-sage-500 text-sm mt-0.5">
-          Active and past placements you are part of.
-        </p>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-forest-900">My placements</h1>
+          <p className="text-sage-500 text-sm mt-0.5">
+            Active and past placements you are part of.
+          </p>
+        </div>
+        {rows.length > 0 && <ViewToggle mode={viewMode} onChange={setViewMode} />}
       </div>
 
       {error && (
@@ -51,7 +56,7 @@ export default function PlacementsListPage() {
             </p>
           </CardBody>
         </Card>
-      ) : (
+      ) : viewMode === "list" ? (
         <div className="space-y-2">
           {rows.map((p) => (
             <Link key={p.id} href={`/placements/${p.id}`} className="block">
@@ -76,6 +81,39 @@ export default function PlacementsListPage() {
               </Card>
             </Link>
           ))}
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((p) => {
+            const weeks = Math.round(
+              (new Date(p.endDate).getTime() - new Date(p.startDate).getTime()) /
+                (7 * 24 * 60 * 60 * 1000),
+            );
+            return (
+              <Link key={p.id} href={`/placements/${p.id}`} className="block">
+                <Card className="h-full hover:border-forest-300 transition-colors">
+                  <CardBody>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <p className="text-xs uppercase tracking-wider text-sage-500 font-semibold">
+                        {p.engagementType.replace("_", " ")}
+                      </p>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${STATUS_STYLES[p.status]}`}>
+                        {p.status.replace("_", " ")}
+                      </span>
+                    </div>
+                    <p className="text-lg font-bold text-forest-900">
+                      ${p.billRateUsd.toFixed(0)}/hr
+                    </p>
+                    <p className="text-xs text-sage-500 mt-0.5">{weeks} weeks</p>
+                    <div className="mt-4 pt-3 border-t border-sage-100 text-xs text-sage-600">
+                      <p>{new Date(p.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                      <p className="text-sage-400">→ {new Date(p.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                    </div>
+                  </CardBody>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

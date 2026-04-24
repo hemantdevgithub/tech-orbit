@@ -6,6 +6,7 @@ import { Badge, Button, Card, CardBody, CardHeader, CardTitle, Input, Label } fr
 import type { InterviewerProfileResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getProfileClient } from "@/lib/api-client";
+import { ViewToggle, useViewMode } from "@/components/view-toggle";
 
 export default function InterviewersPage() {
   const [interviewers, setInterviewers] = useState<InterviewerProfileResponse[]>([]);
@@ -14,6 +15,7 @@ export default function InterviewersPage() {
   const [search, setSearch] = useState("");
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const [viewMode, setViewMode] = useViewMode("interviewers-view", "list");
 
   async function loadPage(cursor?: string) {
     setLoading(true);
@@ -46,11 +48,12 @@ export default function InterviewersPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-forest-900">Interviewer marketplace</h1>
           <p className="text-sage-600 text-sm">Browse verified technical interviewers for your requirements.</p>
         </div>
+        {interviewers.length > 0 && <ViewToggle mode={viewMode} onChange={setViewMode} />}
       </div>
 
       <form onSubmit={onSearch} className="mb-6 flex gap-3 max-w-md">
@@ -87,31 +90,54 @@ export default function InterviewersPage() {
           </CardBody>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className={viewMode === "grid" ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3" : "space-y-3"}>
           {interviewers.map((iv) => (
-            <Card key={iv.id}>
-              <CardBody className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-forest-900">{iv.displayName ?? "Interviewer"}</h3>
+            viewMode === "grid" ? (
+              <Card key={iv.id} className="h-full">
+                <CardBody className="flex flex-col h-full">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-semibold text-forest-900 truncate">{iv.displayName ?? "Interviewer"}</h3>
                     {iv.linkedinVerified && <Badge variant="success">Verified</Badge>}
                   </div>
-                  {iv.headline && <p className="text-sm text-sage-600 mt-0.5">{iv.headline}</p>}
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {iv.specializations.map((s) => <Badge key={s} variant="mint">{s}</Badge>)}
-                    {iv.seniorityLevelsCoverable.map((s) => <Badge key={s} variant="cream">{s}</Badge>)}
+                  {iv.headline && <p className="text-sm text-sage-600 line-clamp-2">{iv.headline}</p>}
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {iv.specializations.slice(0, 4).map((s) => <Badge key={s} variant="mint">{s}</Badge>)}
                   </div>
-                </div>
-                <div className="shrink-0 text-right space-y-1">
-                  {iv.perInterviewFeeUsd !== null && (
-                    <p className="text-sm font-semibold text-forest-900">${iv.perInterviewFeeUsd}/interview</p>
-                  )}
-                  <Link href={`/interviewers/${iv.userId}`}>
-                    <Button variant="secondary" size="sm">View profile</Button>
-                  </Link>
-                </div>
-              </CardBody>
-            </Card>
+                  <div className="mt-auto pt-4 flex items-center justify-between">
+                    {iv.perInterviewFeeUsd !== null ? (
+                      <p className="text-sm font-semibold text-forest-900">${iv.perInterviewFeeUsd}/interview</p>
+                    ) : <span />}
+                    <Link href={`/interviewers/${iv.userId}`}>
+                      <Button variant="secondary" size="sm">View →</Button>
+                    </Link>
+                  </div>
+                </CardBody>
+              </Card>
+            ) : (
+              <Card key={iv.id}>
+                <CardBody className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-forest-900">{iv.displayName ?? "Interviewer"}</h3>
+                      {iv.linkedinVerified && <Badge variant="success">Verified</Badge>}
+                    </div>
+                    {iv.headline && <p className="text-sm text-sage-600 mt-0.5">{iv.headline}</p>}
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {iv.specializations.map((s) => <Badge key={s} variant="mint">{s}</Badge>)}
+                      {iv.seniorityLevelsCoverable.map((s) => <Badge key={s} variant="cream">{s}</Badge>)}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right space-y-1">
+                    {iv.perInterviewFeeUsd !== null && (
+                      <p className="text-sm font-semibold text-forest-900">${iv.perInterviewFeeUsd}/interview</p>
+                    )}
+                    <Link href={`/interviewers/${iv.userId}`}>
+                      <Button variant="secondary" size="sm">View profile</Button>
+                    </Link>
+                  </div>
+                </CardBody>
+              </Card>
+            )
           ))}
 
           {hasMore && (

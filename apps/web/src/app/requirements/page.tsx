@@ -15,6 +15,7 @@ import { TECH_STACK_OPTIONS } from "@techorbit/types";
 import { getRequirementClient } from "@/lib/api-client";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
+import { ViewToggle, useViewMode } from "@/components/view-toggle";
 
 const STATUS_OPTIONS: RequirementStatus[] = [
   "DRAFT", "OPEN", "INTERVIEWING", "OFFER_EXTENDED", "PLACED", "CLOSED", "CANCELLED",
@@ -46,6 +47,53 @@ const SENIORITY_COLOR: Record<string, string> = {
   PRINCIPAL: "bg-forest-400 text-cream-100",
   PARTNER:   "bg-forest-600 text-cream-100",
 };
+
+function RequirementListRow({ r }: { r: RequirementResponse }) {
+  const router = useRouter();
+  const location = r.locationType === "REMOTE"
+    ? "Remote"
+    : r.locationCity
+      ? `${r.locationCity}${r.locationState ? `, ${r.locationState}` : ""}`
+      : r.locationType;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => router.push(`/requirements/${r.id}`)}
+      onKeyDown={(e) => e.key === "Enter" && router.push(`/requirements/${r.id}`)}
+      className="group flex items-center gap-4 rounded-lg border border-surface-border bg-surface px-4 py-3 hover:border-forest-300 hover:shadow-card transition-all cursor-pointer"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href={`/requirements/${r.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="font-semibold text-forest-900 hover:text-forest-700 text-sm truncate"
+          >
+            {r.title}
+          </Link>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${STATUS_STYLES[r.status]}`}>
+            {r.status === "OFFER_EXTENDED" ? "Offer" : r.status.charAt(0) + r.status.slice(1).toLowerCase()}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-sage-500 mt-1 flex-wrap">
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${SENIORITY_COLOR[r.seniority] ?? "bg-surface-soft text-sage-500"}`}>
+            {r.seniority}
+          </span>
+          <span>{LOCATION_ICON[r.locationType]} {location}</span>
+          <span className="text-forest-600 font-medium">${r.billRateMinUsd}–${r.billRateMaxUsd}/hr</span>
+          <span>{r.durationWeeks}w</span>
+          <span>{r.techStack.slice(0, 3).join(" · ")}{r.techStack.length > 3 ? ` +${r.techStack.length - 3}` : ""}</span>
+          {r.publishedAt && (
+            <span>· Posted {new Date(r.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+          )}
+        </div>
+      </div>
+      <span className="text-sage-300 group-hover:text-forest-500 transition-colors text-sm shrink-0">→</span>
+    </div>
+  );
+}
 
 function RequirementCard({ r }: { r: RequirementResponse }) {
   const router = useRouter();
@@ -127,6 +175,7 @@ export default function BrowseRequirementsPage() {
   const [locationType, setLocationType] = useState<LocationType | "">("");
   const [techStack, setTechStack] = useState<string[]>([]);
   const [search, setSearch] = useState(() => searchParams?.get("search") ?? "");
+  const [viewMode, setViewMode] = useViewMode("requirements-view", "grid");
 
   // Keep search in sync if the URL changes (e.g. sidebar quick-search).
   useEffect(() => {
@@ -183,6 +232,7 @@ export default function BrowseRequirementsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
@@ -274,9 +324,15 @@ export default function BrowseRequirementsPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {rows.map((r) => <RequirementCard key={r.id} r={r} />)}
-          </div>
+          {viewMode === "grid" ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {rows.map((r) => <RequirementCard key={r.id} r={r} />)}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {rows.map((r) => <RequirementListRow key={r.id} r={r} />)}
+            </div>
+          )}
           {hasMore && (
             <div className="mt-6 text-center">
               <Button variant="secondary" onClick={() => load(false)} disabled={loading}>
