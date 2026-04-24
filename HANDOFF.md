@@ -44,6 +44,16 @@ across all 31 workspaces.
 ### Prereqs
 - Docker Desktop running (postgres/redis/rabbitmq/mailpit containers)
 - Node 20+ (tested on 23). macOS: bump per-proc FD limit.
+- After a fresh `pnpm install` in a new worktree, **regenerate Prisma clients**
+  (they live under `services/*/src/generated/` and are gitignored):
+  ```bash
+  for svc in admin file identity interview matching messaging notification \
+             payments placement profile rating requirement; do
+    pnpm --filter @techorbit/$svc exec prisma generate
+  done
+  ```
+  Without this, `pnpm typecheck` and `pnpm test` fail on `Cannot find module
+  '../generated/client'` in every service.
 
 ### Known gotchas you MUST know
 
@@ -146,20 +156,24 @@ Sprint 10 is partial — what landed vs what's still open:
 - 9 Playwright E2E spec file stubs (helpers.ts + updated signup.spec.ts)
 - Deployment docs (LOCAL + VPS + CHECKLIST)
 
+**Closed in the 2026-04-24 polish pass** (see the addendum in `SPRINT_10_SUMMARY.md`):
+- Identity login/password-reset/register per-route limits — verified these were
+  already wired in Sprint 1 (`services/identity/src/routes/auth.routes.ts`).
+- Payments per-route limits — added to `mark-paid` + 4 timesheet mutations,
+  with a new `rate-limit.test.ts` mirroring identity's suite.
+- XSS audit — zero `dangerouslySetInnerHTML` in `apps/web`, `packages/ui`, or
+  any service src.
+- `@next/bundle-analyzer` — already installed + wired in `next.config.js`;
+  added an `analyze` script to `apps/web/package.json`.
+- DB index audit — every FK and primary filter column is indexed. See the
+  table in `SPRINT_10_SUMMARY.md`.
+
 **Still open in Sprint 10:**
-- Per-route rate limits on the *other* sensitive endpoints (identity login,
-  password reset, payments invoice endpoints). Global limiter is on; per-route
-  opt-ins aren't.
-- XSS input audit. React handles output escaping already, but I never did the
-  grep-for-`dangerouslySetInnerHTML` pass.
-- Bundle analyzer wiring. `@next/bundle-analyzer` not installed.
-- DB index audit. Existing indexes look sufficient per Sprint 6/7 migrations;
-  haven't verified against the Sprint 10 prompt's target list.
 - The E2E spec files 01-09 exist but are **stubs** (placeholder `test.skip`).
   signup.spec.ts was updated for the role picker; login.spec.ts still uses
   the old registration flow and probably fails.
-- `SPRINT_10_SUMMARY.md` is a stub — write the real summary after closing the
-  above items.
+- Per-IP (not per-token) rate limits for the fully anonymous surfaces — noted
+  as a known gap in `SPRINT_10_SUMMARY.md`.
 
 **UI polish still outstanding** (user flagged these in earlier sessions):
 - Onboarding flows for each role are not fully built. Registration leaves

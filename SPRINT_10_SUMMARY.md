@@ -128,3 +128,27 @@ You can:
 - Hand the `PRODUCTION_CHECKLIST.md` to a second pair of eyes before you tell users the URL.
 
 **Techorbit is deployable.**
+
+---
+
+## Polish pass — 2026-04-24
+
+After the original sprint closeout, a grep over the payments-svc routes
+showed five financial-mutation endpoints still falling through to the
+now-registered global limiter (which is `global: false`, so "none" in
+practice). Added per-route limits mirroring the admin-svc pattern:
+
+- `POST /api/v1/invoices/:id/mark-paid` → **30/min** per IP (matches admin)
+- `POST /api/v1/timesheets` → **60/min**
+- `PATCH /api/v1/timesheets/:id` → **60/min**
+- `POST /api/v1/timesheets/:id/approve` → **120/min** (allows batch approval)
+- `POST /api/v1/timesheets/:id/reject` → **120/min**
+
+New test: [`services/payments/tests/integration/rate-limit.test.ts`](services/payments/tests/integration/rate-limit.test.ts)
+mirrors identity's rate-limit suite — builds its own Fastify instance with
+`DISABLE_RATE_LIMIT` cleared, asserts 429 on `mark-paid` and `POST /timesheets`
+after the configured cap. Noted a gotcha in the test: `z.coerce.boolean()`
+returns `true` for any non-empty string (including `"0"`), so the test
+**deletes** the env var rather than setting it to `"0"`.
+
+No other changes this pass.
