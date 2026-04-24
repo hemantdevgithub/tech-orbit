@@ -98,6 +98,7 @@ export type {
 export {
   AvailabilitySlotSchema,
   CandidateProfileResponseSchema,
+  PublicCandidateProfileSchema,
   UpdateCandidateProfileSchema,
   StartKycResponseSchema,
   MsmeProfileResponseSchema,
@@ -111,6 +112,7 @@ export {
   UpdateCustomerCompanySchema,
   AttributeCrmSchema,
   InterviewerProfileResponseSchema,
+  PublicInterviewerProfileSchema,
   CreateInterviewerProfileSchema,
   UpdateInterviewerProfileSchema,
   SetAvailabilitySchema,
@@ -128,6 +130,7 @@ export {
 export type {
   AvailabilitySlot,
   CandidateProfileResponse,
+  PublicCandidateProfile,
   UpdateCandidateProfile,
   StartKycResponse,
   MsmeProfileResponse,
@@ -141,6 +144,7 @@ export type {
   UpdateCustomerCompany,
   AttributeCrm,
   InterviewerProfileResponse,
+  PublicInterviewerProfile,
   CreateInterviewerProfile,
   UpdateInterviewerProfile,
   SetAvailability,

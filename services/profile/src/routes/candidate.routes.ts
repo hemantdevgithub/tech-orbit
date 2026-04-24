@@ -25,13 +25,24 @@ export async function candidateRoutes(fastify: FastifyInstance): Promise<void> {
     },
   );
 
-  // GET /api/v1/candidates/:userId  (admin/CRM/SRM view)
+  // GET /api/v1/candidates/:userId  (admin/CRM/SRM view — full profile)
   fastify.get(
     "/api/v1/candidates/:userId",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
       const { userId } = z.object({ userId: z.string().uuid() }).parse(request.params);
       const profile = await candidateService.getProfile(request.auth, userId);
+      return reply.status(200).send(profile);
+    },
+  );
+
+  // GET /api/v1/candidates/:userId/public  (any authenticated user — no PII)
+  fastify.get(
+    "/api/v1/candidates/:userId/public",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { userId } = z.object({ userId: z.string().uuid() }).parse(request.params);
+      const profile = await candidateService.getPublicProfile(userId);
       return reply.status(200).send(profile);
     },
   );

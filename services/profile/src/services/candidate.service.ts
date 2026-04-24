@@ -1,7 +1,12 @@
 import type { CandidateProfile } from "../generated/client/index.js";
 import { Decimal } from "@prisma/client/runtime/library";
 import type { AuthContext } from "@techorbit/auth-middleware";
-import type { CandidateProfileResponse, UpdateCandidateProfile } from "@techorbit/types";
+import type {
+  CandidateProfileResponse,
+  PublicCandidateProfile,
+  UpdateCandidateProfile,
+} from "@techorbit/types";
+import { NotFoundError } from "@techorbit/errors";
 import { candidateRepository } from "../repositories/candidate.repository.js";
 
 function toResponse(p: CandidateProfile): CandidateProfileResponse {
@@ -47,6 +52,17 @@ export const candidateService = {
   async getProfile(ctx: AuthContext, userId: string): Promise<CandidateProfileResponse> {
     const profile = await candidateRepository.getByUserId(ctx, userId);
     return toResponse(profile);
+  },
+
+  async getPublicProfile(userId: string): Promise<PublicCandidateProfile> {
+    const profile = await candidateRepository.findByUserId(userId);
+    if (!profile) throw new NotFoundError("Candidate profile not found");
+    return {
+      userId: profile.userId,
+      headline: profile.headline,
+      seniority: profile.seniority as PublicCandidateProfile["seniority"],
+      location: profile.location,
+    };
   },
 
   async updateProfile(

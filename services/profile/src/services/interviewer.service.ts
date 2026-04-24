@@ -4,8 +4,10 @@ import type {
   InterviewerProfileResponse,
   CreateInterviewerProfile,
   UpdateInterviewerProfile,
+  PublicInterviewerProfile,
   SetAvailability,
 } from "@techorbit/types";
+import { NotFoundError } from "@techorbit/errors";
 import { interviewerRepository } from "../repositories/interviewer.repository.js";
 
 function toResponse(p: InterviewerProfile): InterviewerProfileResponse {
@@ -94,6 +96,17 @@ export const interviewerService = {
     const profile = await interviewerRepository.findByUserId(userId);
     if (!profile) return null;
     return toResponse(profile);
+  },
+
+  async getPublicProfile(userId: string): Promise<PublicInterviewerProfile> {
+    const profile = await interviewerRepository.findByUserId(userId);
+    if (!profile) throw new NotFoundError("Interviewer profile not found");
+    return {
+      userId: profile.userId,
+      displayName: profile.displayName,
+      headline: profile.headline,
+      specializations: profile.specializations,
+    };
   },
 
   async listInterviewers(opts: {

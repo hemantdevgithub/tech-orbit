@@ -12,6 +12,8 @@ import type {
   CreateCustomerCompany,
   UpdateCustomerCompany,
   PublicCustomerProfile,
+  PublicCandidateProfile,
+  PublicInterviewerProfile,
   InterviewerProfileResponse,
   CreateInterviewerProfile,
   UpdateInterviewerProfile,
@@ -44,6 +46,10 @@ export class ProfileApiClient {
 
   getCandidateByUserId(userId: string): Promise<CandidateProfileResponse> {
     return this.client.get(`/api/v1/candidates/${userId}`);
+  }
+
+  getPublicCandidate(userId: string): Promise<PublicCandidateProfile> {
+    return this.client.get(`/api/v1/candidates/${userId}/public`);
   }
 
   // ─── MSME ────────────────────────────────────────────────────────────────────
@@ -123,6 +129,10 @@ export class ProfileApiClient {
 
   getInterviewerByUserId(userId: string): Promise<InterviewerProfileResponse> {
     return this.client.get(`/api/v1/interviewers/${userId}`);
+  }
+
+  getPublicInterviewer(userId: string): Promise<PublicInterviewerProfile> {
+    return this.client.get(`/api/v1/interviewers/${userId}/public`);
   }
 
   // ─── Files ───────────────────────────────────────────────────────────────────

@@ -59,13 +59,24 @@ export async function interviewerRoutes(fastify: FastifyInstance): Promise<void>
     },
   );
 
-  // GET /api/v1/interviewers/:userId  (admin/CRM/SRM view)
+  // GET /api/v1/interviewers/:userId  (admin/CRM/SRM view — full profile)
   fastify.get(
     "/api/v1/interviewers/:userId",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
       const { userId } = z.object({ userId: z.string().uuid() }).parse(request.params);
       const profile = await interviewerService.getProfile(request.auth, userId);
+      return reply.status(200).send(profile);
+    },
+  );
+
+  // GET /api/v1/interviewers/:userId/public  (any authenticated user — no PII)
+  fastify.get(
+    "/api/v1/interviewers/:userId/public",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { userId } = z.object({ userId: z.string().uuid() }).parse(request.params);
+      const profile = await interviewerService.getPublicProfile(userId);
       return reply.status(200).send(profile);
     },
   );

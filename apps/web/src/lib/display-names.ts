@@ -38,15 +38,15 @@ function fetchName(id: string, kind: Kind): Promise<string> {
     try {
       const client = getProfileClient();
       if (kind === "candidate") {
-        const r = await client.getCandidateByUserId(id);
+        const r = await client.getPublicCandidate(id);
         return r.headline?.trim() || shortId(id);
       }
       if (kind === "customer") {
         const r = await client.getPublicCustomer(id);
         return r.legalName || shortId(id);
       }
-      const r = await client.getInterviewerByUserId(id);
-      return r.displayName?.trim() || shortId(id);
+      const r = await client.getPublicInterviewer(id);
+      return r.displayName?.trim() || r.headline?.trim() || shortId(id);
     } catch {
       return shortId(id);
     }

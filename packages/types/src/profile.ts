@@ -52,6 +52,17 @@ export const CandidateProfileResponseSchema = z.object({
 });
 export type CandidateProfileResponse = z.infer<typeof CandidateProfileResponseSchema>;
 
+// Narrow, safe-to-browse subset of a candidate profile. No rate, no KYC,
+// no resume — just the fields we display on list rows (headline, seniority,
+// location). Any authenticated user can read this.
+export const PublicCandidateProfileSchema = z.object({
+  userId: z.string(),
+  headline: z.string().nullable(),
+  seniority: Seniority.nullable(),
+  location: z.string().nullable(),
+});
+export type PublicCandidateProfile = z.infer<typeof PublicCandidateProfileSchema>;
+
 export const UpdateCandidateProfileSchema = z.object({
   headline: z.string().max(160).optional(),
   bio: z.string().max(2000).optional(),
@@ -234,6 +245,16 @@ export const InterviewerProfileResponseSchema = z.object({
   updatedAt: z.string(),
 });
 export type InterviewerProfileResponse = z.infer<typeof InterviewerProfileResponseSchema>;
+
+// Narrow, safe-to-browse subset of an interviewer profile. Mirrors the
+// candidate + customer public endpoints. Any authenticated user can read it.
+export const PublicInterviewerProfileSchema = z.object({
+  userId: z.string(),
+  displayName: z.string().nullable(),
+  headline: z.string().nullable(),
+  specializations: z.array(z.string()),
+});
+export type PublicInterviewerProfile = z.infer<typeof PublicInterviewerProfileSchema>;
 
 export const CreateInterviewerProfileSchema = z.object({
   displayName: z.string().max(100).optional(),
