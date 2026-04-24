@@ -118,4 +118,61 @@ runIntegrationSuite("Candidate profile integration", () => {
     const res = await server.inject({ method: "GET", url: "/api/v1/candidates/me" });
     expect(res.statusCode).toBe(401);
   });
+
+  // ── Public endpoint (narrow, safe-to-browse subset) ────────────────────────
+
+  it("GET /api/v1/candidates/:userId/public returns narrow fields for any authed user", async () => {
+    const server = await getServer();
+    const ownerToken = await makeBearerToken(USER_ID, ["CANDIDATE"]);
+    const viewerToken = await makeBearerToken(OTHER_USER_ID, ["CUSTOMER"]);
+
+    await server.inject({
+      method: "PATCH",
+      url: "/api/v1/candidates/me",
+      headers: { authorization: `Bearer ${ownerToken}`, "content-type": "application/json" },
+      payload: JSON.stringify({
+        headline: "Senior Full-Stack Engineer",
+        seniority: "SENIOR",
+        location: "Austin, TX",
+        skills: ["React"],
+        rateMin: 100,
+        rateMax: 140,
+      }),
+    });
+
+    const res = await server.inject({
+      method: "GET",
+      url: `/api/v1/candidates/${USER_ID}/public`,
+      headers: { authorization: `Bearer ${viewerToken}` },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as Record<string, unknown>;
+    // Exactly the public subset — no rate / KYC / resume fields leak.
+    expect(Object.keys(body).sort()).toEqual(["headline", "location", "seniority", "userId"]);
+    expect(body.headline).toBe("Senior Full-Stack Engineer");
+    expect(body.seniority).toBe("SENIOR");
+    expect(body.userId).toBe(USER_ID);
+    expect(body.location).toBe("Austin, TX");
+  });
+
+  it("public endpoint is 404 when the profile doesn't exist", async () => {
+    const server = await getServer();
+    const viewerToken = await makeBearerToken(OTHER_USER_ID, ["CUSTOMER"]);
+    const res = await server.inject({
+      method: "GET",
+      url: `/api/v1/candidates/${USER_ID}/public`,
+      headers: { authorization: `Bearer ${viewerToken}` },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("public endpoint requires authentication", async () => {
+    const server = await getServer();
+    const res = await server.inject({
+      method: "GET",
+      url: `/api/v1/candidates/${USER_ID}/public`,
+    });
+    expect(res.statusCode).toBe(401);
+  });
 });

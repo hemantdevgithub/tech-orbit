@@ -175,15 +175,57 @@ Sprint 10 is partial — what landed vs what's still open:
 - Per-IP (not per-token) rate limits for the fully anonymous surfaces — noted
   as a known gap in `SPRINT_10_SUMMARY.md`.
 
-**UI polish still outstanding** (user flagged these in earlier sessions):
-- Onboarding flows for each role are not fully built. Registration leaves
-  CUSTOMER → `/onboarding/customer` and CANDIDATE → `/onboarding/candidate`,
-  but those pages are minimal. CRM/SRM have no onboarding page at all — they
-  go straight to `/dashboard`.
-- Candidate profile (`/candidates/[id]`) is a stub; only `/users/[id]` exists
-  as a generic profile page.
-- Rating display on customer profiles is wired but there's no dedicated
-  `/customers/[id]` page for MSMEs/SRMs to browse.
+**Closed in the 2026-04-25 UI polish pass** (15 commits on
+`claude/adoring-montalcini-dc0292`, not yet merged):
+- Role profile pages: `/candidates/[id]`, `/customers/[id]` (public subset)
+  and enhanced `/users/[id]`.
+- Static onboarding welcome pages for CRM and SRM; wired into
+  `register` → `ONBOARDING_ROUTES`.
+- Left-sidebar `AppShell` replacing the top NavBar across 17 layouts
+  (dashboard, candidates, customers, users, onboarding, requirements,
+  placements, interviews, interviewers, submissions, timesheets,
+  invoices, payouts, messages, notifications, settings/*, admin).
+  Role-aware: sidebar renders a primary CTA, 3 quick-search inputs, and
+  nav links that fit the viewer's role. Mobile collapses to a drawer.
+- Grid/list `ViewToggle` with `useViewMode` persisted per-page on
+  Requirements, Placements, Interviewers.
+- `<Breadcrumbs>` component used on every list + detail page.
+- Dashboards for CRM and SRM (earnings strip + attribution/submissions
+  panels). Customer/Candidate/MSME dashboards swapped their "Coming in
+  Sprint 3" placeholders for live data from listRequirements /
+  listSubmissions.
+- Lucide-style SVG icon set replacing emojis everywhere — sidebar nav,
+  CTAs, role badges, notification bell type icons, value-chain nodes,
+  register role picker, onboarding welcome headers, dashboard empty
+  states. Emojis remain only in Prisma seed strings and markdown.
+- Public profile endpoints `GET /candidates/:id/public`,
+  `/interviewers/:id/public`, `/customers/:id/public` — narrow
+  no-PII subsets accessible to any authenticated user. `useDisplayName`
+  hook on the web uses them, so timesheets / interviews / placements
+  now read e.g. "Full-stack engineer — 8 yrs React/Node" instead of
+  `#ed087681`.
+
+**Critical bug fixes from the same pass:**
+- `api-client.ts`: `getApiClient` / `makeServiceClient` were freezing
+  a snapshot of the zustand store, so `getAccessToken` always returned
+  `null`. Every authed request silently went anonymous — including
+  `fetchMe` after login, which left the dashboard stuck on a blank
+  screen.
+- `dashboard/layout.tsx` + new `useAuthGuard` hook: wait for zustand
+  persist rehydration before deciding whether to bounce to `/login`.
+  Without this, hard-reload of any authenticated page flashed the
+  login screen.
+- Placement list + detail titles: stopped rendering the candidate's
+  own UUID as the H1 when the candidate was the viewer.
+
+**UI polish still outstanding:**
+- E2E Playwright specs 01-09 are still `test.skip` stubs.
+- Per-IP rate limits for fully anonymous register/login surfaces (docs +
+  infra layer decision).
+- Cross-service "Customer #abc" — value-chain graph on placement detail
+  shows a short company id because it has `customerCompanyId` not a
+  primaryUserId; wants a `GET /internal/customers/by-company/:id/public`
+  lookup to resolve the name.
 
 **Dependencies for the next sprint:**
 - Real Stripe/Gusto integration (payments-svc currently uses mocks).
