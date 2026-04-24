@@ -86,4 +86,4 @@ export const selectIsLoading = (state: AuthState) => state.status === "loading";
 export const selectRequires2FA = (state: AuthState) => state.status === "requires2FA";
 export const selectRoles = (state: AuthState) => state.user?.roles ?? [];
 export const selectActiveRoles = (state: AuthState) =>
-  state.user?.roles.filter((r) => r.status === "ACTIVE") ?? [];
+  state.user?.roles?.filter((r) => r.status === "ACTIVE") ?? [];

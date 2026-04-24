@@ -78,11 +78,12 @@ let adminClientInstance: AdminApiClient | null = null;
 
 export function getApiClient(): ApiClient {
   if (!apiClientInstance) {
-    const store = useAuthStore.getState();
-
     apiClientInstance = new ApiClient({
       baseUrl: IDENTITY_BASE_URL,
-      getAccessToken: () => store.accessToken,
+      // Always read the live store — getState() returns a snapshot, so
+      // closing over a single `const store = useAuthStore.getState()` would
+      // freeze accessToken at null (its initial value).
+      getAccessToken: () => useAuthStore.getState().accessToken,
       onAccessTokenRefresh: (token) => {
         useAuthStore.getState().setTokens(token, 900); // 15 min default
       },
@@ -106,10 +107,10 @@ export function getAuthClient(): AuthApiClient {
 }
 
 function makeServiceClient(baseUrl: string): ApiClient {
-  const store = useAuthStore.getState();
   return new ApiClient({
     baseUrl,
-    getAccessToken: () => store.accessToken,
+    // See note in getApiClient — getAccessToken must always read the live store.
+    getAccessToken: () => useAuthStore.getState().accessToken,
     onAccessTokenRefresh: (token) => {
       useAuthStore.getState().setTokens(token, 900);
     },
