@@ -123,7 +123,13 @@ export default function PlacementDetailPage() {
                 {ENGAGEMENT_LABEL[placement.engagementType] ?? placement.engagementType} placement
               </p>
               <h1 className="text-2xl font-bold text-cream-100">
-                Candidate {placement.candidateId.slice(0, 8)}…
+                ${placement.billRateUsd.toFixed(0)}/hr ·{" "}
+                {Math.round(
+                  (new Date(placement.endDate).getTime() -
+                    new Date(placement.startDate).getTime()) /
+                    (7 * 24 * 60 * 60 * 1000),
+                )}{" "}
+                weeks
               </h1>
               <div className="flex items-center gap-3 mt-2 text-sm text-sage-400">
                 <span>

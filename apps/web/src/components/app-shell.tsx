@@ -86,8 +86,8 @@ const SEARCH_FIELDS: Record<RoleType, SearchField[]> = {
   ],
   INTERVIEWER: [
     { placeholder: "Find an interview", href: "/interviews" },
-    { placeholder: "Find a requirement", href: "/requirements" },
-    { placeholder: "Find a placement", href: "/placements" },
+    { placeholder: "Find a scorecard", href: "/interviews" },
+    { placeholder: "Find a payout", href: "/payouts" },
   ],
   ADMIN: [
     { placeholder: "Find a user", href: "/admin/users" },

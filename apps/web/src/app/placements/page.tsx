@@ -59,10 +59,9 @@ export default function PlacementsListPage() {
                 <CardBody className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-forest-900">
-                      Candidate {p.candidateId.slice(0, 8)}…
+                      {p.engagementType.replace("_", " ")} placement · ${p.billRateUsd.toFixed(0)}/hr
                     </p>
                     <p className="text-xs text-sage-500 mt-0.5">
-                      {p.engagementType} · ${p.billRateUsd.toFixed(2)}/hr ·{" "}
                       {new Date(p.startDate).toLocaleDateString()} →{" "}
                       {new Date(p.endDate).toLocaleDateString()}
                     </p>

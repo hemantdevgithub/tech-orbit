@@ -145,10 +145,17 @@ export default function RequirementDetailPage() {
       ? "Remote"
       : [req.locationCity, req.locationState].filter(Boolean).join(", ") ||
         req.locationType;
-  const companyLabel =
-    req.blindPosting && !isOwner && !isAttributedCrm
-      ? "Confidential"
-      : (req.customerCompanyId ?? "Confidential");
+  // Show a friendly label for the company. We don't have company-name
+  // lookup wired into requirement-svc yet, so we pick between:
+  //   - "Confidential" for blind postings the viewer isn't owner/CRM on
+  //   - "Your company" when the viewer is the owner
+  //   - a short ID tag otherwise (still useful for link-chasing)
+  const companyLabel = (() => {
+    if (req.blindPosting && !isOwner && !isAttributedCrm) return "Confidential";
+    if (isOwner) return "Your company";
+    if (!req.customerCompanyId) return "Confidential";
+    return `#${req.customerCompanyId.slice(0, 8)}`;
+  })();
 
   return (
     <div>
