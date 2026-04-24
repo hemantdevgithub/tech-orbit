@@ -25,6 +25,8 @@ const ROLES: { value: Role; label: string; description: string; icon: string }[]
 const ONBOARDING_ROUTES: Partial<Record<Role, string>> = {
   CUSTOMER: "/onboarding/customer",
   CANDIDATE: "/onboarding/candidate",
+  CRM: "/onboarding/crm",
+  SRM: "/onboarding/srm",
   MSME: "/onboarding/msme",
   INTERVIEWER: "/onboarding/interviewer",
 };
