@@ -95,10 +95,8 @@ export function ValueChainGraph({
   const msmeRedacted = vc.redactedSlots.includes("MSME");
   const interviewerRedacted = vc.redactedSlots.includes("INTERVIEWER");
 
-  // Note: vc.customerCompanyId is the COMPANY id, not the primary user id —
-  // we don't have a company-by-id name endpoint, so the customer node still
-  // shows the short id. Candidate uses their user id which does resolve.
   const candidateName = useDisplayName(vc.candidateId ?? null, "candidate");
+  const customerName = useDisplayName(vc.customerCompanyId ?? null, "customerByCompany");
 
   const crmRule = ruleFor(rules, "CRM", vc.attributedCrmId);
   const srmRule = ruleFor(rules, "SRM", vc.attributedSrmId);
@@ -126,8 +124,8 @@ export function ValueChainGraph({
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         <Node
           icon={<BuildingIcon size={20} />}
-          label={vc.customerCompanyId ? "Customer" : "Confidential"}
-          sublabel={vc.customerCompanyId ? displayUserId(vc.customerCompanyId) : undefined}
+          label={vc.customerCompanyId ? customerName : "Confidential"}
+          sublabel="Customer"
           highlight
         />
         <Arrow />

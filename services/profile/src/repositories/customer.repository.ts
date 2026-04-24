@@ -31,6 +31,10 @@ export const customerRepository = {
     return prisma.customerCompanyProfile.findUnique({ where: { primaryUserId } });
   },
 
+  async findByCompanyId(companyId: string): Promise<CustomerCompanyProfile | null> {
+    return prisma.customerCompanyProfile.findUnique({ where: { id: companyId } });
+  },
+
   async getByPrimaryUserId(
     ctx: AuthContext,
     primaryUserId: string,

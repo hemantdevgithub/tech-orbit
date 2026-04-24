@@ -71,6 +71,21 @@ export async function customerRoutes(
     },
   );
 
+  // GET /api/v1/customers/by-company/:companyId/public
+  // Value-chain + placement rows expose customerCompanyId (not user id);
+  // this endpoint resolves those to the company's public profile.
+  fastify.get(
+    "/api/v1/customers/by-company/:companyId/public",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { companyId } = z
+        .object({ companyId: z.string().uuid() })
+        .parse(request.params);
+      const profile = await customerService.getPublicProfileByCompany(companyId);
+      return reply.status(200).send(profile);
+    },
+  );
+
   // POST /api/v1/customers/:primaryUserId/crm
   fastify.post(
     "/api/v1/customers/:primaryUserId/crm",

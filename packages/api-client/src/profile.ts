@@ -96,6 +96,10 @@ export class ProfileApiClient {
     return this.client.get(`/api/v1/customers/${primaryUserId}/public`);
   }
 
+  getPublicCustomerByCompany(companyId: string): Promise<PublicCustomerProfile> {
+    return this.client.get(`/api/v1/customers/by-company/${companyId}/public`);
+  }
+
   // ─── Interviewer ──────────────────────────────────────────────────────────────
 
   getInterviewerProfile(): Promise<InterviewerProfileResponse> {

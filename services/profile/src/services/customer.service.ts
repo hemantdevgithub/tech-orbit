@@ -126,16 +126,26 @@ export function createCustomerService(encryptionService: EncryptionService) {
     async getPublicProfile(primaryUserId: string): Promise<PublicCustomerProfile> {
       const profile = await customerRepository.findByPrimaryUserId(primaryUserId);
       if (!profile) throw new NotFoundError("Customer profile not found");
-      return {
-        id: profile.id,
-        primaryUserId: profile.primaryUserId,
-        legalName: profile.legalName,
-        dba: profile.dba,
-        industry: profile.industry,
-        companySizeRange: profile.companySizeRange,
-        website: profile.website,
-      };
+      return toPublicProfile(profile);
     },
+
+    async getPublicProfileByCompany(companyId: string): Promise<PublicCustomerProfile> {
+      const profile = await customerRepository.findByCompanyId(companyId);
+      if (!profile) throw new NotFoundError("Customer profile not found");
+      return toPublicProfile(profile);
+    },
+  };
+}
+
+function toPublicProfile(p: CustomerCompanyProfile): PublicCustomerProfile {
+  return {
+    id: p.id,
+    primaryUserId: p.primaryUserId,
+    legalName: p.legalName,
+    dba: p.dba,
+    industry: p.industry,
+    companySizeRange: p.companySizeRange,
+    website: p.website,
   };
 }
 

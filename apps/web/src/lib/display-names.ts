@@ -17,11 +17,12 @@ import { getProfileClient } from "./api-client";
  * First-party profile data only — no identity-svc /me cross-reads.
  */
 
-type Kind = "candidate" | "customer" | "interviewer";
+type Kind = "candidate" | "customer" | "customerByCompany" | "interviewer";
 
 const caches: Record<Kind, Map<string, Promise<string>>> = {
   candidate: new Map(),
   customer: new Map(),
+  customerByCompany: new Map(),
   interviewer: new Map(),
 };
 
@@ -43,6 +44,10 @@ function fetchName(id: string, kind: Kind): Promise<string> {
       }
       if (kind === "customer") {
         const r = await client.getPublicCustomer(id);
+        return r.legalName || shortId(id);
+      }
+      if (kind === "customerByCompany") {
+        const r = await client.getPublicCustomerByCompany(id);
         return r.legalName || shortId(id);
       }
       const r = await client.getPublicInterviewer(id);
