@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { CandidateProfileResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getProfileClient } from "@/lib/api-client";
 import { UserRatingsPanel } from "@/components/user-ratings-panel";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const WORK_AUTH_LABELS: Record<string, string> = {
   US_CITIZEN: "US Citizen",
@@ -73,11 +73,13 @@ export default function CandidateDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/dashboard" className="text-sm text-forest-700 hover:underline">
-          ← Dashboard
-        </Link>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Candidates" },
+          { label: profile.headline ?? "Candidate" },
+        ]}
+      />
 
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">

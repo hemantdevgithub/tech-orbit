@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import { useAuthStore } from "@/store/auth.store";
 import { UserRatingsPanel } from "@/components/user-ratings-panel";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const ROLE_ICONS: Record<string, string> = {
   CUSTOMER: "🏢",
@@ -39,11 +40,14 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: isSelf ? "Your profile" : "User profile" },
+        ]}
+      />
       <div>
-        <Link href="/dashboard" className="text-sm text-forest-700 hover:underline">
-          ← Dashboard
-        </Link>
-        <h1 className="text-2xl font-bold text-forest-900 mt-2">
+        <h1 className="text-2xl font-bold text-forest-900">
           {isSelf ? `${me.firstName} ${me.lastName}` : "User profile"}
         </h1>
         {isSelf && me.email && (

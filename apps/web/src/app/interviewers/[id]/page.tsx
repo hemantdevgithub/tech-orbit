@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { Badge, Button, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { InterviewerProfileResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getProfileClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export default function InterviewerDetailPage() {
   const params = useParams<{ id: string }>();
@@ -28,11 +28,13 @@ export default function InterviewerDetailPage() {
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-4">
-        <Link href="/interviewers" className="text-sm text-forest-700 hover:underline">
-          ← All interviewers
-        </Link>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Interviewers", href: "/interviewers" },
+          { label: iv.displayName ?? "Interviewer" },
+        ]}
+      />
 
       <div className="mb-6">
         <div className="flex items-start justify-between">

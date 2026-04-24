@@ -20,6 +20,7 @@ import type {
 import { getRequirementClient } from "@/lib/api-client";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const STATUS_VARIANT: Record<
   RequirementStatus,
@@ -159,11 +160,13 @@ export default function RequirementDetailPage() {
 
   return (
     <div>
-      <div className="mb-4">
-        <Link href="/requirements" className="text-sm text-forest-700 hover:underline">
-          ← All requirements
-        </Link>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Requirements", href: "/requirements" },
+          { label: req.title },
+        ]}
+      />
 
       <div className="mb-6 flex items-start justify-between">
         <div>

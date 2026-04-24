@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { PublicCustomerProfile } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getProfileClient } from "@/lib/api-client";
 import { UserRatingsPanel } from "@/components/user-ratings-panel";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const COMPANY_SIZE_LABELS: Record<string, string> = {
   SIZE_1_10: "1–10",
@@ -44,11 +44,13 @@ export default function CustomerDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/dashboard" className="text-sm text-forest-700 hover:underline">
-          ← Dashboard
-        </Link>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Customers" },
+          { label: profile.legalName },
+        ]}
+      />
 
       <div>
         <h1 className="text-2xl font-bold text-forest-900">{profile.legalName}</h1>

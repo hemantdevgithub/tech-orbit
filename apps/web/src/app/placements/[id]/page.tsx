@@ -19,6 +19,7 @@ import {
   computePlatformBreakdown,
 } from "@/components/placement/platform-fee-breakdown";
 import { UserRatingsPanel } from "@/components/user-ratings-panel";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -107,16 +108,18 @@ export default function PlacementDetailPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Placements", href: "/placements" },
+          { label: `${ENGAGEMENT_LABEL[placement.engagementType] ?? placement.engagementType} · $${placement.billRateUsd.toFixed(0)}/hr` },
+        ]}
+      />
       {/* Hero header */}
       <div className="rounded-2xl bg-forest-800 p-6 mb-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 85% 30%, #B2CCBA 0%, transparent 55%)" }} />
         <div className="relative z-10">
-          <div className="mb-3">
-            <Link href="/placements" className="text-sage-400 hover:text-cream-100 text-sm">
-              ← All placements
-            </Link>
-          </div>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <p className="text-mint-200 text-xs font-medium uppercase tracking-wider mb-1">

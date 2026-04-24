@@ -7,6 +7,7 @@ import type { PlacementResponse, PlacementStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getPlacementClient } from "@/lib/api-client";
 import { ViewToggle, useViewMode } from "@/components/view-toggle";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const STATUS_STYLES: Record<PlacementStatus, string> = {
   ACTIVE:          "bg-success/10 text-success border-success/30",
@@ -33,11 +34,19 @@ export default function PlacementsListPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Placements" },
+        ]}
+      />
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-forest-900">My placements</h1>
           <p className="text-sage-500 text-sm mt-0.5">
-            Active and past placements you are part of.
+            {rows.length > 0
+              ? `${rows.length} placement${rows.length === 1 ? "" : "s"} you are part of`
+              : "Active and past placements you are part of."}
           </p>
         </div>
         {rows.length > 0 && <ViewToggle mode={viewMode} onChange={setViewMode} />}

@@ -7,6 +7,7 @@ import type { InterviewerProfileResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getProfileClient } from "@/lib/api-client";
 import { ViewToggle, useViewMode } from "@/components/view-toggle";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export default function InterviewersPage() {
   const [interviewers, setInterviewers] = useState<InterviewerProfileResponse[]>([]);
@@ -48,6 +49,12 @@ export default function InterviewersPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Interviewers" },
+        ]}
+      />
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-forest-900">Interviewer marketplace</h1>

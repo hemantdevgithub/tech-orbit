@@ -16,6 +16,7 @@ import { getRequirementClient } from "@/lib/api-client";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { ViewToggle, useViewMode } from "@/components/view-toggle";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const STATUS_OPTIONS: RequirementStatus[] = [
   "DRAFT", "OPEN", "INTERVIEWING", "OFFER_EXTENDED", "PLACED", "CLOSED", "CANCELLED",
@@ -224,11 +225,19 @@ export default function BrowseRequirementsPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Requirements" },
+        ]}
+      />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-forest-900">Requirements</h1>
           <p className="text-sage-500 text-sm mt-0.5">
-            {loading ? "Loading…" : `${rows.length}${hasMore ? "+" : ""} positions`}
+            {loading && rows.length === 0
+              ? "Loading…"
+              : `Showing ${rows.length}${hasMore ? "+" : ""} position${rows.length === 1 ? "" : "s"}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -333,13 +342,20 @@ export default function BrowseRequirementsPage() {
               {rows.map((r) => <RequirementListRow key={r.id} r={r} />)}
             </div>
           )}
-          {hasMore && (
-            <div className="mt-6 text-center">
+          {hasMore ? (
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <p className="text-sm text-sage-500">
+                Showing {rows.length} · more available
+              </p>
               <Button variant="secondary" onClick={() => load(false)} disabled={loading}>
-                {loading ? "Loading…" : "Load more"}
+                {loading ? "Loading…" : "Load more →"}
               </Button>
             </div>
-          )}
+          ) : rows.length > 0 ? (
+            <p className="mt-6 text-center text-xs text-sage-400">
+              End of list · {rows.length} position{rows.length === 1 ? "" : "s"} total
+            </p>
+          ) : null}
         </>
       )}
     </div>
