@@ -1,10 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit/ui";
-import type { BenchEntryResponse } from "@techorbit/types";
-import { getProfileClient } from "@/lib/api-client";
+import type { BenchEntryResponse, SubmissionResponse } from "@techorbit/types";
+import { getProfileClient, getMatchingClient } from "@/lib/api-client";
 import { VendorEarningsCards } from "./earnings-cards";
+
+const SUBMISSION_STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
+  SUBMITTED: "mint",
+  SCREENING: "cream",
+  INTERVIEWING: "warning",
+  OFFER: "success",
+  PLACED: "success",
+  REJECTED: "muted",
+  WITHDRAWN: "muted",
+};
 
 const AVAILABILITY_LABELS: Record<string, string> = {
   AVAILABLE: "Available",
@@ -15,15 +26,32 @@ const AVAILABILITY_LABELS: Record<string, string> = {
 
 export function MsmeDashboard() {
   const [benchEntries, setBenchEntries] = useState<BenchEntryResponse[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getProfileClient()
-      .getBenchEntries()
-      .then((res) => setBenchEntries(res.data))
-      .catch(() => {})
+    Promise.all([
+      getProfileClient().getBenchEntries().then((r) => r.data).catch(() => []),
+      getMatchingClient()
+        .listSubmissions({ submitterRole: "MSME", limit: 50 })
+        .then((r) => r.data)
+        .catch(() => []),
+    ])
+      .then(([bench, subs]) => {
+        setBenchEntries(bench);
+        setSubmissions(subs);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const { activeCount, recentSubmissions } = useMemo(() => {
+    const activeStatuses = new Set(["SUBMITTED", "SCREENING", "INTERVIEWING", "OFFER"]);
+    const a = submissions.filter((s) => activeStatuses.has(s.status)).length;
+    const sorted = [...submissions].sort(
+      (x, y) => new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime(),
+    );
+    return { activeCount: a, recentSubmissions: sorted.slice(0, 5) };
+  }, [submissions]);
 
   return (
     <div className="space-y-6">
@@ -86,17 +114,63 @@ export function MsmeDashboard() {
         </CardBody>
       </Card>
 
-      {/* Active submissions placeholder */}
+      {/* Active submissions */}
       <Card>
         <CardHeader>
-          <CardTitle>Active submissions</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Active submissions</CardTitle>
+            <Link
+              href="/requirements"
+              className="text-sm text-forest-700 hover:underline"
+            >
+              Browse requirements →
+            </Link>
+          </div>
         </CardHeader>
         <CardBody>
-          <div className="text-center py-8 text-sage-500">
-            <p className="text-lg mb-1">📋</p>
-            <p className="font-medium">Coming in Sprint 3</p>
-            <p className="text-sm">Submitted candidates will appear here</p>
-          </div>
+          {loading ? (
+            <p className="text-sage-500 text-sm">Loading…</p>
+          ) : recentSubmissions.length === 0 ? (
+            <div className="text-center py-6 text-sage-500">
+              <p className="text-2xl mb-1">📋</p>
+              <p className="text-sm">No submissions yet.</p>
+              <p className="text-xs mt-1">Submit bench candidates to open requirements.</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-sage-600 mb-3">
+                {activeCount > 0
+                  ? `${activeCount} active submission${activeCount === 1 ? "" : "s"} awaiting customer decision.`
+                  : "No active submissions right now."}
+              </p>
+              <ul className="divide-y divide-sage-100">
+                {recentSubmissions.map((s) => (
+                  <li key={s.id} className="py-3 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-medium text-forest-900 text-sm truncate">
+                        Candidate {s.candidateId.slice(0, 8)}… → Req {s.requirementId.slice(0, 8)}…
+                      </p>
+                      <p className="text-xs text-sage-600 mt-0.5">
+                        {new Date(s.createdAt).toLocaleDateString()}
+                        {s.matchScore !== null && <> · Match {s.matchScore}</>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={SUBMISSION_STATUS_VARIANTS[s.status] ?? "muted"}>
+                        {s.status}
+                      </Badge>
+                      <Link
+                        href={`/submissions/${s.id}`}
+                        className="text-sm text-forest-700 hover:underline"
+                      >
+                        View →
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </CardBody>
       </Card>
     </div>
