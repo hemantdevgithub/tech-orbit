@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit
 import type { RequirementResponse } from "@techorbit/types";
 import { getRequirementClient } from "@/lib/api-client";
 import { CustomerEarningsCards } from "./earnings-cards";
+import { BriefcaseIcon } from "@/components/icons";
 
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   DRAFT: "cream",
@@ -74,7 +75,7 @@ export function CustomerDashboard() {
             <p className="text-sage-500 text-sm">Loading…</p>
           ) : requirements.length === 0 ? (
             <div className="text-center py-8 text-sage-500">
-              <p className="text-lg mb-1">📌</p>
+              <div className="flex justify-center mb-2 text-sage-400"><BriefcaseIcon size={28} /></div>
               <p className="font-medium text-forest-900 mb-1">No requirements yet</p>
               <p className="text-sm">
                 <Link href="/requirements/new" className="text-forest-700 hover:underline">

@@ -6,6 +6,7 @@ import { Badge, Card, CardBody, CardHeader, CardTitle, Button } from "@techorbit
 import type { SubmissionResponse } from "@techorbit/types";
 import { getProfileClient, getMatchingClient } from "@/lib/api-client";
 import { CandidateEarningsCards } from "./earnings-cards";
+import { SearchIcon } from "@/components/icons";
 
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   SUBMITTED: "mint",
@@ -98,7 +99,7 @@ export function CandidateDashboard() {
             <p className="text-sage-500 text-sm">Loading…</p>
           ) : recent.length === 0 ? (
             <div className="text-center py-8 text-sage-500">
-              <p className="text-lg mb-1">🔍</p>
+              <div className="flex justify-center mb-2 text-sage-400"><SearchIcon size={28} /></div>
               <p className="font-medium text-forest-900 mb-1">No submissions yet</p>
               <p className="text-sm">Browse open requirements and apply to ones that fit.</p>
             </div>

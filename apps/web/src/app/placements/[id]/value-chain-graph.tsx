@@ -5,6 +5,13 @@ import type {
   EngagementType,
   ValueChainResponse,
 } from "@techorbit/types";
+import {
+  BuildingIcon,
+  FactoryIcon,
+  HandshakeIcon,
+  SearchIcon,
+  UserIcon,
+} from "@/components/icons";
 
 type Props = {
   valueChain: ValueChainResponse;
@@ -20,14 +27,14 @@ type Props = {
 
 function Node({
   icon, label, sublabel, highlight,
-}: { icon: string; label: string; sublabel?: string; highlight?: boolean }) {
+}: { icon: React.ReactNode; label: string; sublabel?: string; highlight?: boolean }) {
   return (
     <div className={`shrink-0 rounded-xl border p-3 text-center min-w-[120px] ${
       highlight
         ? "bg-forest-800 text-cream-100 border-forest-700"
         : "bg-surface border-surface-border"
     }`}>
-      <div className="text-xl mb-1">{icon}</div>
+      <div className={`flex justify-center mb-1.5 ${highlight ? "text-mint-200" : "text-forest-700"}`}>{icon}</div>
       <div className={`text-xs font-semibold ${highlight ? "text-cream-100" : "text-forest-900"}`}>
         {label}
       </div>
@@ -97,12 +104,12 @@ export function ValueChainGraph({
   // End-of-chain beneficiary depends on engagement type.
   const endNode = engagementType === "C2C"
     ? {
-        icon: "🏗️",
+        icon: <FactoryIcon size={20} />,
         label: msmeRedacted ? "Confidential" : vc.attributedMsmeId ? displayUserId(vc.attributedMsmeId) : "MSME",
         sublabel: msmeRule ? `MSME · ${hourlyLabel(msmeRule)}` : "MSME · Confidential",
       }
     : {
-        icon: "👤",
+        icon: <UserIcon size={20} />,
         label: vc.candidateId ? displayUserId(vc.candidateId) : "Candidate",
         sublabel: candidateRule ? `Candidate · ${hourlyLabel(candidateRule)}` : "Candidate",
       };
@@ -112,20 +119,20 @@ export function ValueChainGraph({
       {/* Main horizontal flow */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         <Node
-          icon="🏢"
+          icon={<BuildingIcon size={20} />}
           label={vc.customerCompanyId ? "Customer" : "Confidential"}
           sublabel={vc.customerCompanyId ? displayUserId(vc.customerCompanyId) : undefined}
           highlight
         />
         <Arrow />
         <Node
-          icon="🤝"
+          icon={<HandshakeIcon size={20} />}
           label={crmRedacted ? "Confidential" : vc.attributedCrmId ? displayUserId(vc.attributedCrmId) : "No CRM"}
           sublabel={crmRule ? `CRM · ${hourlyLabel(crmRule)}` : crmRedacted ? "CRM · Hidden" : "CRM · —"}
         />
         <Arrow />
         <Node
-          icon="🔍"
+          icon={<SearchIcon size={20} />}
           label={srmRedacted ? "Confidential" : vc.attributedSrmId ? displayUserId(vc.attributedSrmId) : "No SRM"}
           sublabel={srmRule ? `SRM · ${hourlyLabel(srmRule)}` : srmRedacted ? "SRM · Hidden" : "SRM · —"}
         />

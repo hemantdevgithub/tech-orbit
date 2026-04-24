@@ -13,7 +13,7 @@ import { CustomerDashboard } from "@/components/dashboard/customer-dashboard";
 import { InterviewerDashboard } from "@/components/dashboard/interviewer-dashboard";
 import { CrmDashboard } from "@/components/dashboard/crm-dashboard";
 import { SrmDashboard } from "@/components/dashboard/srm-dashboard";
-import { ROLE_ICON_COMPONENT } from "@/components/icons";
+import { ClockIcon, ROLE_ICON_COMPONENT } from "@/components/icons";
 
 const ROLE_LABELS: Record<RoleType, string> = {
   CUSTOMER: "Customer",
@@ -137,7 +137,7 @@ export default function DashboardPage() {
       {/* Pending roles banner */}
       {pendingRoles.length > 0 && (
         <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 flex items-start gap-3">
-          <span className="text-warning text-xl shrink-0 mt-0.5">⏳</span>
+          <span className="text-warning shrink-0 mt-0.5"><ClockIcon size={20} /></span>
           <div className="flex-1">
             <p className="font-semibold text-forest-900 text-sm">
               {pendingRoles.length} role{pendingRoles.length > 1 ? "s" : ""} pending verification

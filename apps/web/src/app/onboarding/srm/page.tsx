@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Card, CardBody, CardHeader, CardTitle, Button } from "@techorbit/ui";
+import { SearchIcon } from "@/components/icons";
 
 const PLAYBOOK = [
   {
@@ -27,7 +28,9 @@ export default function SrmOnboardingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-forest-900">Welcome, SRM 🔍</h1>
+        <h1 className="text-2xl font-bold text-forest-900 flex items-center gap-2">
+          Welcome, SRM <SearchIcon size={24} />
+        </h1>
         <p className="text-sage-600 mt-1">
           You&apos;re set up as a Senior Recruitment Manager. Here&apos;s how the
           sourcing loop works.

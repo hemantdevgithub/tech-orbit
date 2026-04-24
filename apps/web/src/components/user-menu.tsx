@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth.store";
 import { useAuth } from "@/lib/auth-hooks";
+import { BellIcon, HomeIcon, ShieldIcon, UserIcon } from "@/components/icons";
 
 export function UserMenu(): JSX.Element | null {
   const { user } = useAuthStore();
@@ -81,18 +82,18 @@ export function UserMenu(): JSX.Element | null {
           </div>
           <ul className="py-1">
             <li>
-              <MenuLink href="/settings/profile" onClick={() => setOpen(false)} icon="👤" label="Profile" />
+              <MenuLink href="/settings/profile" onClick={() => setOpen(false)} Icon={UserIcon} label="Profile" />
             </li>
             <li>
-              <MenuLink href="/settings/notifications" onClick={() => setOpen(false)} icon="🔔" label="Notification preferences" />
+              <MenuLink href="/settings/notifications" onClick={() => setOpen(false)} Icon={BellIcon} label="Notification preferences" />
             </li>
             {isAdmin && (
               <li>
-                <MenuLink href="/admin" onClick={() => setOpen(false)} icon="🛡" label="Admin console" />
+                <MenuLink href="/admin" onClick={() => setOpen(false)} Icon={ShieldIcon} label="Admin console" />
               </li>
             )}
             <li>
-              <MenuLink href="/dashboard" onClick={() => setOpen(false)} icon="🏠" label="Dashboard" />
+              <MenuLink href="/dashboard" onClick={() => setOpen(false)} Icon={HomeIcon} label="Dashboard" />
             </li>
           </ul>
           <div className="border-t border-surface-border py-1">
@@ -112,14 +113,26 @@ export function UserMenu(): JSX.Element | null {
   );
 }
 
-function MenuLink({ href, icon, label, onClick }: { href: string; icon: string; label: string; onClick: () => void }) {
+function MenuLink({
+  href,
+  Icon,
+  label,
+  onClick,
+}: {
+  href: string;
+  Icon: (p: { size?: number; className?: string }) => JSX.Element;
+  label: string;
+  onClick: () => void;
+}) {
   return (
     <Link
       href={href}
       onClick={onClick}
       className="flex items-center gap-2.5 px-4 py-2 text-sm text-forest-900 hover:bg-cream-50"
     >
-      <span className="text-base w-5 text-center">{icon}</span>
+      <span className="w-5 flex justify-center text-sage-600">
+        <Icon size={16} />
+      </span>
       {label}
     </Link>
   );

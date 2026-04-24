@@ -17,6 +17,7 @@ import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { ViewToggle, useViewMode } from "@/components/view-toggle";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { SearchIcon } from "@/components/icons";
 
 const STATUS_OPTIONS: RequirementStatus[] = [
   "DRAFT", "OPEN", "INTERVIEWING", "OFFER_EXTENDED", "PLACED", "CLOSED", "CANCELLED",
@@ -34,11 +35,8 @@ const STATUS_STYLES: Record<RequirementStatus, string> = {
   CANCELLED:      "bg-danger/10 text-danger border-danger/20",
 };
 
-const LOCATION_ICON: Record<LocationType, string> = {
-  REMOTE: "🌍",
-  HYBRID: "🏙️",
-  ONSITE: "🏢",
-};
+// Location type shows as a plain text label (Remote/Hybrid/Onsite) — clearer
+// than an emoji, and readable at small sizes in both grid and list views.
 
 const SENIORITY_COLOR: Record<string, string> = {
   JUNIOR:    "bg-mint-200 text-forest-700",
@@ -82,7 +80,7 @@ function RequirementListRow({ r }: { r: RequirementResponse }) {
           <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${SENIORITY_COLOR[r.seniority] ?? "bg-surface-soft text-sage-500"}`}>
             {r.seniority}
           </span>
-          <span>{LOCATION_ICON[r.locationType]} {location}</span>
+          <span>{location}</span>
           <span className="text-forest-600 font-medium">${r.billRateMinUsd}–${r.billRateMaxUsd}/hr</span>
           <span>{r.durationWeeks}w</span>
           <span>{r.techStack.slice(0, 3).join(" · ")}{r.techStack.length > 3 ? ` +${r.techStack.length - 3}` : ""}</span>
@@ -148,9 +146,7 @@ function RequirementCard({ r }: { r: RequirementResponse }) {
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${SENIORITY_COLOR[r.seniority] ?? "bg-surface-soft text-sage-500"}`}>
           {r.seniority}
         </span>
-        <span className="flex items-center gap-1">
-          {LOCATION_ICON[r.locationType]}&nbsp;{location}
-        </span>
+        <span>{location}</span>
         <span className="text-forest-600 font-medium">${r.billRateMinUsd}–${r.billRateMaxUsd}/hr</span>
         <span>{r.durationWeeks}w</span>
       </div>
@@ -324,7 +320,7 @@ export default function BrowseRequirementsPage() {
         </div>
       ) : rows.length === 0 ? (
         <div className="rounded-xl border border-surface-border bg-surface p-12 text-center">
-          <p className="text-3xl mb-3">🔍</p>
+          <div className="flex justify-center mb-3 text-sage-400"><SearchIcon size={32} /></div>
           <p className="font-semibold text-forest-900 mb-1">No requirements found</p>
           <p className="text-sage-500 text-sm mb-4">Try different filters or check back later.</p>
           {activeFilterCount > 0 && (

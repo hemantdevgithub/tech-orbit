@@ -6,17 +6,28 @@ import { Button, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { NotificationResponse, NotificationType } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getNotificationClient } from "@/lib/api-client";
+import {
+  BriefcaseIcon,
+  CalendarIcon,
+  ClockIcon,
+  DollarIcon,
+  MessageIcon,
+  ReceiptIcon,
+  TargetIcon,
+  UserIcon,
+} from "@/components/icons";
 
-const TYPE_ICONS: Record<NotificationType, string> = {
-  REQUIREMENT_PUBLISHED: "📌",
-  SUBMISSION_RECEIVED: "📥",
-  INTERVIEW_SCHEDULED: "🎥",
-  TIMESHEET_SUBMITTED: "⏱",
-  TIMESHEET_APPROVED: "✅",
-  INVOICE_GENERATED: "🧾",
-  PAYOUT_COMPLETED: "💰",
-  MESSAGE_RECEIVED: "💬",
-  RATING_RECEIVED: "⭐",
+type IconComp = (p: { size?: number; className?: string }) => JSX.Element;
+const TYPE_ICON: Record<NotificationType, IconComp> = {
+  REQUIREMENT_PUBLISHED: BriefcaseIcon,
+  SUBMISSION_RECEIVED: UserIcon,
+  INTERVIEW_SCHEDULED: CalendarIcon,
+  TIMESHEET_SUBMITTED: ClockIcon,
+  TIMESHEET_APPROVED: ClockIcon,
+  INVOICE_GENERATED: ReceiptIcon,
+  PAYOUT_COMPLETED: DollarIcon,
+  MESSAGE_RECEIVED: MessageIcon,
+  RATING_RECEIVED: TargetIcon,
 };
 
 function timeAgo(iso: string): string {
@@ -140,7 +151,12 @@ export default function NotificationsPage() {
             const content = (
               <Card className={`hover:border-forest-300 transition-colors ${unread ? "border-l-4 border-l-forest-700" : ""}`}>
                 <CardBody className="flex items-start gap-3">
-                  <span className="text-2xl shrink-0">{TYPE_ICONS[n.type]}</span>
+                  <span className="shrink-0 text-forest-700 mt-1">
+                    {(() => {
+                      const Icon = TYPE_ICON[n.type];
+                      return <Icon size={22} />;
+                    })()}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-3">
                       <p className={`text-sm ${unread ? "font-semibold text-forest-900" : "text-sage-700"}`}>

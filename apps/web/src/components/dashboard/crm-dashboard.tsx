@@ -10,6 +10,7 @@ import type {
 import { getRequirementClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { BrokerEarningsCards } from "./earnings-cards";
+import { HandshakeIcon } from "@/components/icons";
 
 export function CrmDashboard() {
   const me = useAuthStore((s) => s.user);
@@ -100,7 +101,7 @@ export function CrmDashboard() {
             <p className="text-sage-500 text-sm">Loading…</p>
           ) : openAttributedReqs.length === 0 ? (
             <div className="text-center py-6 text-sage-500">
-              <p className="text-2xl mb-1">🤝</p>
+              <div className="flex justify-center mb-2 text-sage-400"><HandshakeIcon size={28} /></div>
               <p className="text-sm">No attributed requirements yet.</p>
               <Link
                 href="/requirements"

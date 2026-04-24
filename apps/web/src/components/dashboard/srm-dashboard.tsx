@@ -6,6 +6,7 @@ import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { SubmissionResponse } from "@techorbit/types";
 import { getMatchingClient } from "@/lib/api-client";
 import { BrokerEarningsCards } from "./earnings-cards";
+import { SearchIcon } from "@/components/icons";
 
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   SUBMITTED: "mint",
@@ -75,7 +76,7 @@ export function SrmDashboard() {
             <p className="text-sage-500 text-sm">Loading…</p>
           ) : recent.length === 0 ? (
             <div className="text-center py-6 text-sage-500">
-              <p className="text-2xl mb-1">🔍</p>
+              <div className="flex justify-center mb-2 text-sage-400"><SearchIcon size={28} /></div>
               <p className="text-sm">No submissions yet.</p>
               <Link
                 href="/requirements"

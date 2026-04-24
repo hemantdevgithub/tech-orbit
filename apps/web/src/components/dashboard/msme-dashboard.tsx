@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader, CardTitle, Button, Badge } from "@techorbit
 import type { BenchEntryResponse, SubmissionResponse } from "@techorbit/types";
 import { getProfileClient, getMatchingClient } from "@/lib/api-client";
 import { VendorEarningsCards } from "./earnings-cards";
+import { BriefcaseIcon } from "@/components/icons";
 
 const SUBMISSION_STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   SUBMITTED: "mint",
@@ -132,7 +133,7 @@ export function MsmeDashboard() {
             <p className="text-sage-500 text-sm">Loading…</p>
           ) : recentSubmissions.length === 0 ? (
             <div className="text-center py-6 text-sage-500">
-              <p className="text-2xl mb-1">📋</p>
+              <div className="flex justify-center mb-2 text-sage-400"><BriefcaseIcon size={28} /></div>
               <p className="text-sm">No submissions yet.</p>
               <p className="text-xs mt-1">Submit bench candidates to open requirements.</p>
             </div>

@@ -13,13 +13,15 @@ import { useAuth } from "@/lib/auth-hooks";
 
 type Role = "CUSTOMER" | "CANDIDATE" | "CRM" | "SRM" | "MSME" | "INTERVIEWER";
 
-const ROLES: { value: Role; label: string; description: string; icon: string }[] = [
-  { value: "CUSTOMER", label: "Customer", description: "I'm hiring IT consultants for my company.", icon: "🏢" },
-  { value: "CANDIDATE", label: "Candidate", description: "I'm a consultant looking for work.", icon: "👤" },
-  { value: "CRM", label: "Client Relationship Manager", description: "I bring clients to the platform.", icon: "🤝" },
-  { value: "SRM", label: "Senior Recruitment Manager", description: "I source and submit candidates.", icon: "🔍" },
-  { value: "MSME", label: "Vendor (MSME)", description: "I manage a team of benched consultants.", icon: "🏗" },
-  { value: "INTERVIEWER", label: "Interviewer", description: "I conduct technical interviews.", icon: "🎯" },
+import { ROLE_ICON_COMPONENT } from "@/components/icons";
+
+const ROLES: { value: Role; label: string; description: string }[] = [
+  { value: "CUSTOMER", label: "Customer", description: "I'm hiring IT consultants for my company." },
+  { value: "CANDIDATE", label: "Candidate", description: "I'm a consultant looking for work." },
+  { value: "CRM", label: "Client Relationship Manager", description: "I bring clients to the platform." },
+  { value: "SRM", label: "Senior Recruitment Manager", description: "I source and submit candidates." },
+  { value: "MSME", label: "Vendor (MSME)", description: "I manage a team of benched consultants." },
+  { value: "INTERVIEWER", label: "Interviewer", description: "I conduct technical interviews." },
 ];
 
 const ONBOARDING_ROUTES: Partial<Record<Role, string>> = {
@@ -124,7 +126,14 @@ export default function RegisterPage() {
               }`}
             >
               <div className="flex items-start gap-2">
-                <span className="text-lg shrink-0">{r.icon}</span>
+                {(() => {
+                  const RoleIcon = ROLE_ICON_COMPONENT[r.value];
+                  return RoleIcon ? (
+                    <span className="shrink-0 text-forest-700 mt-0.5">
+                      <RoleIcon size={18} />
+                    </span>
+                  ) : null;
+                })()}
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-forest-900">{r.label}</p>
                   <p className="text-[11px] text-sage-600 mt-0.5 leading-snug">{r.description}</p>

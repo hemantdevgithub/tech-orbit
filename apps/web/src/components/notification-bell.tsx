@@ -4,19 +4,30 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { NotificationResponse, NotificationType } from "@techorbit/types";
 import { getNotificationClient } from "@/lib/api-client";
+import {
+  BriefcaseIcon,
+  CalendarIcon,
+  ClockIcon,
+  DollarIcon,
+  MessageIcon,
+  ReceiptIcon,
+  TargetIcon,
+  UserIcon,
+} from "@/components/icons";
 
 const POLL_MS = 30_000;
 
-const TYPE_ICONS: Record<NotificationType, string> = {
-  REQUIREMENT_PUBLISHED: "📌",
-  SUBMISSION_RECEIVED: "📥",
-  INTERVIEW_SCHEDULED: "🎥",
-  TIMESHEET_SUBMITTED: "⏱",
-  TIMESHEET_APPROVED: "✅",
-  INVOICE_GENERATED: "🧾",
-  PAYOUT_COMPLETED: "💰",
-  MESSAGE_RECEIVED: "💬",
-  RATING_RECEIVED: "⭐",
+type IconComp = (p: { size?: number; className?: string }) => JSX.Element;
+const TYPE_ICON: Record<NotificationType, IconComp> = {
+  REQUIREMENT_PUBLISHED: BriefcaseIcon,
+  SUBMISSION_RECEIVED: UserIcon,
+  INTERVIEW_SCHEDULED: CalendarIcon,
+  TIMESHEET_SUBMITTED: ClockIcon,
+  TIMESHEET_APPROVED: ClockIcon,
+  INVOICE_GENERATED: ReceiptIcon,
+  PAYOUT_COMPLETED: DollarIcon,
+  MESSAGE_RECEIVED: MessageIcon,
+  RATING_RECEIVED: TargetIcon,
 };
 
 function timeAgo(iso: string): string {
@@ -110,9 +121,10 @@ export function NotificationBell(): JSX.Element {
               </div>
             ) : (
               recent.map((n) => {
+                const Icon = TYPE_ICON[n.type];
                 const content = (
                   <div className="px-4 py-3 border-b border-surface-border/50 hover:bg-cream-50 flex items-start gap-3">
-                    <span className="text-xl shrink-0">{TYPE_ICONS[n.type]}</span>
+                    <span className="shrink-0 text-forest-700 mt-0.5"><Icon size={18} /></span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="text-sm font-semibold text-forest-900 truncate">{n.title}</p>
