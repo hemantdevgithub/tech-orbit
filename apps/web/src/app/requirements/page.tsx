@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@techorbit/ui";
 import type {
   RequirementFilter,
@@ -113,6 +113,7 @@ function RequirementCard({ r }: { r: RequirementResponse }) {
 
 export default function BrowseRequirementsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const [rows, setRows] = useState<RequirementResponse[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -125,7 +126,14 @@ export default function BrowseRequirementsPage() {
   const [seniority, setSeniority] = useState<Seniority | "">("");
   const [locationType, setLocationType] = useState<LocationType | "">("");
   const [techStack, setTechStack] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams?.get("search") ?? "");
+
+  // Keep search in sync if the URL changes (e.g. sidebar quick-search).
+  useEffect(() => {
+    const q = searchParams?.get("search") ?? "";
+    setSearch(q);
+    if (q) setShowFilters(true);
+  }, [searchParams]);
 
   const activeFilterCount = [status && status !== "OPEN", seniority, locationType, techStack.length > 0, search].filter(Boolean).length;
 
