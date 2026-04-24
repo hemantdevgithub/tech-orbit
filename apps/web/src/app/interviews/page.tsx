@@ -6,6 +6,7 @@ import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { InterviewResponse, InterviewStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getInterviewClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const STATUS_VARIANT: Record<InterviewStatus, "mint" | "cream" | "muted" | "success" | "warning" | "danger"> = {
   SCHEDULED: "mint",
@@ -32,9 +33,19 @@ export default function InterviewsPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Interviews" },
+        ]}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-forest-900">My interviews</h1>
-        <p className="text-sage-600 text-sm mt-1">All interviews you are scheduled for as customer, candidate, or interviewer.</p>
+        <p className="text-sage-600 text-sm mt-1">
+          {interviews.length > 0
+            ? `${interviews.length} interview${interviews.length === 1 ? "" : "s"} scheduled`
+            : "All interviews you are scheduled for as customer, candidate, or interviewer."}
+        </p>
       </div>
 
       {error && (
@@ -52,26 +63,30 @@ export default function InterviewsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {interviews.map((iv) => (
-            <Link key={iv.id} href={`/interviews/${iv.id}`} className="block">
-              <Card className="hover:border-forest-300 transition-colors">
-                <CardBody className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-forest-900">
-                      Candidate: {iv.candidateId.slice(0, 8)}…
-                    </p>
-                    <p className="text-xs text-sage-600 mt-0.5">
-                      {new Date(iv.scheduledStart).toLocaleString()} — {iv.conductedByRole.replace("_", " ")}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={STATUS_VARIANT[iv.status]}>{iv.status}</Badge>
-                    <span className="text-sage-400 text-sm">→</span>
-                  </div>
-                </CardBody>
-              </Card>
-            </Link>
-          ))}
+          {interviews.map((iv) => {
+            const date = new Date(iv.scheduledStart);
+            return (
+              <Link key={iv.id} href={`/interviews/${iv.id}`} className="block">
+                <Card className="hover:border-forest-300 transition-colors">
+                  <CardBody className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-forest-900">
+                        {date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}{" "}
+                        · {date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                      </p>
+                      <p className="text-xs text-sage-600 mt-0.5">
+                        {iv.conductedByRole.replace("_", " ")} interview · Candidate #{iv.candidateId.slice(0, 8)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={STATUS_VARIANT[iv.status]}>{iv.status}</Badge>
+                      <span className="text-sage-400 text-sm">→</span>
+                    </div>
+                  </CardBody>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

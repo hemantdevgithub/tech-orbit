@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { InvoiceStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getPaymentsClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 type InvoiceRow = {
   id: string;
@@ -50,10 +51,18 @@ export default function InvoicesPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Invoices" },
+        ]}
+      />
       <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-forest-900">Invoices</h1>
-          <p className="text-sage-500 text-sm mt-0.5">{rows.length} invoices</p>
+          <p className="text-sage-500 text-sm mt-0.5">
+            {rows.length} invoice{rows.length === 1 ? "" : "s"}
+          </p>
         </div>
         {totalUnpaid > 0 && (
           <div className="rounded-lg bg-warning/10 border border-warning/30 px-4 py-2 text-sm">

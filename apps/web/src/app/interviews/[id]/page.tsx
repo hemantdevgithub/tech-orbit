@@ -8,6 +8,7 @@ import type { InterviewResponse, InterviewStatus, ScorecardResponse } from "@tec
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getInterviewClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 // useSearchParams requires Suspense in App Router (static export guard)
 export const dynamic = "force-dynamic";
@@ -89,22 +90,38 @@ export default function InterviewDetailPage() {
   const canScorecard =
     (isScheduler || isInterviewer) && iv.status === "COMPLETED" && !scorecard;
 
+  const startDate = new Date(iv.scheduledStart);
+  const interviewTitle = `${startDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  })} · ${startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+
   return (
     <div>
-      <div className="mb-4">
-        <Link href={`/submissions/${iv.submissionId}`} className="text-sm text-forest-700 hover:underline">
-          ← Back to submission
-        </Link>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Interviews", href: "/interviews" },
+          { label: interviewTitle },
+        ]}
+      />
 
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-forest-900">Interview</h1>
+          <h1 className="text-2xl font-bold text-forest-900">{interviewTitle}</h1>
           <div className="mt-1 flex items-center gap-2">
             <Badge variant={STATUS_VARIANT[iv.status]}>{iv.status}</Badge>
             <span className="text-sage-600 text-sm">
-              {new Date(iv.scheduledStart).toLocaleString()} →{" "}
+              Ends{" "}
               {new Date(iv.scheduledEnd).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {" · "}
+              <Link
+                href={`/submissions/${iv.submissionId}`}
+                className="text-forest-700 hover:underline"
+              >
+                View submission →
+              </Link>
             </span>
           </div>
         </div>
@@ -124,9 +141,27 @@ export default function InterviewDetailPage() {
             <CardBody>
               <dl className="grid grid-cols-2 gap-y-3 text-sm">
                 <dt className="text-sage-600">Candidate</dt>
-                <dd>{iv.candidateId.slice(0, 8)}…</dd>
+                <dd>
+                  <Link
+                    href={`/candidates/${iv.candidateId}`}
+                    className="text-forest-700 hover:underline"
+                  >
+                    #{iv.candidateId.slice(0, 8)}
+                  </Link>
+                </dd>
                 <dt className="text-sage-600">Interviewer</dt>
-                <dd>{iv.interviewerUserId ? `${iv.interviewerUserId.slice(0, 8)}…` : "Self-conducted"}</dd>
+                <dd>
+                  {iv.interviewerUserId ? (
+                    <Link
+                      href={`/interviewers/${iv.interviewerUserId}`}
+                      className="text-forest-700 hover:underline"
+                    >
+                      #{iv.interviewerUserId.slice(0, 8)}
+                    </Link>
+                  ) : (
+                    "Self-conducted"
+                  )}
+                </dd>
                 <dt className="text-sage-600">Type</dt>
                 <dd><Badge variant="muted">{iv.conductedByRole.replace("_", " ")}</Badge></dd>
                 {iv.interviewerFeeUsd !== null && (

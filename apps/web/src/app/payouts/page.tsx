@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { CommissionPayoutResponse, PayoutStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getPaymentsClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const STATUS_STYLES: Record<PayoutStatus, string> = {
   PENDING: "bg-warning/10 text-warning border-warning/30",
@@ -58,6 +59,12 @@ export default function PayoutsPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Payouts" },
+        ]}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-forest-900">Payouts</h1>
         <p className="text-sage-500 text-sm mt-0.5">Your commission earnings</p>

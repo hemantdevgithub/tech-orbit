@@ -122,10 +122,13 @@ export default function VideoCallPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between bg-forest-900 px-4 py-2 text-cream-100">
         <div>
-          <p className="text-sm font-semibold">Interview — {iv.candidateId.slice(0, 8)}…</p>
+          <p className="text-sm font-semibold">
+            Interview · {new Date(iv.scheduledStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </p>
           <p className="text-xs text-sage-400">
-            {new Date(iv.scheduledStart).toLocaleString()} –{" "}
-            {new Date(iv.scheduledEnd).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {new Date(iv.scheduledStart).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} –{" "}
+            {new Date(iv.scheduledEnd).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+            {" · Candidate #"}{iv.candidateId.slice(0, 8)}
           </p>
         </div>
         <Link href={`/interviews/${iv.id}`} className="text-xs text-sage-400 hover:text-cream-100">

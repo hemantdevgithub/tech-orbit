@@ -7,6 +7,7 @@ import type { TimesheetResponse, TimesheetStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getPaymentsClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,12 @@ export default function TimesheetsPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Timesheets" },
+        ]}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-forest-900">Timesheets</h1>
         <p className="text-sage-500 text-sm mt-0.5">
@@ -131,8 +138,8 @@ export default function TimesheetsPage() {
                     Week of {new Date(t.weekStartDate).toUTCString().slice(5, 16)} · {t.hoursWorked} hrs
                   </p>
                   <p className="text-xs text-sage-500 mt-0.5">
-                    Placement {t.placementId.slice(0, 8)}…
-                    {t.candidateId !== user?.id && <> · Candidate {t.candidateId.slice(0, 8)}…</>}
+                    Placement #{t.placementId.slice(0, 8)}
+                    {t.candidateId !== user?.id && <> · Candidate #{t.candidateId.slice(0, 8)}</>}
                     {t.submittedAt && <> · Submitted {new Date(t.submittedAt).toLocaleDateString()}</>}
                     {t.rejectionReason && <> · <span className="text-danger">Rejected: {t.rejectionReason}</span></>}
                   </p>
