@@ -101,6 +101,7 @@ model CandidateProfile {
   kycSessionId          String?               @map("kyc_session_id")
   averageRating         Decimal?              @map("average_rating") @db.Decimal(3, 2)
   ratingCount           Int                   @default(0) @map("rating_count")
+  featuredInterviewIds  String[]              @default([]) @map("featured_interview_ids")
   isProfileComplete     Boolean               @default(false) @map("is_profile_complete")
   createdAt             DateTime              @default(now()) @map("created_at")
   updatedAt             DateTime              @updatedAt @map("updated_at")

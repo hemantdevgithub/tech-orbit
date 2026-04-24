@@ -8,6 +8,8 @@ const configSchema = z.object({
   DATABASE_URL: z.string(),
   RABBITMQ_URL: z.string().optional(),
   JWT_PUBLIC_KEY: z.string(),
+  JWT_PRIVATE_KEY: z.string().optional(),
+  INTERVIEW_SVC_URL: z.string().optional(),
   ALLOWED_ORIGINS: z.string().optional(),
   FIELD_ENCRYPTION_KEK_V1: z.string().optional(),
   DISABLE_RATE_LIMIT: z.coerce.boolean().default(false),

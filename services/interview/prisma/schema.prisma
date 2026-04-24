@@ -24,6 +24,13 @@ model Interview {
   videoProviderId   String?         @map("video_provider_id")
   videoRoomUrl      String?         @map("video_room_url")
   videoRecordingUrl String?         @map("video_recording_url")
+
+  videoRecordingFileId      String?         @map("video_recording_file_id")
+  videoRecordingStatus      RecordingStatus @default(NONE) @map("video_recording_status")
+  videoRecordingStartedAt   DateTime?       @map("video_recording_started_at")
+  videoRecordingEndedAt     DateTime?       @map("video_recording_ended_at")
+  videoRecordingDurationSec Int?            @map("video_recording_duration_sec")
+
   status            InterviewStatus @default(SCHEDULED)
   startedAt         DateTime?       @map("started_at")
   endedAt           DateTime?       @map("ended_at")
@@ -121,6 +128,16 @@ enum Recommendation {
 enum OutgoingEventStatus {
   PENDING
   SENT
+  FAILED
+
+  @@schema("interview")
+}
+
+enum RecordingStatus {
+  NONE
+  RECORDING
+  PROCESSING
+  READY
   FAILED
 
   @@schema("interview")

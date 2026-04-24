@@ -16,6 +16,7 @@ enum FilePurpose {
   W9
   VIDEO_INTRO
   PROFILE_PHOTO
+  INTERVIEW_RECORDING
 }
 
 enum FileStatus {

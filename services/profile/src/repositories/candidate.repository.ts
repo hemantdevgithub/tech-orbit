@@ -93,6 +93,22 @@ export const candidateRepository = {
     });
   },
 
+  async setFeaturedInterviews(
+    ctx: AuthContext,
+    userId: string,
+    interviewIds: string[],
+  ): Promise<CandidateProfile> {
+    if (ctx.userId !== userId) {
+      throw new ForbiddenError("Cannot update another user's profile");
+    }
+    const profile = await prisma.candidateProfile.findUnique({ where: { userId } });
+    if (!profile) throw new NotFoundError("Candidate profile not found");
+    return prisma.candidateProfile.update({
+      where: { userId },
+      data: { featuredInterviewIds: interviewIds },
+    });
+  },
+
   // Internal: paginated listing of complete candidate profiles, used by
   // matching-svc to precompute scores when a requirement is published.
   // No authz check here — callers gate access via requireServiceRole.

@@ -11,6 +11,7 @@ import {
   MsmeStatus,
   WorkAuthStatus,
 } from "./enums.js";
+import { InterviewSummarySchema } from "./interview.js";
 
 // ─── Availability slot (used by InterviewerProfile) ─────────────────────────
 
@@ -46,6 +47,7 @@ export const CandidateProfileResponseSchema = z.object({
   kycVerified: z.boolean(),
   averageRating: z.string().nullable(),
   ratingCount: z.number().int(),
+  featuredInterviewIds: z.array(z.string().uuid()).default([]),
   isProfileComplete: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -54,14 +56,24 @@ export type CandidateProfileResponse = z.infer<typeof CandidateProfileResponseSc
 
 // Narrow, safe-to-browse subset of a candidate profile. No rate, no KYC,
 // no resume — just the fields we display on list rows (headline, seniority,
-// location). Any authenticated user can read this.
+// location), plus featured interview summaries a candidate chose to expose.
+// Any authenticated user can read this.
 export const PublicCandidateProfileSchema = z.object({
   userId: z.string(),
   headline: z.string().nullable(),
   seniority: Seniority.nullable(),
   location: z.string().nullable(),
+  featuredInterviews: z.array(InterviewSummarySchema).default([]),
 });
 export type PublicCandidateProfile = z.infer<typeof PublicCandidateProfileSchema>;
+
+// Write surface for the candidate's chosen featured interviews. Order is
+// preserved; the service caps at 6 and validates each ID belongs to the
+// candidate and has a READY recording.
+export const SetFeaturedInterviewsSchema = z.object({
+  interviewIds: z.array(z.string().uuid()).max(6),
+});
+export type SetFeaturedInterviews = z.infer<typeof SetFeaturedInterviewsSchema>;
 
 export const UpdateCandidateProfileSchema = z.object({
   headline: z.string().max(160).optional(),

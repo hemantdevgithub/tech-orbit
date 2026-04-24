@@ -1,6 +1,6 @@
 import type { EventBus, EventEnvelope } from "@techorbit/event-bus";
 import { UserRegisteredEventSchema, UserRoleAddedEventSchema } from "@techorbit/types";
-import { candidateService } from "../services/candidate.service.js";
+import { candidateRepository } from "../repositories/candidate.repository.js";
 import { interviewerService } from "../services/interviewer.service.js";
 
 export async function registerUserEventConsumers(eventBus: EventBus): Promise<void> {
@@ -28,7 +28,7 @@ async function handleUserRoleAdded(envelope: EventEnvelope): Promise<void> {
 
 async function createShellForRole(userId: string, role: string): Promise<void> {
   if (role === "CANDIDATE") {
-    await candidateService.createShell(userId).catch(() => { /* idempotent */ });
+    await candidateRepository.createShell(userId).catch(() => { /* idempotent */ });
   }
   if (role === "INTERVIEWER") {
     await interviewerService.createShell(userId).catch(() => { /* idempotent */ });

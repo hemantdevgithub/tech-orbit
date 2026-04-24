@@ -149,11 +149,18 @@ runIntegrationSuite("Candidate profile integration", () => {
     expect(res.statusCode).toBe(200);
     const body = res.json() as Record<string, unknown>;
     // Exactly the public subset — no rate / KYC / resume fields leak.
-    expect(Object.keys(body).sort()).toEqual(["headline", "location", "seniority", "userId"]);
+    expect(Object.keys(body).sort()).toEqual([
+      "featuredInterviews",
+      "headline",
+      "location",
+      "seniority",
+      "userId",
+    ]);
     expect(body.headline).toBe("Senior Full-Stack Engineer");
     expect(body.seniority).toBe("SENIOR");
     expect(body.userId).toBe(USER_ID);
     expect(body.location).toBe("Austin, TX");
+    expect(body.featuredInterviews).toEqual([]);
   });
 
   it("public endpoint is 404 when the profile doesn't exist", async () => {

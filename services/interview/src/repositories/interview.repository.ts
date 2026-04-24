@@ -4,6 +4,7 @@ import type {
   InterviewStatus,
   InterviewerRole,
   Prisma,
+  RecordingStatus,
 } from "../generated/client/index.js";
 import { ForbiddenError, NotFoundError } from "@techorbit/errors";
 import type { AuthContext } from "@techorbit/auth-middleware";
@@ -172,6 +173,75 @@ export const interviewRepository = {
     return prisma.interview.update({
       where: { id },
       data: { videoRecordingUrl: url },
+    });
+  },
+
+  async markRecordingStarted(
+    id: string,
+    at: Date,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Interview> {
+    const db = tx ?? prisma;
+    return db.interview.update({
+      where: { id },
+      data: {
+        videoRecordingStatus: "RECORDING",
+        videoRecordingStartedAt: at,
+      },
+    });
+  },
+
+  async markRecordingProcessing(
+    id: string,
+    at: Date,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Interview> {
+    const db = tx ?? prisma;
+    return db.interview.update({
+      where: { id },
+      data: {
+        videoRecordingStatus: "PROCESSING",
+        videoRecordingEndedAt: at,
+      },
+    });
+  },
+
+  async setRecording(
+    id: string,
+    input: {
+      fileId: string | null;
+      downloadUrl: string;
+      durationSec: number;
+    },
+  ): Promise<Interview> {
+    return prisma.interview.update({
+      where: { id },
+      data: {
+        videoRecordingStatus: "READY",
+        videoRecordingFileId: input.fileId,
+        videoRecordingUrl: input.downloadUrl,
+        videoRecordingDurationSec: input.durationSec,
+      },
+    });
+  },
+
+  async setRecordingFailed(id: string): Promise<Interview> {
+    return prisma.interview.update({
+      where: { id },
+      data: { videoRecordingStatus: "FAILED" },
+    });
+  },
+
+  async findManyByIds(ids: string[]): Promise<Interview[]> {
+    if (ids.length === 0) return [];
+    return prisma.interview.findMany({ where: { id: { in: ids } } });
+  },
+
+  async findProcessingRecordings(limit: number): Promise<Interview[]> {
+    return prisma.interview.findMany({
+      where: { videoRecordingStatus: "PROCESSING" as RecordingStatus },
+      orderBy: { videoRecordingEndedAt: "asc" },
+      take: limit,
     });
   },
 

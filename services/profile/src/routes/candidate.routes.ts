@@ -1,9 +1,19 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { UpdateCandidateProfileSchema } from "@techorbit/types";
-import { candidateService } from "../services/candidate.service.js";
+import {
+  SetFeaturedInterviewsSchema,
+  UpdateCandidateProfileSchema,
+} from "@techorbit/types";
+import type { CandidateService } from "../services/candidate.service.js";
 
-export async function candidateRoutes(fastify: FastifyInstance): Promise<void> {
+type Options = { candidateService: CandidateService };
+
+export async function candidateRoutes(
+  fastify: FastifyInstance,
+  options: Options,
+): Promise<void> {
+  const { candidateService } = options;
+
   // GET /api/v1/candidates/me
   fastify.get(
     "/api/v1/candidates/me",
@@ -21,6 +31,21 @@ export async function candidateRoutes(fastify: FastifyInstance): Promise<void> {
     async (request, reply) => {
       const body = UpdateCandidateProfileSchema.parse(request.body);
       const profile = await candidateService.updateProfile(request.auth, request.auth.userId, body);
+      return reply.status(200).send(profile);
+    },
+  );
+
+  // PATCH /api/v1/candidates/me/featured-interviews
+  fastify.patch(
+    "/api/v1/candidates/me/featured-interviews",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const body = SetFeaturedInterviewsSchema.parse(request.body);
+      const profile = await candidateService.setFeaturedInterviews(
+        request.auth,
+        request.auth.userId,
+        body.interviewIds,
+      );
       return reply.status(200).send(profile);
     },
   );

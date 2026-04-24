@@ -56,7 +56,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   const interviewService = createInterviewService({ config, dailyApi, matchingApi });
   await fastify.register(interviewRoutes, { interviewService });
-  await fastify.register(internalInterviewRoutes);
+  await fastify.register(internalInterviewRoutes, { interviewService });
 
   if (config.RABBITMQ_URL) {
     const eventBus = createEventBus(

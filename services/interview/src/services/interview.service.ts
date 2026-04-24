@@ -3,6 +3,7 @@ import type {
   InterviewFilter,
   InterviewListResponse,
   InterviewResponse,
+  InterviewSummary,
   ScheduleInterviewRequest,
   ScorecardRequest,
   ScorecardResponse,
@@ -137,9 +138,15 @@ export function createInterviewService(deps: Deps) {
         ctx.roles.includes("ADMIN");
       if (!isParticipant) throw new ForbiddenError("Only participants can start the interview");
 
+      const now = new Date();
       const updated = await interviewRepository.updateStatus(id, "IN_PROGRESS", {
-        startedAt: new Date(),
+        startedAt: now,
       });
+      // Cloud-recording starts automatically when the first participant joins.
+      // Flip the bookkeeping status so UI can render "recording" immediately.
+      if (iv.videoProviderId && iv.videoRecordingStatus === "NONE") {
+        await interviewRepository.markRecordingStarted(id, now);
+      }
       return toInterviewResponse(updated);
     },
 
@@ -157,6 +164,9 @@ export function createInterviewService(deps: Deps) {
       const now = new Date();
       const updated = await prisma.$transaction(async (tx) => {
         const ended = await interviewRepository.updateStatus(id, "COMPLETED", { endedAt: now }, tx);
+        if (iv.videoProviderId && iv.videoRecordingStatus !== "NONE") {
+          await interviewRepository.markRecordingProcessing(id, now, tx);
+        }
         const event = buildEvent("interview.completed.v1", {
           interviewId: ended.id,
           candidateId: ended.candidateId,
@@ -169,14 +179,31 @@ export function createInterviewService(deps: Deps) {
 
       // Async recording fetch — best effort, don't block the response.
       if (iv.videoProviderId) {
-        void dailyApi.getRecordingUrl(iv.videoProviderId).then(async (url) => {
-          if (url) await interviewRepository.setRecordingUrl(id, url);
-        }).catch(() => {
+        void this.processRecording(id).catch(() => {
           // non-fatal
         });
       }
 
       return toInterviewResponse(updated);
+    },
+
+    // Transition a PROCESSING recording to READY by fetching metadata from
+    // the provider. Safe to call repeatedly — a no-op once status is READY.
+    // Called: (1) immediately after endInterview (mock returns synchronously),
+    // (2) by a cron poller for long-running Daily.co cloud recordings.
+    async processRecording(id: string): Promise<void> {
+      const iv = await interviewRepository.findByIdRaw(id);
+      if (!iv || !iv.videoProviderId) return;
+      if (iv.videoRecordingStatus === "READY" || iv.videoRecordingStatus === "NONE") return;
+
+      const recording = await dailyApi.getRecording(iv.videoProviderId);
+      if (!recording) return; // stay PROCESSING; poller will retry
+
+      await interviewRepository.setRecording(id, {
+        fileId: null,
+        downloadUrl: recording.downloadUrl,
+        durationSec: recording.durationSec,
+      });
     },
 
     async cancelInterview(
@@ -240,6 +267,53 @@ export function createInterviewService(deps: Deps) {
     async getScorecard(ctx: AuthContext, interviewId: string): Promise<ScorecardResponse | null> {
       const sc = await scorecardRepository.findByInterview(ctx, interviewId);
       return sc ? toScorecardResponse(sc) : null;
+    },
+
+    // Service-to-service: batch-resolve interviews to narrow summaries. Used by
+    // profile-svc to embed a candidate's featured interviews in the public
+    // profile response. Only returns interviews for `candidateId` (filter
+    // applied by caller), with recording URLs included.
+    async getSummariesByIds(
+      ids: string[],
+      candidateId?: string,
+    ): Promise<InterviewSummary[]> {
+      if (ids.length === 0) return [];
+      const rows = await interviewRepository.findManyByIds(ids);
+      const scored = await scorecardRepository.findManyByInterviewIds(
+        rows.map((r) => r.id),
+      );
+      const scMap = new Map(scored.map((s) => [s.interviewId, s]));
+
+      return rows
+        .filter((iv) => !candidateId || iv.candidateId === candidateId)
+        .map((iv) => {
+          const sc = scMap.get(iv.id);
+          const dims = [
+            sc?.technicalScore,
+            sc?.communicationScore,
+            sc?.problemSolvingScore,
+            sc?.culturalFitScore,
+          ].filter((v): v is number => typeof v === "number");
+          const overallScore =
+            dims.length > 0
+              ? Number(
+                  (dims.reduce((a, b) => a + b, 0) / dims.length).toFixed(2),
+                )
+              : null;
+          return {
+            id: iv.id,
+            scheduledStart: iv.scheduledStart.toISOString(),
+            durationSec: iv.videoRecordingDurationSec,
+            conductedByRole: iv.conductedByRole,
+            recordingStatus: iv.videoRecordingStatus,
+            recordingUrl:
+              iv.videoRecordingStatus === "READY"
+                ? iv.videoRecordingUrl
+                : null,
+            recommendation: sc?.recommendation ?? null,
+            overallScore,
+          } satisfies InterviewSummary;
+        });
     },
   };
 }

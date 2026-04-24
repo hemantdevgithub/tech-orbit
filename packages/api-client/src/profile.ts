@@ -2,6 +2,7 @@ import type { ApiClient } from "./client.js";
 import type {
   CandidateProfileResponse,
   UpdateCandidateProfile,
+  SetFeaturedInterviews,
   StartKycResponse,
   MsmeProfileResponse,
   CreateMsmeProfile,
@@ -50,6 +51,10 @@ export class ProfileApiClient {
 
   getPublicCandidate(userId: string): Promise<PublicCandidateProfile> {
     return this.client.get(`/api/v1/candidates/${userId}/public`);
+  }
+
+  setFeaturedInterviews(data: SetFeaturedInterviews): Promise<CandidateProfileResponse> {
+    return this.client.patch("/api/v1/candidates/me/featured-interviews", data);
   }
 
   // ─── MSME ────────────────────────────────────────────────────────────────────

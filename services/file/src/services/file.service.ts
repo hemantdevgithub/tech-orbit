@@ -40,6 +40,7 @@ const ALLOWED_CONTENT_TYPES: Record<FilePurpose, string[]> = {
   W9: ["application/pdf", "image/png", "image/jpeg"],
   VIDEO_INTRO: ["video/mp4", "video/webm"],
   PROFILE_PHOTO: ["image/png", "image/jpeg", "image/webp"],
+  INTERVIEW_RECORDING: ["video/mp4", "video/webm"],
 };
 
 export function createFileService(config: Config) {

@@ -158,6 +158,15 @@ export type SubmissionStatus = z.infer<typeof SubmissionStatus>;
 export const InterviewerRole = z.enum(["PLATFORM_INTERVIEWER", "CUSTOMER_INTERNAL"]);
 export type InterviewerRole = z.infer<typeof InterviewerRole>;
 
+export const RecordingStatus = z.enum([
+  "NONE",
+  "RECORDING",
+  "PROCESSING",
+  "READY",
+  "FAILED",
+]);
+export type RecordingStatus = z.infer<typeof RecordingStatus>;
+
 export const Recommendation = z.enum([
   "STRONG_YES",
   "YES",
@@ -211,7 +220,14 @@ export const PayoutStatus = z.enum([
 export type PayoutStatus = z.infer<typeof PayoutStatus>;
 
 // File enums
-export const FilePurpose = z.enum(["RESUME", "CONTRACT", "W9", "VIDEO_INTRO", "PROFILE_PHOTO"]);
+export const FilePurpose = z.enum([
+  "RESUME",
+  "CONTRACT",
+  "W9",
+  "VIDEO_INTRO",
+  "PROFILE_PHOTO",
+  "INTERVIEW_RECORDING",
+]);
 export type FilePurpose = z.infer<typeof FilePurpose>;
 
 export const FileStatus = z.enum(["PENDING", "CONFIRMED", "VIRUS_DETECTED", "DELETED"]);

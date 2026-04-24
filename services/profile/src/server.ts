@@ -13,6 +13,12 @@ import { interviewerRoutes } from "./routes/interviewer.routes.js";
 import { internalRoutes } from "./routes/internal.routes.js";
 import { createMsmeService } from "./services/msme.service.js";
 import { createCustomerService } from "./services/customer.service.js";
+import { createCandidateService } from "./services/candidate.service.js";
+import {
+  createInterviewApi,
+  createNullInterviewApi,
+} from "./lib/interview-api.js";
+import { createServiceTokenSigner } from "./lib/service-token.js";
 import { registerUserEventConsumers } from "./consumers/user-events.consumer.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
@@ -52,7 +58,16 @@ export async function buildServer(): Promise<FastifyInstance> {
   const msmeService = createMsmeService(encryptionService);
   const customerService = createCustomerService(encryptionService);
 
-  await fastify.register(candidateRoutes);
+  const interviewApi =
+    config.JWT_PRIVATE_KEY && config.INTERVIEW_SVC_URL
+      ? createInterviewApi(
+          config.INTERVIEW_SVC_URL,
+          createServiceTokenSigner(config.JWT_PRIVATE_KEY, config.SERVICE_NAME),
+        )
+      : createNullInterviewApi();
+  const candidateService = createCandidateService({ interviewApi });
+
+  await fastify.register(candidateRoutes, { candidateService });
   await fastify.register(msmeRoutes, { msmeService });
   await fastify.register(customerRoutes, { customerService });
   await fastify.register(interviewerRoutes);

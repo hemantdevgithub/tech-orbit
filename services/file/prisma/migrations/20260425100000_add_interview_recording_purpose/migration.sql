@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "FilePurpose" ADD VALUE 'INTERVIEW_RECORDING';

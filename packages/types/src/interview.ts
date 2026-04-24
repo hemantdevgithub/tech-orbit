@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { InterviewerRole, InterviewStatus, Recommendation } from "./enums.js";
+import {
+  InterviewerRole,
+  InterviewStatus,
+  Recommendation,
+  RecordingStatus,
+} from "./enums.js";
 
 // ─── Request schemas ─────────────────────────────────────────────────────────
 
@@ -58,6 +63,10 @@ export const InterviewResponseSchema = z.object({
   scheduledEnd: z.string().datetime(),
   videoRoomUrl: z.string().nullable(),
   videoRecordingUrl: z.string().nullable(),
+  videoRecordingStatus: RecordingStatus,
+  videoRecordingStartedAt: z.string().datetime().nullable(),
+  videoRecordingEndedAt: z.string().datetime().nullable(),
+  videoRecordingDurationSec: z.number().int().nullable(),
   status: InterviewStatus,
   startedAt: z.string().datetime().nullable(),
   endedAt: z.string().datetime().nullable(),
@@ -76,6 +85,32 @@ export const InterviewListResponseSchema = z.object({
   hasMore: z.boolean(),
 });
 export type InterviewListResponse = z.infer<typeof InterviewListResponseSchema>;
+
+// Narrow interview summary used when embedding a candidate's featured
+// interviews on their public profile — no PII, enough to render a card.
+export const InterviewSummarySchema = z.object({
+  id: z.string().uuid(),
+  scheduledStart: z.string().datetime(),
+  durationSec: z.number().int().nullable(),
+  conductedByRole: InterviewerRole,
+  recordingStatus: RecordingStatus,
+  recordingUrl: z.string().nullable(),
+  recommendation: Recommendation.nullable(),
+  overallScore: z.number().nullable(), // average of the 4 score dimensions
+});
+export type InterviewSummary = z.infer<typeof InterviewSummarySchema>;
+
+export const InterviewSummaryListSchema = z.object({
+  data: z.array(InterviewSummarySchema),
+});
+export type InterviewSummaryList = z.infer<typeof InterviewSummaryListSchema>;
+
+export const RecordingPlaybackResponseSchema = z.object({
+  url: z.string(),
+  durationSec: z.number().int().nullable(),
+  mimeType: z.string().nullable(),
+});
+export type RecordingPlaybackResponse = z.infer<typeof RecordingPlaybackResponseSchema>;
 
 export const ScorecardResponseSchema = z.object({
   id: z.string().uuid(),

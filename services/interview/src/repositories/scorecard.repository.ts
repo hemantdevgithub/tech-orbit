@@ -59,6 +59,11 @@ export const scorecardRepository = {
     });
   },
 
+  async findManyByInterviewIds(interviewIds: string[]): Promise<Scorecard[]> {
+    if (interviewIds.length === 0) return [];
+    return prisma.scorecard.findMany({ where: { interviewId: { in: interviewIds } } });
+  },
+
   async findByInterview(ctx: AuthContext, interviewId: string): Promise<Scorecard | null> {
     const iv = await prisma.interview.findUnique({ where: { id: interviewId } });
     if (!iv) throw new NotFoundError("Interview not found");
