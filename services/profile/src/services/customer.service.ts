@@ -5,7 +5,9 @@ import type {
   CustomerCompanyResponse,
   CreateCustomerCompany,
   UpdateCustomerCompany,
+  PublicCustomerProfile,
 } from "@techorbit/types";
+import { NotFoundError } from "@techorbit/errors";
 import { customerRepository } from "../repositories/customer.repository.js";
 import type { EncryptionService } from "@techorbit/db-client";
 
@@ -119,6 +121,20 @@ export function createCustomerService(encryptionService: EncryptionService) {
       const profile = await customerRepository.findByPrimaryUserId(primaryUserId);
       if (!profile) return null;
       return toResponse(profile);
+    },
+
+    async getPublicProfile(primaryUserId: string): Promise<PublicCustomerProfile> {
+      const profile = await customerRepository.findByPrimaryUserId(primaryUserId);
+      if (!profile) throw new NotFoundError("Customer profile not found");
+      return {
+        id: profile.id,
+        primaryUserId: profile.primaryUserId,
+        legalName: profile.legalName,
+        dba: profile.dba,
+        industry: profile.industry,
+        companySizeRange: profile.companySizeRange,
+        website: profile.website,
+      };
     },
   };
 }

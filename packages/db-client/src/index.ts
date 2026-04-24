@@ -29,7 +29,16 @@ export function createPrismaClient<T extends { $connect: () => Promise<void>; $d
   const client = new Proxy({} as T, {
     get(_target, prop) {
       return async (...args: unknown[]) => {
-        const { PrismaClient } = await import("@prisma/client");
+        // @prisma/client ships CJS; dynamic-import wrapping makes its type
+        // surface unstable across bundler/node resolution. This function is
+        // a generic proxy that doesn't need Prisma's actual types.
+        const prismaModule = (await import("@prisma/client")) as unknown as {
+          PrismaClient: new (opts: unknown) => {
+            $connect: () => Promise<void>;
+            $disconnect: () => Promise<void>;
+          } & Record<string, (...args: unknown[]) => unknown>;
+        };
+        const PrismaClient = prismaModule.PrismaClient;
 
         const prisma = new PrismaClient({
           datasources: {

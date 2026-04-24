@@ -45,7 +45,7 @@ export async function customerRoutes(
     },
   );
 
-  // GET /api/v1/customers/:primaryUserId  (admin/CRM view)
+  // GET /api/v1/customers/:primaryUserId  (admin/CRM view — full profile with PII)
   fastify.get(
     "/api/v1/customers/:primaryUserId",
     { preHandler: [fastify.authenticate] },
@@ -54,6 +54,19 @@ export async function customerRoutes(
         .object({ primaryUserId: z.string().uuid() })
         .parse(request.params);
       const profile = await customerService.getProfile(request.auth, primaryUserId);
+      return reply.status(200).send(profile);
+    },
+  );
+
+  // GET /api/v1/customers/:primaryUserId/public  (any authenticated user — no PII)
+  fastify.get(
+    "/api/v1/customers/:primaryUserId/public",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { primaryUserId } = z
+        .object({ primaryUserId: z.string().uuid() })
+        .parse(request.params);
+      const profile = await customerService.getPublicProfile(primaryUserId);
       return reply.status(200).send(profile);
     },
   );

@@ -169,6 +169,21 @@ export const CustomerCompanyResponseSchema = z.object({
 });
 export type CustomerCompanyResponse = z.infer<typeof CustomerCompanyResponseSchema>;
 
+// Narrower, safe-to-browse subset of the customer profile. Excludes billing
+// address, EIN presence, attribution, and internal status fields — what's
+// left is the kind of info a vendor/SRM could see on a company directory
+// page without leaking PII or internal state.
+export const PublicCustomerProfileSchema = z.object({
+  id: z.string(),
+  primaryUserId: z.string(),
+  legalName: z.string(),
+  dba: z.string().nullable(),
+  industry: z.string().nullable(),
+  companySizeRange: CompanySizeRange.nullable(),
+  website: z.string().nullable(),
+});
+export type PublicCustomerProfile = z.infer<typeof PublicCustomerProfileSchema>;
+
 export const CreateCustomerCompanySchema = z.object({
   legalName: z.string().min(1).max(200),
   dba: z.string().max(200).optional(),

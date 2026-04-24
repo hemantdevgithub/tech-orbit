@@ -11,6 +11,7 @@ import type {
   CustomerCompanyResponse,
   CreateCustomerCompany,
   UpdateCustomerCompany,
+  PublicCustomerProfile,
   InterviewerProfileResponse,
   CreateInterviewerProfile,
   UpdateInterviewerProfile,
@@ -83,6 +84,10 @@ export class ProfileApiClient {
 
   updateCustomerProfile(data: UpdateCustomerCompany): Promise<CustomerCompanyResponse> {
     return this.client.patch("/api/v1/customers/me", data);
+  }
+
+  getPublicCustomer(primaryUserId: string): Promise<PublicCustomerProfile> {
+    return this.client.get(`/api/v1/customers/${primaryUserId}/public`);
   }
 
   // ─── Interviewer ──────────────────────────────────────────────────────────────
