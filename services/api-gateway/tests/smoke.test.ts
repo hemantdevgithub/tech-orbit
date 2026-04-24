@@ -6,7 +6,7 @@ import proxy from "@fastify/http-proxy";
 import { createLogger } from "@techorbit/logger";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
-const TEST_PORT = 3001;
+const TEST_PORT = 0; // OS-picked port avoids collision with the running dev stack
 
 async function buildTestServer(): Promise<FastifyInstance> {
   const logger = createLogger({ name: "api-gateway", level: "silent" });

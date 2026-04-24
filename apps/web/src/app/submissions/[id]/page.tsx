@@ -27,6 +27,8 @@ import {
   getProfileClient,
   getRequirementClient,
 } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { useDisplayName } from "@/lib/display-names";
 
 const STATUS_VARIANT: Record<
   SubmissionStatus,
@@ -176,23 +178,24 @@ export default function SubmissionDetailPage(): JSX.Element {
     submission.status !== "WITHDRAWN" &&
     submission.status !== "PLACED";
   const nextStatuses = NEXT_STATUSES[submission.status] ?? [];
+  // Fall back to the public display-name when the full profile 403'd.
+  const publicName = useDisplayName(submission.candidateId, "candidate");
+  const heading = candidate?.headline || publicName;
 
   return (
     <div>
-      <div className="mb-4">
-        <Link
-          href={`/requirements/${submission.requirementId}`}
-          className="text-sm text-forest-700 hover:underline"
-        >
-          ← Back to requirement
-        </Link>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Requirements", href: "/requirements" },
+          { label: "Requirement", href: `/requirements/${submission.requirementId}` },
+          { label: heading },
+        ]}
+      />
 
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-forest-900">
-            {candidate?.headline ?? `Candidate ${submission.candidateId.slice(0, 8)}…`}
-          </h1>
+          <h1 className="text-2xl font-bold text-forest-900">{heading}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sage-600">
             <Badge variant={STATUS_VARIANT[submission.status]}>
               {submission.status}

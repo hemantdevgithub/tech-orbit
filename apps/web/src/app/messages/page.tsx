@@ -12,6 +12,7 @@ import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getMessagingClient } from "@/lib/api-client";
 import { MessageIcon } from "@/components/icons";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const POLL_MS = 10_000;
 
@@ -112,10 +113,18 @@ export default function MessagesPage() {
 
   return (
     <div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Messages" },
+        ]}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-forest-900">Messages</h1>
         <p className="text-sage-500 text-sm mt-0.5">
-          Threads refresh every {POLL_MS / 1000}s.
+          {threads.length > 0
+            ? `${threads.length} thread${threads.length === 1 ? "" : "s"} · refreshes every ${POLL_MS / 1000}s`
+            : `Threads refresh every ${POLL_MS / 1000}s.`}
         </p>
       </div>
 

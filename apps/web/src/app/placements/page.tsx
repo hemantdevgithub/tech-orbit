@@ -8,6 +8,8 @@ import { ApiError } from "@techorbit/api-client";
 import { getPlacementClient } from "@/lib/api-client";
 import { ViewToggle, useViewMode } from "@/components/view-toggle";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { useDisplayName } from "@/lib/display-names";
+import { useAuthStore } from "@/store/auth.store";
 
 const STATUS_STYLES: Record<PlacementStatus, string> = {
   ACTIVE:          "bg-success/10 text-success border-success/30",
@@ -67,29 +69,7 @@ export default function PlacementsListPage() {
         </Card>
       ) : viewMode === "list" ? (
         <div className="space-y-2">
-          {rows.map((p) => (
-            <Link key={p.id} href={`/placements/${p.id}`} className="block">
-              <Card className="hover:border-forest-300 transition-colors">
-                <CardBody className="flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-forest-900">
-                      {p.engagementType.replace("_", " ")} placement · ${p.billRateUsd.toFixed(0)}/hr
-                    </p>
-                    <p className="text-xs text-sage-500 mt-0.5">
-                      {new Date(p.startDate).toLocaleDateString()} →{" "}
-                      {new Date(p.endDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[p.status]}`}>
-                      {p.status.replace("_", " ")}
-                    </span>
-                    <span className="text-sage-400 text-sm">→</span>
-                  </div>
-                </CardBody>
-              </Card>
-            </Link>
-          ))}
+          {rows.map((p) => <PlacementListRow key={p.id} p={p} />)}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,5 +106,40 @@ export default function PlacementsListPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Extracted so we can call useDisplayName per row (hook rule).
+function PlacementListRow({ p }: { p: PlacementResponse }) {
+  const me = useAuthStore((s) => s.user);
+  // For the candidate viewing their own placement, showing their own
+  // headline on every row is pointless — use the customer instead.
+  const isOwnCandidate = me?.id === p.candidateId;
+  const candidateName = useDisplayName(isOwnCandidate ? null : p.candidateId, "candidate");
+  const customerName = useDisplayName(p.customerCompanyId, "customerByCompany");
+  const counterpart = isOwnCandidate ? customerName : candidateName;
+
+  return (
+    <Link href={`/placements/${p.id}`} className="block">
+      <Card className="hover:border-forest-300 transition-colors">
+        <CardBody className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-forest-900">
+              {p.engagementType.replace("_", " ")} placement · ${p.billRateUsd.toFixed(0)}/hr
+            </p>
+            <p className="text-xs text-sage-500 mt-0.5">
+              {counterpart} · {new Date(p.startDate).toLocaleDateString()} →{" "}
+              {new Date(p.endDate).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[p.status]}`}>
+              {p.status.replace("_", " ")}
+            </span>
+            <span className="text-sage-400 text-sm">→</span>
+          </div>
+        </CardBody>
+      </Card>
+    </Link>
   );
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildServer } from "../src/server.js";
 
-const TEST_PORT = 3003;
+const TEST_PORT = 0; // OS-picked port avoids collision with the running dev stack
 
 describe("profile smoke tests", () => {
   let server: Awaited<ReturnType<typeof buildServer>>;

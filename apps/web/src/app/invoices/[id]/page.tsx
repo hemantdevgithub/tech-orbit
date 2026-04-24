@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { Badge, Button, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type { InvoiceResponse, InvoiceStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getPaymentsClient } from "@/lib/api-client";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const STATUS_STYLES: Record<InvoiceStatus, string> = {
   DRAFT: "bg-surface-soft text-sage-500 border-surface-border",
@@ -58,13 +58,17 @@ export default function InvoiceDetailPage() {
   if (loading) return <p className="text-sage-500">Loading…</p>;
   if (error || !inv) return <Card><CardBody className="text-danger">{error ?? "Not found"}</CardBody></Card>;
 
+  const periodLabel = `${new Date(inv.billingPeriodStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${money(inv.totalUsd)}`;
+
   return (
     <div>
-      <div className="mb-4">
-        <Link href="/invoices" className="text-sm text-forest-700 hover:underline">
-          ← All invoices
-        </Link>
-      </div>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Invoices", href: "/invoices" },
+          { label: periodLabel },
+        ]}
+      />
 
       <div className="rounded-2xl bg-forest-800 p-6 mb-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10"
