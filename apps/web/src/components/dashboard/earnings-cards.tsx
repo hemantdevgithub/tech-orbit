@@ -138,6 +138,63 @@ export function CustomerEarningsCards() {
   );
 }
 
+// Used by both CRM and SRM dashboards — the backend already scopes
+// listPayouts to the authenticated user's beneficiary rows.
+export function BrokerEarningsCards() {
+  const [payouts, setPayouts] = useState<CommissionPayoutResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPaymentsClient()
+      .listPayouts({ limit: 100 })
+      .then((r) => setPayouts(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const { pending, earningsMonth, lifetime } = useMemo(() => {
+    const now = new Date();
+    let p = 0;
+    let em = 0;
+    let lt = 0;
+    for (const x of payouts) {
+      if (x.status === "PENDING" || x.status === "PROCESSING") p += x.amountUsd;
+      if (x.status === "COMPLETED") {
+        lt += x.amountUsd;
+        if (x.processedAt && sameMonth(x.processedAt, now)) em += x.amountUsd;
+      }
+    }
+    return { pending: p, earningsMonth: em, lifetime: lt };
+  }, [payouts]);
+
+  if (loading) return null;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <StatCard
+        label="Pending commissions"
+        value={money(pending)}
+        sub="Awaiting invoice payment"
+        href="/payouts"
+        tone={pending > 0 ? "warn" : "default"}
+      />
+      <StatCard
+        label="Earnings this month"
+        value={money(earningsMonth)}
+        sub="Completed payouts"
+        href="/payouts"
+        tone="accent"
+      />
+      <StatCard
+        label="Lifetime earnings"
+        value={money(lifetime)}
+        sub={`${payouts.filter((p) => p.status === "COMPLETED").length} completed payouts`}
+        href="/payouts"
+      />
+    </div>
+  );
+}
+
 export function VendorEarningsCards() {
   const [payouts, setPayouts] = useState<CommissionPayoutResponse[]>([]);
   const [loading, setLoading] = useState(true);

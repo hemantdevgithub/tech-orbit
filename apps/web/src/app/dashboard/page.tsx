@@ -11,6 +11,8 @@ import { CandidateDashboard } from "@/components/dashboard/candidate-dashboard";
 import { MsmeDashboard } from "@/components/dashboard/msme-dashboard";
 import { CustomerDashboard } from "@/components/dashboard/customer-dashboard";
 import { InterviewerDashboard } from "@/components/dashboard/interviewer-dashboard";
+import { CrmDashboard } from "@/components/dashboard/crm-dashboard";
+import { SrmDashboard } from "@/components/dashboard/srm-dashboard";
 
 const ROLE_LABELS: Record<RoleType, string> = {
   CUSTOMER: "Customer",
@@ -71,6 +73,8 @@ const ONBOARDING_ROUTES: Partial<Record<RoleType, string>> = {
   MSME: "/onboarding/msme",
   CUSTOMER: "/onboarding/customer",
   INTERVIEWER: "/onboarding/interviewer",
+  CRM: "/onboarding/crm",
+  SRM: "/onboarding/srm",
 };
 
 export default function DashboardPage() {
@@ -213,6 +217,18 @@ export default function DashboardPage() {
         <section>
           <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">Interviewer workspace</h2>
           <InterviewerDashboard />
+        </section>
+      )}
+      {activeRoles.some((r) => r.roleType === "CRM") && (
+        <section>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">CRM workspace</h2>
+          <CrmDashboard />
+        </section>
+      )}
+      {activeRoles.some((r) => r.roleType === "SRM") && (
+        <section>
+          <h2 className="text-sm font-semibold text-sage-500 uppercase tracking-wider mb-3">SRM workspace</h2>
+          <SrmDashboard />
         </section>
       )}
 
