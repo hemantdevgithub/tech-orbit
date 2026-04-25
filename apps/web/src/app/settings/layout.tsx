@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth.store";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 
 export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, status } = useAuthStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!user) router.replace("/login");
-  }, [user, status, router]);
-
-  if (!user) return null;
+  const { ready } = useAuthGuard();
+  if (!ready) return null;
 
   return (
     <div className="min-h-screen bg-mint-50">
