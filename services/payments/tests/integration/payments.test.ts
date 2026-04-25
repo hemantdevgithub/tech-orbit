@@ -309,6 +309,95 @@ runIntegrationSuite("payments", () => {
     expect(Number(inv!.commissionPayouts[0]!.amountUsd)).toBe(150);
   });
 
+  it("customer can mark their own SENT invoice as paid (mock pay flow)", async () => {
+    stubCrossServiceFetch({
+      placements: [buildPlacement()],
+      commissionRules: fullW2Rules(IDS.placement),
+      customerPrimaryUsers: [{ primaryUserId: IDS.customer, id: IDS.company }],
+    });
+    await insertApprovedTimesheet({
+      placementId: IDS.placement,
+      candidateId: IDS.candidate,
+      weekStartDate: BILLING_START,
+      hours: 40,
+      approverUserId: IDS.customer,
+    });
+
+    const { createInvoiceGeneratorService } = await import("../../src/services/invoice-generator.service.js");
+    const { createPlacementApi } = await import("../../src/lib/placement-api.js");
+    const { createServiceTokenSigner } = await import("../../src/lib/service-token.js");
+    const signer = createServiceTokenSigner(process.env.JWT_PRIVATE_KEY!, "payments-test");
+    const placementApi = createPlacementApi(process.env.PLACEMENT_SVC_URL!, signer);
+    const gen = createInvoiceGeneratorService({
+      placementApi,
+      logger: { info: () => undefined, warn: () => undefined },
+    });
+    await gen.generateWeeklyInvoices(BILLING_START, BILLING_END);
+
+    const inv = await getPrisma().invoice.findFirstOrThrow({
+      where: { customerCompanyId: IDS.company, invoiceType: "WEEKLY_HOURS" },
+    });
+    expect(inv.status).toBe("SENT");
+
+    const server = await getServer();
+    const custToken = await makeBearerToken(IDS.customer, ["CUSTOMER"]);
+
+    const res = await server.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${inv.id}/mark-paid`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { status: string; paidAt: string | null };
+    expect(body.status).toBe("PAID");
+    expect(body.paidAt).toBeTruthy();
+  });
+
+  it("a different customer cannot mark someone else's invoice as paid → 403", async () => {
+    const OTHER_CUSTOMER = "00000000-9999-9999-9999-999999999999";
+    const OTHER_COMPANY = "00000000-8888-8888-8888-888888888888";
+    stubCrossServiceFetch({
+      placements: [buildPlacement()],
+      commissionRules: fullW2Rules(IDS.placement),
+      customerPrimaryUsers: [
+        { primaryUserId: IDS.customer, id: IDS.company },
+        { primaryUserId: OTHER_CUSTOMER, id: OTHER_COMPANY },
+      ],
+    });
+    await insertApprovedTimesheet({
+      placementId: IDS.placement,
+      candidateId: IDS.candidate,
+      weekStartDate: BILLING_START,
+      hours: 40,
+      approverUserId: IDS.customer,
+    });
+
+    const { createInvoiceGeneratorService } = await import("../../src/services/invoice-generator.service.js");
+    const { createPlacementApi } = await import("../../src/lib/placement-api.js");
+    const { createServiceTokenSigner } = await import("../../src/lib/service-token.js");
+    const signer = createServiceTokenSigner(process.env.JWT_PRIVATE_KEY!, "payments-test");
+    const placementApi = createPlacementApi(process.env.PLACEMENT_SVC_URL!, signer);
+    const gen = createInvoiceGeneratorService({
+      placementApi,
+      logger: { info: () => undefined, warn: () => undefined },
+    });
+    await gen.generateWeeklyInvoices(BILLING_START, BILLING_END);
+
+    const inv = await getPrisma().invoice.findFirstOrThrow({
+      where: { customerCompanyId: IDS.company, invoiceType: "WEEKLY_HOURS" },
+    });
+
+    const server = await getServer();
+    const otherToken = await makeBearerToken(OTHER_CUSTOMER, ["CUSTOMER"]);
+
+    const res = await server.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${inv.id}/mark-paid`,
+      headers: { authorization: `Bearer ${otherToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
   it("candidate can list only their own timesheets", async () => {
     stubCrossServiceFetch({
       placements: [buildPlacement()],

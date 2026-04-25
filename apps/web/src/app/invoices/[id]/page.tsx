@@ -157,18 +157,24 @@ export default function InvoiceDetailPage() {
                     </p>
                   </>
                 ) : (
-                  <p className="text-xs text-sage-500">
-                    Payment link will appear once the invoice is processed. Pay via ACH or your account manager.
-                  </p>
+                  <>
+                    <Button className="w-full" onClick={markPaid} disabled={working}>
+                      {working ? "Confirming…" : "Confirm payment"}
+                    </Button>
+                    <p className="text-[11px] text-sage-500 text-center">
+                      Mock provider — no real charge. Real Stripe checkout
+                      replaces this button when wired.
+                    </p>
+                  </>
                 )}
-                {isAdmin && (
+                {isAdmin && inv.stripeInvoiceId && (
                   <div className="pt-2 border-t border-sage-100">
                     <Button variant="secondary" size="sm" className="w-full" onClick={markPaid} disabled={working}>
                       {working ? "Working…" : "Mark paid (admin override)"}
                     </Button>
                     <p className="text-[11px] text-sage-500 mt-1">
                       Records payment without a Stripe charge. Use only for ACH /
-                      check or to demo the post-payment flow.
+                      check or to bypass a stuck webhook.
                     </p>
                   </div>
                 )}

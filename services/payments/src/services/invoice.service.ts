@@ -4,7 +4,7 @@ import type {
   InvoiceResponse,
 } from "@techorbit/types";
 import type { AuthContext } from "@techorbit/auth-middleware";
-import { ConflictError, ForbiddenError, NotFoundError } from "@techorbit/errors";
+import { ConflictError, NotFoundError } from "@techorbit/errors";
 import { invoiceRepository } from "../repositories/invoice.repository.js";
 import { toInvoiceResponse } from "../lib/response-mappers.js";
 import type { PayoutProcessorService } from "./payout-processor.service.js";
@@ -69,14 +69,15 @@ export function createInvoiceService(deps: Deps) {
     },
 
     async markInvoicePaid(ctx: AuthContext, id: string): Promise<InvoiceResponse> {
-      // For v1: only admin (or internal webhook) can mark paid.  Customers
-      // pay via Stripe which triggers a webhook in prod; here we expose an
-      // admin-only endpoint for manual recording.
-      if (!ctx.roles.includes("ADMIN")) {
-        throw new ForbiddenError("Only admins can mark invoices as paid");
-      }
-      const existing = await invoiceRepository.findById(ctx, id, null);
+      // Authz:
+      //  - ADMIN: always allowed (manual override / ACH / dispute resolution).
+      //  - CUSTOMER: allowed for invoices billed to their own company. Stands
+      //    in as the demo confirmation today; in prod the Stripe webhook is
+      //    the source of truth and this branch can be locked back to admin.
+      const scope = await resolveScope(ctx);
+      const existing = await invoiceRepository.findById(ctx, id, scope);
       if (!existing) throw new NotFoundError("Invoice not found");
+
       if (existing.status !== "SENT" && existing.status !== "OVERDUE") {
         throw new ConflictError(
           `Cannot mark invoice as paid from status ${existing.status}`,
@@ -94,7 +95,7 @@ export function createInvoiceService(deps: Deps) {
         logger.info({ invoiceId: id, err: String(err) }, "Payout processing error");
       });
 
-      const full = await invoiceRepository.findById(ctx, id, null);
+      const full = await invoiceRepository.findById(ctx, id, scope);
       return toInvoiceResponse({ ...full, status: updated.status, paidAt: updated.paidAt });
     },
   };
