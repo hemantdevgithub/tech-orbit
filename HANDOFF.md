@@ -227,10 +227,46 @@ Sprint 10 is partial — what landed vs what's still open:
   primaryUserId; wants a `GET /internal/customers/by-company/:id/public`
   lookup to resolve the name.
 
+**Closed in the 2026-04-25 interview-recording pass** (4 commits on
+`claude/adoring-montalcini-dc0292`, not yet merged):
+- `Interview` schema gains a recording lifecycle (`videoRecordingStatus`
+  NONE → RECORDING → PROCESSING → READY → FAILED) plus
+  `videoRecordingFileId / StartedAt / EndedAt / DurationSec`. The
+  `start` route flips to RECORDING; `end` flips to PROCESSING and fires
+  an async `processRecording()` that asks the provider for metadata and
+  settles to READY. Mock provider in `services/interview/src/lib/daily.ts`
+  returns a deterministic public MP4 so the full flow works end-to-end
+  with no real Daily account.
+- New `GET /api/v1/internal/interviews/summaries?ids=&candidateId=`
+  returns narrow summaries (score, duration, recording URL if READY)
+  for cross-service consumers. Service-role gated.
+- `CandidateProfile.featuredInterviewIds: String[]` (cap 6,
+  order-preserving). New `PATCH /api/v1/candidates/me/featured-interviews`
+  validates each ID via S2S to interview-svc — must belong to the
+  candidate and have a READY recording. Public endpoint
+  `GET /candidates/:userId/public` now embeds the resolved
+  `featuredInterviews` array.
+- `file-svc` `FilePurpose` enum gains `INTERVIEW_RECORDING`.
+- Web: real `<video>` player on the interview detail card; new
+  `FeaturedInterviewsPanel` embedded on `/candidates/[id]` (with a
+  graceful public-only fallback when the viewer can't see the full
+  profile); new `/settings/featured-interviews` picker for candidates
+  (pick / reorder / save, capped at 6).
+- 31 new tests across interview-svc and profile-svc (recording
+  lifecycle, summaries endpoint authz, PATCH happy/ownership/non-READY/
+  cap/dup paths, public-embedding ordering).
+- Hardening: profile-svc error handler now maps ZodError → 400 (was
+  leaking as 500); routes wrap `.parse()` in `parseOrThrow` for
+  defence-in-depth. Settings layout switched to `useAuthGuard` (was
+  bouncing to `/login` on hard reload).
+
 **Dependencies for the next sprint:**
 - Real Stripe/Gusto integration (payments-svc currently uses mocks).
 - Real SendGrid/Twilio integration (notification-svc mocks).
 - Real video provider for interviews (currently Daily.co mock).
+  **Note:** the interview-recording feature shipped today works
+  end-to-end with the mock — switching to real cloud-recording is a
+  one-file change in `services/interview/src/lib/daily.ts:createLiveApi`.
 - Cloud deployment (everything's single-host-ready; ECS/Fargate/CloudWatch
   deferred).
 
