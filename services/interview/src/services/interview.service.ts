@@ -138,6 +138,15 @@ export function createInterviewService(deps: Deps) {
         ctx.roles.includes("ADMIN");
       if (!isParticipant) throw new ForbiddenError("Only participants can start the interview");
 
+      // Idempotent: re-entering the call from the UI shouldn't reset start
+      // timestamps or undo a completed interview.
+      if (iv.status === "IN_PROGRESS") return toInterviewResponse(iv);
+      if (iv.status !== "SCHEDULED") {
+        throw new ValidationError(
+          `Cannot start an interview in status ${iv.status}`,
+        );
+      }
+
       const now = new Date();
       const updated = await interviewRepository.updateStatus(id, "IN_PROGRESS", {
         startedAt: now,

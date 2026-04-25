@@ -161,6 +161,10 @@ export default function SubmissionDetailPage(): JSX.Element {
     }
   }
 
+  // Hooks must run in the same order every render — keep above the early
+  // returns. The hook tolerates null while the submission is still loading.
+  const publicName = useDisplayName(submission?.candidateId ?? null, "candidate");
+
   if (loading) return <p className="text-sage-600">Loading submission…</p>;
   if (error && !submission) {
     return (
@@ -178,8 +182,6 @@ export default function SubmissionDetailPage(): JSX.Element {
     submission.status !== "WITHDRAWN" &&
     submission.status !== "PLACED";
   const nextStatuses = NEXT_STATUSES[submission.status] ?? [];
-  // Fall back to the public display-name when the full profile 403'd.
-  const publicName = useDisplayName(submission.candidateId, "candidate");
   const heading = candidate?.headline || publicName;
 
   return (
