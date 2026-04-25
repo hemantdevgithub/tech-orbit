@@ -26,11 +26,13 @@ export function useAuthGuard(): AuthGuardState {
   const { fetchMe } = useAuth();
   const router = useRouter();
 
-  const [hydrated, setHydrated] = useState(() =>
-    useAuthStore.persist.hasHydrated(),
-  );
+  // useState's initializer runs on the server during the first RSC render
+  // too, where zustand-persist isn't attached and `.persist` is undefined.
+  // Start as not-hydrated; the effect below promotes after client mount.
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    if (typeof window === "undefined" || !useAuthStore.persist) return;
     const unsub = useAuthStore.persist.onFinishHydration(() =>
       setHydrated(true),
     );
