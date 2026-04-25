@@ -95,6 +95,15 @@ export async function buildServer(): Promise<FastifyInstance> {
   fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error({ err: error, url: request.url }, "Request error");
 
+    // Detect Zod first — it reaches here via `.parse()` in route handlers,
+    // and its `instanceof` can fail across dual-bundled zod versions.
+    const maybeZod = error as unknown as { issues?: unknown[]; name?: string };
+    if (Array.isArray(maybeZod.issues) && maybeZod.name === "ZodError") {
+      return reply.status(400).send({
+        error: { code: "VALIDATION_ERROR", message: "Invalid request", details: maybeZod.issues },
+      });
+    }
+
     if (error.validation) {
       return reply.status(400).send({
         error: { code: "VALIDATION_ERROR", message: "Invalid request", details: error.validation },

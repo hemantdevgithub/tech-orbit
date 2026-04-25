@@ -42,6 +42,7 @@ export default function ProfileSettingsPage() {
   const pendingRoles = user.roles?.filter((r) => r.status === "PENDING_VERIFICATION") ?? [];
   const currentRoleTypes = new Set(user.roles?.map((r) => r.roleType) ?? []);
   const availableToAdd = ADDABLE_ROLES.filter((r) => !currentRoleTypes.has(r));
+  const isCandidate = currentRoleTypes.has("CANDIDATE");
 
   async function onAddRole(role: string) {
     setAddingRole(role);
@@ -135,6 +136,25 @@ export default function ProfileSettingsPage() {
           )}
         </CardBody>
       </Card>
+
+      {/* Candidate-only: showcase featured interviews on public profile */}
+      {isCandidate && (
+        <Card>
+          <CardHeader><CardTitle>Featured interviews</CardTitle></CardHeader>
+          <CardBody>
+            <p className="text-sm text-sage-600 mb-3">
+              Pick up to 6 of your completed interview recordings to showcase
+              on your public profile.
+            </p>
+            <Link
+              href="/settings/featured-interviews"
+              className="text-sm text-forest-700 hover:underline"
+            >
+              Manage featured interviews →
+            </Link>
+          </CardBody>
+        </Card>
+      )}
 
       {/* Add role */}
       {availableToAdd.length > 0 && (

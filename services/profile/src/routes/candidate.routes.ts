@@ -1,10 +1,26 @@
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import {
   SetFeaturedInterviewsSchema,
   UpdateCandidateProfileSchema,
 } from "@techorbit/types";
+import { ValidationError } from "@techorbit/errors";
 import type { CandidateService } from "../services/candidate.service.js";
+
+function parseOrThrow<T>(schema: { parse: (input: unknown) => T }, input: unknown): T {
+  try {
+    return schema.parse(input);
+  } catch (err) {
+    if (err instanceof ZodError || (err as { name?: string })?.name === "ZodError") {
+      const issues = (err as unknown as { issues: { path: (string | number)[]; message: string }[] }).issues;
+      const summary = issues
+        .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+        .join("; ");
+      throw new ValidationError(summary || "Invalid request");
+    }
+    throw err;
+  }
+}
 
 type Options = { candidateService: CandidateService };
 
@@ -40,7 +56,7 @@ export async function candidateRoutes(
     "/api/v1/candidates/me/featured-interviews",
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const body = SetFeaturedInterviewsSchema.parse(request.body);
+      const body = parseOrThrow(SetFeaturedInterviewsSchema, request.body);
       const profile = await candidateService.setFeaturedInterviews(
         request.auth,
         request.auth.userId,

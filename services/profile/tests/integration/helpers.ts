@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { describe } from "vitest";
+import { describe, vi } from "vitest";
+import type { InterviewSummary } from "@techorbit/types";
 import { PrismaClient } from "../../src/generated/client/index.js";
 
 let serverInstance: FastifyInstance | undefined;
@@ -56,6 +57,41 @@ export async function resetDb(): Promise<void> {
 
 import { createPrivateKey } from "node:crypto";
 import { SignJWT } from "jose";
+
+export type StubInterviewSummary = InterviewSummary & { candidateId?: string };
+
+// Stub the interview-svc summaries endpoint used by profile-svc when
+// resolving a candidate's featured interviews. Pass in a list of
+// summaries (with candidateId hints); the stub respects the ids and
+// candidateId filter applied by the caller.
+export function stubInterviewSummaries(
+  summaries: StubInterviewSummary[] = [],
+): ReturnType<typeof vi.spyOn> {
+  const summaryMap = new Map<string, StubInterviewSummary>();
+  for (const s of summaries) summaryMap.set(s.id, s);
+
+  return vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = typeof input === "string" ? input : input.toString();
+
+    const match = url.match(/\/api\/v1\/internal\/interviews\/summaries\?(.+)$/);
+    if (!match) return new Response("not stubbed", { status: 501 });
+
+    const params = new URLSearchParams(match[1]);
+    const ids = (params.get("ids") ?? "").split(",").filter(Boolean);
+    const candidateId = params.get("candidateId") ?? undefined;
+
+    const data = ids
+      .map((id) => summaryMap.get(id))
+      .filter((s): s is StubInterviewSummary => s !== undefined)
+      .filter((s) => !candidateId || s.candidateId === candidateId)
+      .map(({ candidateId: _c, ...rest }) => rest);
+
+    return new Response(JSON.stringify({ data }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+}
 
 // Sign a test JWT using the RSA private key generated in globalSetup
 export async function makeBearerToken(

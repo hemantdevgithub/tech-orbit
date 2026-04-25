@@ -26,6 +26,11 @@ export async function setup(): Promise<void> {
   });
   process.env.JWT_PUBLIC_KEY = publicKey;
   process.env.JWT_PRIVATE_KEY_TEST = privateKey; // exposed for test token signing
+  // profile-svc signs service-to-service tokens (e.g. calls to interview-svc
+  // when resolving featured interviews). Tests stub the HTTP fetch itself,
+  // but the private key still has to be loadable during server boot.
+  process.env.JWT_PRIVATE_KEY = privateKey;
+  process.env.INTERVIEW_SVC_URL = "http://interview-svc.test";
 
   const encryptionKey = Buffer.alloc(32, "test-profile-enc-key-32-bytes!!!");
   process.env.FIELD_ENCRYPTION_KEK_V1 = encryptionKey.toString("base64");

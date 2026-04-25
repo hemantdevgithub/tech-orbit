@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
-import type { CandidateProfileResponse } from "@techorbit/types";
+import type {
+  CandidateProfileResponse,
+  InterviewSummary,
+  PublicCandidateProfile,
+} from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getProfileClient } from "@/lib/api-client";
 import { UserRatingsPanel } from "@/components/user-ratings-panel";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { FeaturedInterviewsPanel } from "@/components/featured-interviews-panel";
 
 const WORK_AUTH_LABELS: Record<string, string> = {
   US_CITIZEN: "US Citizen",
@@ -44,26 +49,46 @@ function formatDate(iso: string | null): string {
 export default function CandidateDetailPage() {
   const params = useParams<{ id: string }>();
   const [profile, setProfile] = useState<CandidateProfileResponse | null>(null);
+  const [publicProfile, setPublicProfile] = useState<PublicCandidateProfile | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params?.id) return;
-    getProfileClient()
-      .getCandidateByUserId(params.id)
-      .then(setProfile)
-      .catch((err) => setError(err instanceof ApiError ? err.message : "Not found"))
+    const client = getProfileClient();
+    // Fetch in parallel — public is accessible to any authed viewer;
+    // the full profile only resolves for self/admin/CRM/SRM. The page
+    // degrades gracefully to the public subset when the full fetch 403s.
+    Promise.allSettled([
+      client.getCandidateByUserId(params.id),
+      client.getPublicCandidate(params.id),
+    ])
+      .then(([fullRes, publicRes]) => {
+        if (fullRes.status === "fulfilled") setProfile(fullRes.value);
+        if (publicRes.status === "fulfilled") setPublicProfile(publicRes.value);
+        if (fullRes.status === "rejected" && publicRes.status === "rejected") {
+          const err = publicRes.reason;
+          setError(err instanceof ApiError ? err.message : "Not found");
+        }
+      })
       .finally(() => setLoading(false));
   }, [params?.id]);
 
   if (loading) return <p className="text-sage-600">Loading…</p>;
-  if (error || !profile) {
+  if (!profile && !publicProfile) {
     return (
       <Card>
         <CardBody className="text-red-700">{error ?? "Candidate not found"}</CardBody>
       </Card>
     );
   }
+  if (!profile && publicProfile) {
+    return <PublicOnlyView pub={publicProfile} />;
+  }
+  if (!profile) return null;
+  const featured: InterviewSummary[] = publicProfile?.featuredInterviews ?? [];
 
   const prefs = [
     profile.preferRemote && "Remote",
@@ -134,6 +159,13 @@ export default function CandidateDetailPage() {
             </CardBody>
           </Card>
 
+          {featured.length > 0 && (
+            <FeaturedInterviewsPanel
+              title="Featured interviews"
+              interviews={featured}
+            />
+          )}
+
           <UserRatingsPanel userId={profile.userId} title="Ratings & reviews" />
         </div>
 
@@ -183,6 +215,48 @@ export default function CandidateDetailPage() {
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Fallback view for viewers who only have public access (e.g. a customer
+// browsing a candidate they haven't been matched with yet). Shows the
+// narrow public subset with featured interviews and ratings.
+function PublicOnlyView({ pub }: { pub: PublicCandidateProfile }): JSX.Element {
+  return (
+    <div className="space-y-6">
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Candidates" },
+          { label: pub.headline ?? "Candidate" },
+        ]}
+      />
+      <div>
+        <h1 className="text-2xl font-bold text-forest-900">
+          {pub.headline ?? "Candidate"}
+        </h1>
+        <p className="text-sage-500 text-xs mt-1 font-mono">{pub.userId}</p>
+        {pub.location && (
+          <p className="text-sage-700 text-sm mt-2">📍 {pub.location}</p>
+        )}
+        {pub.seniority && (
+          <div className="mt-2">
+            <Badge variant="mint">
+              {SENIORITY_LABELS[pub.seniority] ?? pub.seniority}
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {pub.featuredInterviews.length > 0 && (
+        <FeaturedInterviewsPanel
+          title="Featured interviews"
+          interviews={pub.featuredInterviews}
+        />
+      )}
+
+      <UserRatingsPanel userId={pub.userId} title="Ratings & reviews" />
     </div>
   );
 }

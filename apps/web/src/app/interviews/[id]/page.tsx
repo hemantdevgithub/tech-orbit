@@ -274,14 +274,39 @@ function InterviewDetailInner({
             </Card>
           )}
 
-          {iv.videoRecordingUrl && (
+          {iv.videoRecordingStatus !== "NONE" && (
             <Card>
               <CardHeader><CardTitle>Recording</CardTitle></CardHeader>
               <CardBody>
-                <a href={iv.videoRecordingUrl} target="_blank" rel="noreferrer"
-                  className="text-sm text-forest-700 hover:underline">
-                  Download recording →
-                </a>
+                {iv.videoRecordingStatus === "READY" && iv.videoRecordingUrl ? (
+                  <div className="space-y-2">
+                    <video
+                      src={iv.videoRecordingUrl}
+                      controls
+                      preload="metadata"
+                      className="w-full rounded bg-sage-100 aspect-video"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    {iv.videoRecordingDurationSec !== null && (
+                      <p className="text-xs text-sage-600">
+                        Duration: {Math.floor(iv.videoRecordingDurationSec / 60)}m{" "}
+                        {iv.videoRecordingDurationSec % 60}s
+                      </p>
+                    )}
+                  </div>
+                ) : iv.videoRecordingStatus === "PROCESSING" ? (
+                  <p className="text-sm text-sage-600">
+                    Processing — check back in a minute.
+                  </p>
+                ) : iv.videoRecordingStatus === "RECORDING" ? (
+                  <p className="text-sm text-sage-600">
+                    <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse" />
+                    Recording in progress.
+                  </p>
+                ) : (
+                  <p className="text-sm text-sage-600">Recording unavailable.</p>
+                )}
               </CardBody>
             </Card>
           )}

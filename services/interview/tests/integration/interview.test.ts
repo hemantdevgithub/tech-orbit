@@ -292,6 +292,134 @@ runIntegrationSuite("interviews", () => {
     expect((res.json() as { data: unknown[] }).data).toHaveLength(0);
   });
 
+  it("start/end transitions recording status NONE → RECORDING → READY (mock)", async () => {
+    stubCrossServiceFetch({ submissions: [buildSubmission()], interviewers: [] });
+    const server = await getServer();
+    const custToken = await makeBearerToken(CUSTOMER, ["CUSTOMER"]);
+
+    const create = await server.inject({
+      method: "POST",
+      url: "/api/v1/interviews",
+      headers: { authorization: `Bearer ${custToken}`, "content-type": "application/json" },
+      payload: JSON.stringify(interviewPayload()),
+    });
+    const { id } = create.json() as { id: string };
+
+    // Pre-start: recording status is NONE.
+    const pre = await server.inject({
+      method: "GET",
+      url: `/api/v1/interviews/${id}`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+    expect((pre.json() as Record<string, unknown>).videoRecordingStatus).toBe("NONE");
+
+    // Start → RECORDING.
+    await server.inject({
+      method: "POST",
+      url: `/api/v1/interviews/${id}/start`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+    const mid = await server.inject({
+      method: "GET",
+      url: `/api/v1/interviews/${id}`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+    const midBody = mid.json() as Record<string, unknown>;
+    expect(midBody.videoRecordingStatus).toBe("RECORDING");
+    expect(midBody.videoRecordingStartedAt).toBeTruthy();
+
+    // End → mock provider returns a recording synchronously, so status
+    // should be READY once the best-effort fetch resolves. Poll briefly
+    // to cover the tiny async window.
+    await server.inject({
+      method: "POST",
+      url: `/api/v1/interviews/${id}/end`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+
+    let body: Record<string, unknown> = {};
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const r = await server.inject({
+        method: "GET",
+        url: `/api/v1/interviews/${id}`,
+        headers: { authorization: `Bearer ${custToken}` },
+      });
+      body = r.json() as Record<string, unknown>;
+      if (body.videoRecordingStatus === "READY") break;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    expect(body.videoRecordingStatus).toBe("READY");
+    expect(body.videoRecordingUrl).toBeTruthy();
+    expect(body.videoRecordingDurationSec).toBeGreaterThan(0);
+    expect(body.videoRecordingEndedAt).toBeTruthy();
+  });
+
+  it("internal summaries endpoint returns recording info, filters by candidateId", async () => {
+    stubCrossServiceFetch({ submissions: [buildSubmission()], interviewers: [] });
+    const server = await getServer();
+    const custToken = await makeBearerToken(CUSTOMER, ["CUSTOMER"]);
+    const svcToken = await makeBearerToken(
+      "00000000-0000-0000-0000-000000000000",
+      ["SERVICE"],
+    );
+
+    const create = await server.inject({
+      method: "POST",
+      url: "/api/v1/interviews",
+      headers: { authorization: `Bearer ${custToken}`, "content-type": "application/json" },
+      payload: JSON.stringify(interviewPayload()),
+    });
+    const { id } = create.json() as { id: string };
+
+    // Drive the interview to READY.
+    await server.inject({
+      method: "POST",
+      url: `/api/v1/interviews/${id}/start`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+    await server.inject({
+      method: "POST",
+      url: `/api/v1/interviews/${id}/end`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+    // Wait for the async recording processor to settle.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const row = await getPrisma().interview.findUnique({ where: { id } });
+      if (row?.videoRecordingStatus === "READY") break;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    // Candidate-filtered summary returns the row with recording URL.
+    const ok = await server.inject({
+      method: "GET",
+      url: `/api/v1/internal/interviews/summaries?ids=${id}&candidateId=${CANDIDATE}`,
+      headers: { authorization: `Bearer ${svcToken}` },
+    });
+    expect(ok.statusCode).toBe(200);
+    const okBody = ok.json() as { data: Array<Record<string, unknown>> };
+    expect(okBody.data).toHaveLength(1);
+    expect(okBody.data[0]?.id).toBe(id);
+    expect(okBody.data[0]?.recordingStatus).toBe("READY");
+    expect(okBody.data[0]?.recordingUrl).toBeTruthy();
+
+    // Same request with a different candidateId filter → empty.
+    const empty = await server.inject({
+      method: "GET",
+      url: `/api/v1/internal/interviews/summaries?ids=${id}&candidateId=11111111-2222-3333-4444-555555555555`,
+      headers: { authorization: `Bearer ${svcToken}` },
+    });
+    expect(empty.statusCode).toBe(200);
+    expect((empty.json() as { data: unknown[] }).data).toHaveLength(0);
+
+    // Non-service token → 401 (requireServiceRole throws UnauthorizedError).
+    const denied = await server.inject({
+      method: "GET",
+      url: `/api/v1/internal/interviews/summaries?ids=${id}`,
+      headers: { authorization: `Bearer ${custToken}` },
+    });
+    expect(denied.statusCode).toBe(401);
+  });
+
   it("outgoing event row enqueued on interview creation", async () => {
     stubCrossServiceFetch({ submissions: [buildSubmission()], interviewers: [] });
     const server = await getServer();
