@@ -53,22 +53,14 @@ export function createInvoiceGeneratorService(deps: Deps) {
       let invoicesSkipped = 0;
 
       for (const [customerCompanyId, placements] of byCustomer) {
-        // Idempotency check: skip if an invoice already exists for this
-        // window, since the job may run twice (retry, manual trigger, etc).
-        const existing = await invoiceRepository.existsForCustomerPeriod(
-          customerCompanyId,
-          "WEEKLY_HOURS",
-          billingPeriodStart,
-          null,
-        );
-        if (existing) {
-          invoicesSkipped += 1;
-          logger.info(
-            { customerCompanyId, invoiceId: existing.id },
-            "Invoice already exists for this billing period; skipping",
-          );
-          continue;
-        }
+        // Idempotency lives at the timesheet level: we only pick up
+        // timesheets in APPROVED status, and flip them to INVOICED inside
+        // the same transaction. Re-runs naturally see no APPROVED rows for
+        // already-invoiced weeks. The previous customer-level "skip if any
+        // invoice exists for this week" check was too coarse — a new
+        // placement under the same customer would never get its first
+        // invoice generated because some other placement already had one
+        // for the same week.
 
         // Gather approved timesheets in the window across all placements
         // for this customer, plus the rules for each placement.

@@ -69,11 +69,13 @@ export const IDS = {
 
 // Stub identity-svc endpoints that admin-svc calls:
 //   - POST /api/v1/internal/users/:id/roles
+//   - POST /api/v1/internal/users/:id/roles/activate
 //   - POST /api/v1/internal/users/:id/status
 //   - POST /api/v1/internal/users/:id/trigger-password-reset
 //   - GET  /api/v1/internal/users/search?q=
 export type IdentityStubCalls = {
   addRole: Array<{ userId: string; roleType: string }>;
+  activateRole: Array<{ userId: string; roleType: string }>;
   status: Array<{ userId: string; body: Record<string, unknown> }>;
   passwordReset: Array<{ userId: string }>;
   search: Array<{ q: string }>;
@@ -90,10 +92,17 @@ export function stubIdentityFetch(opts: {
     createdAt: string;
   }>;
 }): { calls: IdentityStubCalls; spy: ReturnType<typeof vi.spyOn> } {
-  const calls: IdentityStubCalls = { addRole: [], status: [], passwordReset: [], search: [] };
+  const calls: IdentityStubCalls = { addRole: [], activateRole: [], status: [], passwordReset: [], search: [] };
 
   const spy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
     const url = typeof input === "string" ? input : input.toString();
+
+    const activateRole = url.match(/\/api\/v1\/internal\/users\/([0-9a-f-]+)\/roles\/activate$/i);
+    if (activateRole) {
+      const body = init?.body ? JSON.parse(init.body as string) : {};
+      calls.activateRole.push({ userId: activateRole[1]!, roleType: body.roleType });
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
 
     const addRole = url.match(/\/api\/v1\/internal\/users\/([0-9a-f-]+)\/roles$/i);
     if (addRole) {

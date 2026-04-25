@@ -66,6 +66,21 @@ export async function internalIdentityRoutes(fastify: FastifyInstance): Promise<
     },
   );
 
+  // POST /api/v1/internal/users/:id/roles/activate — flip a verified role to ACTIVE
+  // Called from admin-svc when a CRM/SRM/MSME/INTERVIEWER role application
+  // is approved. Without this, JWTs come back with empty roles and every
+  // role-gated endpoint rejects the user — silent demo killer.
+  fastify.post(
+    "/api/v1/internal/users/:id/roles/activate",
+    { preHandler: [gate] },
+    async (request, reply) => {
+      const { id } = IdParams.parse(request.params);
+      const body = AddRoleBody.parse(request.body);
+      await roleService.markRoleActive(systemCtx, id, body.roleType as UserRoleType);
+      return reply.status(200).send({ ok: true });
+    },
+  );
+
   // POST /api/v1/internal/users/:id/status — suspend / ban / reactivate
   //
   // identity's UserStatus enum only has PENDING/ACTIVE/SUSPENDED. BANNED from

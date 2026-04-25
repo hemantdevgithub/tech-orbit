@@ -51,6 +51,7 @@ runIntegrationSuite("Admin API", () => {
     expect(res.json().status).toBe("APPROVED");
 
     expect(calls.addRole).toEqual([{ userId: IDS.candidate, roleType: "CRM" }]);
+    expect(calls.activateRole).toEqual([{ userId: IDS.candidate, roleType: "CRM" }]);
     const audit = await db.auditLog.findMany();
     expect(audit).toHaveLength(1);
     expect(audit[0]!.action).toBe("ROLE_APPLICATION_APPROVED");

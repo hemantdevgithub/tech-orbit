@@ -4,6 +4,7 @@ import type { SuspendDuration, UserStatus, UserSearchResult } from "@techorbit/t
 
 export type IdentityApi = {
   addRole(userId: string, roleType: string): Promise<void>;
+  activateRole(userId: string, roleType: string): Promise<void>;
   updateUserStatus(
     userId: string,
     status: "SUSPENDED" | "BANNED" | "ACTIVE",
@@ -37,6 +38,15 @@ export function createIdentityApi(
   return {
     async addRole(userId, roleType) {
       const res = await svcFetch(`/api/v1/internal/users/${userId}/roles`, {
+        method: "POST",
+        body: JSON.stringify({ roleType }),
+      });
+      if (res.status === 404) throw new NotFoundError("User not found");
+      if (!res.ok) throw new InternalError(`identity-svc returned ${res.status}`);
+    },
+
+    async activateRole(userId, roleType) {
+      const res = await svcFetch(`/api/v1/internal/users/${userId}/roles/activate`, {
         method: "POST",
         body: JSON.stringify({ roleType }),
       });

@@ -68,4 +68,16 @@ export const roleService = {
       addedAt: r.createdAt,
     }));
   },
+
+  // Flip a PENDING_VERIFICATION role to ACTIVE. Called from admin-svc when
+  // a role application is approved. System-context only — there's no
+  // user-facing self-activation path.
+  async markRoleActive(
+    ctx: SystemContext,
+    userId: string,
+    roleType: UserRoleType,
+  ): Promise<void> {
+    if (ctx.type !== "system") throw new Error("Access denied");
+    await roleRepository.markActive(ctx, userId, roleType);
+  },
 };

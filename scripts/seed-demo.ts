@@ -84,9 +84,27 @@ async function registerWithRole(
   const { userId } = await register(email, firstName, lastName);
   const initial = await login(email);
   await addRole(initial, role);
-  // Re-login so the token carries the new role claim.
+  // CRM/SRM/MSME/INTERVIEWER are added as PENDING_VERIFICATION — flip
+  // them to ACTIVE so the demo user can actually act in their role.
+  // Without this the JWT comes back with empty roles and every gated
+  // endpoint rejects them silently.
+  const NON_AUTO_ACTIVE = new Set(["CRM", "SRM", "MSME", "INTERVIEWER"]);
+  if (NON_AUTO_ACTIVE.has(role)) {
+    await activateRole(userId, role);
+  }
+  // Re-login so the token carries the (now-active) role claim.
   const token = await login(email);
   return { token, userId };
+}
+
+// Direct SQL flip of role.status — bypasses the role-application workflow
+// because seeded users haven't filed an application; this is demo-only.
+async function activateRole(userId: string, roleType: string): Promise<void> {
+  const { execSync } = await import("node:child_process");
+  execSync(
+    `docker exec techorbit-postgres psql -U techorbit -d techorbit -c "UPDATE identity_user_role SET status='ACTIVE', verified_at=NOW() WHERE user_id='${userId}' AND role_type='${roleType}'" >/dev/null`,
+    { stdio: "inherit" },
+  );
 }
 
 function money(n: number): string {

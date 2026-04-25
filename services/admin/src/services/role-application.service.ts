@@ -105,7 +105,10 @@ export function createRoleApplicationService(deps: RoleApplicationServiceDeps) {
       }
 
       // Add role in identity-svc first; if that fails, don't mark approved.
+      // The grant arrives as PENDING_VERIFICATION; flip to ACTIVE so the
+      // user's next JWT actually carries the role claim.
       await deps.identityApi.addRole(existing.userId, existing.requestedRole);
+      await deps.identityApi.activateRole(existing.userId, existing.requestedRole);
 
       const updated = await prisma.$transaction(async (tx) => {
         const row = await updateApplicationStatus(

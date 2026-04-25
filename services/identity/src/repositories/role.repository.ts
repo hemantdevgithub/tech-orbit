@@ -32,6 +32,11 @@ export interface RoleRepository {
     verifiedBy?: string,
     rejectNotes?: string
   ): Promise<UserRoleWithUser>;
+  markActive(
+    ctx: SystemContext,
+    userId: string,
+    roleType: UserRoleType,
+  ): Promise<UserRoleWithUser>;
   listPendingVerifications(ctx: AuthContext | SystemContext): Promise<UserRoleWithUser[]>;
 }
 
@@ -71,6 +76,16 @@ export const roleRepository: RoleRepository = {
         verifiedAt: verifiedBy ? new Date() : null,
         rejectNotes: rejectNotes ?? null,
       },
+    });
+  },
+
+  async markActive(ctx, userId, roleType) {
+    if (!isSystemContext(ctx)) throw new Error("Only system context can mark a role active");
+    const existing = await prisma.userRole.findFirst({ where: { userId, roleType } });
+    if (!existing) throw new Error(`Role ${roleType} not found for user ${userId}`);
+    return prisma.userRole.update({
+      where: { id: existing.id },
+      data: { status: "ACTIVE", verifiedAt: new Date(), rejectNotes: null },
     });
   },
 
