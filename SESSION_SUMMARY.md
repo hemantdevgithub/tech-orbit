@@ -1,150 +1,137 @@
-# Session summary — 2026-04-25 UI polish pass
+# Session summary — 2026-04-25 interview recording + featured profile
 
 **Branch:** `claude/adoring-montalcini-dc0292` (worktree)
-**Base:** `sprint/7-payments` at `64d2fc9`
-**Tip:** 18 commits ahead
-**State:** clean working tree · lint 31/31 · typecheck 31/31 · tests 30/30
+**Tip:** 20 commits ahead of `64d2fc9`
+**State:** clean working tree · lint 31/31 · typecheck 31/31 · tests 30/30 (320+ tests)
 
-This doc exists so a fresh Claude session can pick up without replaying
-the entire conversation. Read this **plus** [`HANDOFF.md`](HANDOFF.md) to
-get the whole picture — HANDOFF stays current, this file is the change
-log for the 2026-04-25 pass.
+This pass builds on the UI polish session from earlier today. Read this
+**plus** [`HANDOFF.md`](HANDOFF.md) for a fresh Claude session to pick up
+without replaying the conversation.
 
 ---
 
 ## What changed this session
 
-### New features
+### Interview recording → candidate profile
 
-- **AppShell left sidebar** replacing the top NavBar across 17 layouts.
-  Role-aware: shows a primary CTA, three quick-search inputs, and nav
-  links that fit the viewer's role. Collapses to a drawer on mobile.
-  → `apps/web/src/components/app-shell.tsx`
-- **Role profile pages:** `/candidates/[id]`, `/customers/[id]`
-  (narrow public subset), and enhanced `/users/[id]`.
-- **CRM + SRM onboarding** welcome pages + wired into `register`'s
-  `ONBOARDING_ROUTES`.
-- **CRM + SRM dashboards** — earnings strip (shared `BrokerEarningsCards`)
-  + attribution / submissions panels.
-- **Grid ↔ list view toggle** on Requirements, Placements,
-  Interviewers. Per-page preference persisted in `localStorage`.
-  → `apps/web/src/components/view-toggle.tsx`
-- **Breadcrumbs** on every list + detail page.
-  → `apps/web/src/components/breadcrumbs.tsx`
-- **Lucide-style SVG icon set** replacing emojis everywhere except seed
-  strings and markdown.
-  → `apps/web/src/components/icons.tsx`
-- **Public profile endpoints** on profile-svc: `/customers/:id/public`,
-  `/candidates/:id/public`, `/interviewers/:id/public`, plus a
-  companyId-keyed variant `/customers/by-company/:id/public`. Narrow
-  no-PII shapes, any authenticated viewer can read.
-- **`useDisplayName` hook** resolves UUIDs to real names (candidate
-  headline, customer legalName, interviewer displayName) with a
-  module-level Promise cache. Falls back to `#abc12345` short-ids on
-  403/404.
-  → `apps/web/src/lib/display-names.ts`
-- **Per-route rate limits on payments** — mark-paid (30/min) + 4
-  timesheet mutations (60/min submit/update, 120/min approve/reject).
-  Integration test mirrors identity's suite.
-- **Replaced "Coming in Sprint 3" placeholders** in customer /
-  candidate / MSME dashboards with live data from listRequirements /
-  listSubmissions.
+Shipped item #1 from the previous session's "open items flagged but not
+yet tackled" list: auto-record in-platform interviews, store the recording,
+let the customer replay it, and let candidates feature their best
+recordings on their public profile.
 
-### Critical bug fixes
+**interview-svc**
+- `Interview` schema gains `videoRecordingStatus` (NONE → RECORDING →
+  PROCESSING → READY → FAILED), `videoRecordingFileId`,
+  `videoRecordingStartedAt/EndedAt`, `videoRecordingDurationSec`.
+  Kept `videoRecordingUrl` for the playback URL.
+- `startInterview` flips status to RECORDING (cloud-record auto-starts
+  on Daily.co's side). `endInterview` flips to PROCESSING and fires an
+  async `processRecording()` that asks the provider for metadata and
+  settles to READY. Mock provider returns a deterministic public MP4 so
+  the full flow works end-to-end in dev.
+- New `GET /api/v1/internal/interviews/summaries?ids=&candidateId=`
+  returns narrow summaries (score, duration, recording URL if READY)
+  for profile-svc to embed.
+- `DailyApi` interface gained `getRecording(roomName): DailyRecording | null`
+  — the mock returns a sample clip; the live implementation reads from
+  Daily's `/recordings` endpoint.
 
-- **`api-client.ts` snapshot bug** — `getApiClient` /
-  `makeServiceClient` were freezing a snapshot of the zustand store,
-  so `getAccessToken` always returned `null`. Every authed request
-  silently went anonymous, including `fetchMe` after login, which
-  left the dashboard blank.
-- **Zustand hydration race** — dashboard + 4 other layouts bounced
-  to `/login` on hard-reload before localStorage finished rehydrating.
-  New `useAuthGuard` hook waits for
-  `useAuthStore.persist.onFinishHydration` before deciding.
-- **Smoke-test port collisions** — six services
-  (api-gateway, audit, messaging, notification, profile, rating) bound
-  hardcoded dev ports. Now bind port 0 (OS-picked). `pnpm test` passes
-  all 30 suites even with the dev stack running.
-- **Placement titles showing candidate UUIDs** as H1s — now render
-  engagement type + rate + duration.
+**profile-svc**
+- `CandidateProfile.featuredInterviewIds: String[]` (cap 6,
+  order-preserving) + new `PATCH /api/v1/candidates/me/featured-interviews`.
+  Validates each ID via S2S to interview-svc: must belong to the
+  candidate and have a READY recording, no duplicates.
+- Public endpoint `GET /api/v1/candidates/:userId/public` now embeds the
+  full `featuredInterviews` array resolved via interview-svc.
+- New `services/profile/src/lib/{service-token,interview-api}.ts` for
+  the S2S call. Degrades to a null API when `JWT_PRIVATE_KEY` or
+  `INTERVIEW_SVC_URL` is unset (e.g. in isolated tests).
+- `candidateService` refactored from singleton to factory to inject
+  `interviewApi`. Shell-creation consumer now calls the repository
+  directly to avoid the dep.
+- Error handler: ZodError → 400 (was leaking as 500). Routes also wrap
+  `.parse()` in `parseOrThrow()` for defence-in-depth.
+
+**file-svc**
+- `FilePurpose` enum gains `INTERVIEW_RECORDING` (video/mp4|webm
+  allowlist).
+
+**packages/types**
+- `RecordingStatus` enum, `InterviewSummary` schema,
+  `RecordingPlaybackResponse`, `SetFeaturedInterviewsSchema`,
+  `PublicCandidateProfile.featuredInterviews`,
+  `CandidateProfileResponse.featuredInterviewIds`.
+
+**packages/api-client**
+- `ProfileApiClient.setFeaturedInterviews()`.
+
+**apps/web**
+- `/interviews/[id]` — recording card now uses a real `<video>` player
+  for READY, pulses for RECORDING, shows a processing/unavailable hint
+  otherwise.
+- `/candidates/[id]` — fetches full + public in parallel; degrades to
+  public-only when the viewer isn't self/admin/CRM/SRM. New
+  `FeaturedInterviewsPanel` embeds each featured recording with score +
+  recommendation inline.
+- `/settings/featured-interviews` — candidate-only picker with
+  add/remove, up/down reorder, cap of 6.
+- `/settings/profile` — adds a pointer card for candidates.
 
 ---
 
-## Commits (newest first)
+## Commits in this pass (on top of prior 18)
 
 ```
-6b2fa76 fix+polish: broader display names, breadcrumbs, smoke-test ports
-89647ef feat(profile): customer public lookup by companyId
-1f7b303 test(profile): cover public candidate endpoint + update HANDOFF
-86048e4 feat(profile): public candidate + interviewer endpoints (no PII)
-d04fd3d feat(web): useDisplayName hook for candidate/customer/interviewer labels
-a69d366 feat(web): polish interview + money surfaces after full-flow walkthrough
-72e9dad feat(web): finish emoji → SVG icon sweep
-bdd667f feat(web): replace emoji icons with lucide-style SVGs
-5d8b521 feat(web): breadcrumbs + pagination polish on list pages
-3bcd343 feat(web): grid/list view toggle on browse surfaces
-cb66d06 feat(web): polish cross-role flow — placement titles, req company label
-785f153 feat(web): sidebar app shell with role-aware CTA, search, and nav
-c194377 feat(web): replace Sprint 3 placeholders with live data
-4ef7c60 fix(web): stop bouncing authed users to /login on hard reload
-4d89c5a fix(web): api-client snapshot bug + defensive roles chain
-93f0a08 feat(web): activity-based CRM and SRM dashboards
-8290409 feat(web): role profile pages + CRM/SRM onboarding welcome
-848384b feat(profile): public customer profile endpoint (no PII)
-61be156 feat(payments): per-route rate limits on financial mutations
-80bf499 docs: sprint 10 polish pass — bundle-analyzer script + handoff fixes
+98ef0de feat(web): recording player, featured interviews panel, settings picker
+8478a0a feat(interview,profile): recording lifecycle + featured interviews on public profile
 ```
 
 ---
 
-## Open items flagged but not yet tackled
+## Tests added
 
-These were raised in the session but deferred:
+- interview-svc integration: start/end recording transitions
+  (NONE → RECORDING → READY) and internal summaries endpoint
+  (candidateId filter + service-role gate).
+- profile-svc integration: new `stubInterviewSummaries` helper.
+  PATCH happy path, cross-candidate rejection, non-READY rejection,
+  cap/dup validation, and public endpoint embeds featured interviews in
+  the candidate's chosen order. Public-profile shape assertion updated
+  to include `featuredInterviews`.
 
-1. **Interview recording storage on candidate profile.** User wants:
-   - The in-platform video interview to record automatically.
-   - Recording saved and linked on the candidate's profile.
-   - Customer can watch the recording later.
-   - Candidate can feature preferred interviews + scores on their
-     profile to stand out.
-   - Scope: Daily.co mock currently — recording requires real provider
-     or a mock storage layer. Ties into interview-svc,
-     candidate-profile, and the candidate's public `/candidates/[id]`
-     page ("featured interviews" section).
-2. **Customer payment flow audit.** User hadn't seen the
-   customer-pays-invoice path in detail. `/invoices/[id]` exists with a
-   Stripe-link button for SENT status but the full "pay button →
-   confirmation → receipt" flow hasn't been walked yet.
-3. **Rating flow audit.** Ratings display on profiles but the
-   submit-rating path (after placement end) hasn't been exercised.
-4. **Interview detail polish.** Call page + scorecard form UX.
+---
 
 ## Still open from before this session
 
 - E2E Playwright specs 01-09 are `test.skip` stubs.
-- Per-IP (not per-token) rate limits for fully anonymous register/login
-  surfaces.
+- Per-IP (not per-token) rate limits for fully anonymous
+  register/login surfaces.
 - Real Stripe/Gusto integration (payments-svc mocks today).
 - Real SendGrid/Twilio integration (notification-svc mocks).
-- Real video provider for interviews (Daily.co mock today — also
-  blocks the recording-storage item above).
+- Real video provider for interviews (Daily.co mock today). **Note:**
+  the interview-recording feature built in this pass is fully usable
+  with the mock — real cloud-recording just swaps the `DailyApi`
+  implementation in `services/interview/src/lib/daily.ts:createLiveApi`.
 - Cloud deployment (single-host-ready; ECS/Fargate deferred).
+
+## Deferred in this pass
+
+- Transcripts / auto-summary of recordings.
+- Customer-uploads-recording for out-of-platform interviews.
+- Per-viewer short-TTL signed URLs (recording URLs are currently
+  public for featured; participant views go through the existing
+  `GET /interviews/:id` authz).
 
 ---
 
 ## How to resume
 
 1. `cd /Users/hemant/techorbit/.claude/worktrees/adoring-montalcini-dc0292`
-2. Read `HANDOFF.md` for the up-to-date state (it was refreshed mid-pass
-   in commit `1f7b303`).
-3. Read **this file** for the session change log.
-4. Bring up the dev stack — see the "How to run the app" section of
-   `HANDOFF.md` (the macOS file-watcher gotcha still applies; set
-   `ulimit -n 50000` and use polling mode if it's chatty).
-5. Log in with any `*@demo.test` user. Password:
-   `correct horse battery staple 42`. Admin is
-   `admin@techorbit.test` / `TestAdminPass1234`.
-6. If you're the next session tackling the interview-recording feature:
-   start with interview-svc's schema + daily.co mock, decide where
-   recordings live (file-svc? S3-in-prod/disk-in-dev?), then add a
-   `featuredInterviewIds` field to `CandidateProfile`.
+2. Read `HANDOFF.md` for the up-to-date state.
+3. Read **this file** for the 2026-04-25 interview-recording pass.
+4. Bring up the dev stack — see "How to run the app" in `HANDOFF.md`.
+5. Log in as `candidate@demo.test` / `correct horse battery staple 42`
+   (or any demo user). Demo candidate `Alex Chen` has a completed
+   interview whose recording will settle to READY ~instantly in mock
+   mode — try the `/settings/featured-interviews` picker, save, then
+   visit `/candidates/<id>` as another user to see the featured panel.
