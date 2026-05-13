@@ -114,6 +114,5 @@ export const ROLE_ICON_COMPONENT: Record<string, (p: IconProps) => JSX.Element> 
   CRM: HandshakeIcon,
   SRM: SearchIcon,
   MSME: FactoryIcon,
-  INTERVIEWER: TargetIcon,
   ADMIN: ShieldIcon,
 };

@@ -24,7 +24,6 @@ import { getMatchingClient, getRequirementClient } from "@/lib/api-client";
 const COLUMNS: { id: SubmissionStatus; label: string }[] = [
   { id: "SUBMITTED", label: "Submitted" },
   { id: "SCREENING", label: "Screening" },
-  { id: "INTERVIEWING", label: "Interviewing" },
   { id: "OFFER", label: "Offer" },
   { id: "PLACED", label: "Placed" },
   { id: "REJECTED", label: "Rejected" },
@@ -173,7 +172,6 @@ export default function ShortlistPage(): JSX.Element {
     const map: Record<SubmissionStatus, SubmissionResponse[]> = {
       SUBMITTED: [],
       SCREENING: [],
-      INTERVIEWING: [],
       OFFER: [],
       PLACED: [],
       REJECTED: [],

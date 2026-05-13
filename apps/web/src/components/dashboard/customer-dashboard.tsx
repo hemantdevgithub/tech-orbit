@@ -8,7 +8,6 @@ import { getRequirementClient, getPaymentsClient } from "@/lib/api-client";
 import { DashboardHeader, WorkspaceCard, StatStrip } from "./dashboard-shell";
 import {
   BriefcaseIcon,
-  CalendarIcon,
   ClockIcon,
   DollarIcon,
   HandshakeIcon,
@@ -18,7 +17,6 @@ import {
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   DRAFT: "cream",
   OPEN: "success",
-  INTERVIEWING: "warning",
   OFFER_EXTENDED: "mint",
   PLACED: "success",
   CLOSED: "muted",
@@ -59,7 +57,7 @@ export function CustomerDashboard() {
     <div className="space-y-6">
       <DashboardHeader
         title="Customer Dashboard"
-        subtitle="Live view of your requirements, interviews and consultant pipeline."
+        subtitle="Live view of your requirements and consultant pipeline."
         action={
           <Link
             href="/techforce/requirements/new"
@@ -73,10 +71,9 @@ export function CustomerDashboard() {
       {/* Workspace */}
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Post Requirement" subtitle="Create a listing" href="/techforce/requirements/new" />
           <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Requirements" subtitle="Active listings" href="/techforce/requirements" />
-          <WorkspaceCard icon={<CalendarIcon size={18} />} title="Interviews" subtitle="Scheduled sessions" href="/techforce/interviews" />
           <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Placements" subtitle="Active consultants" href="/techforce/placements" />
           <WorkspaceCard icon={<ReceiptIcon size={18} />} title="Invoices" subtitle="Billing & payments" href="/techforce/invoices" />
           <WorkspaceCard icon={<ClockIcon size={18} />} title="Timesheets" subtitle="Approve hours" href="/techforce/timesheets" />

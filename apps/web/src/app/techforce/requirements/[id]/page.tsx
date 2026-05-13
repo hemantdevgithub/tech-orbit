@@ -28,7 +28,6 @@ const STATUS_VARIANT: Record<
 > = {
   DRAFT: "muted",
   OPEN: "mint",
-  INTERVIEWING: "cream",
   OFFER_EXTENDED: "warning",
   PLACED: "success",
   CLOSED: "muted",

@@ -5,14 +5,12 @@ import { useParams } from "next/navigation";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@techorbit/ui";
 import type {
   CandidateProfileResponse,
-  InterviewSummary,
   PublicCandidateProfile,
 } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getProfileClient } from "@/lib/api-client";
 import { UserRatingsPanel } from "@/components/user-ratings-panel";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { FeaturedInterviewsPanel } from "@/components/featured-interviews-panel";
 
 const WORK_AUTH_LABELS: Record<string, string> = {
   US_CITIZEN: "US Citizen",
@@ -88,7 +86,6 @@ export default function CandidateDetailPage() {
     return <PublicOnlyView pub={publicProfile} />;
   }
   if (!profile) return null;
-  const featured: InterviewSummary[] = publicProfile?.featuredInterviews ?? [];
 
   const prefs = [
     profile.preferRemote && "Remote",
@@ -158,13 +155,6 @@ export default function CandidateDetailPage() {
               )}
             </CardBody>
           </Card>
-
-          {featured.length > 0 && (
-            <FeaturedInterviewsPanel
-              title="Featured interviews"
-              interviews={featured}
-            />
-          )}
 
           <UserRatingsPanel userId={profile.userId} title="Ratings & reviews" />
         </div>
@@ -248,13 +238,6 @@ function PublicOnlyView({ pub }: { pub: PublicCandidateProfile }): JSX.Element {
           </div>
         )}
       </div>
-
-      {pub.featuredInterviews.length > 0 && (
-        <FeaturedInterviewsPanel
-          title="Featured interviews"
-          interviews={pub.featuredInterviews}
-        />
-      )}
 
       <UserRatingsPanel userId={pub.userId} title="Ratings & reviews" />
     </div>

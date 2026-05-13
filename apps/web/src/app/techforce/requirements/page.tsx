@@ -20,7 +20,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { SearchIcon } from "@/components/icons";
 
 const STATUS_OPTIONS: RequirementStatus[] = [
-  "DRAFT", "OPEN", "INTERVIEWING", "OFFER_EXTENDED", "PLACED", "CLOSED", "CANCELLED",
+  "DRAFT", "OPEN", "OFFER_EXTENDED", "PLACED", "CLOSED", "CANCELLED",
 ];
 const SENIORITY_OPTIONS: Seniority[] = ["JUNIOR", "MID", "SENIOR", "STAFF", "PRINCIPAL"];
 const LOCATION_OPTIONS: LocationType[] = ["ONSITE", "HYBRID", "REMOTE"];
@@ -28,7 +28,6 @@ const LOCATION_OPTIONS: LocationType[] = ["ONSITE", "HYBRID", "REMOTE"];
 const STATUS_STYLES: Record<RequirementStatus, string> = {
   DRAFT:          "bg-surface-soft text-sage-500 border-surface-border",
   OPEN:           "bg-success/10 text-success border-success/30",
-  INTERVIEWING:   "bg-info/10 text-info border-info/30",
   OFFER_EXTENDED: "bg-warning/10 text-warning border-warning/30",
   PLACED:         "bg-success/20 text-success border-success/40",
   CLOSED:         "bg-surface-soft text-sage-500 border-surface-border",

@@ -9,7 +9,6 @@ import { DashboardHeader, WorkspaceCard, StatStrip } from "./dashboard-shell";
 import {
   SearchIcon,
   TargetIcon,
-  CalendarIcon,
   ClockIcon,
   DollarIcon,
   HandshakeIcon,
@@ -18,7 +17,6 @@ import {
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   SUBMITTED: "mint",
   SCREENING: "cream",
-  INTERVIEWING: "warning",
   OFFER: "success",
   PLACED: "success",
   REJECTED: "muted",
@@ -53,7 +51,7 @@ export function CandidateDashboard() {
   }, []);
 
   const { activeCount, earningsMonth, pendingTimesheets, recent } = useMemo(() => {
-    const activeStatuses = new Set(["SUBMITTED", "SCREENING", "INTERVIEWING", "OFFER"]);
+    const activeStatuses = new Set(["SUBMITTED", "SCREENING", "OFFER"]);
     const active = submissions.filter((s) => activeStatuses.has(s.status)).length;
     const now = new Date();
     let em = 0;
@@ -99,10 +97,9 @@ export function CandidateDashboard() {
       {/* Workspace */}
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <WorkspaceCard icon={<SearchIcon size={18} />} title="Browse Jobs" subtitle="Open requirements" href="/techforce/requirements" />
           <WorkspaceCard icon={<TargetIcon size={18} />} title="Submissions" subtitle="Track your bids" href="/techforce/requirements" />
-          <WorkspaceCard icon={<CalendarIcon size={18} />} title="Interviews" subtitle="Scheduled sessions" href="/techforce/interviews" />
           <WorkspaceCard icon={<HandshakeIcon size={18} />} title="My Placement" subtitle="Active engagement" href="/techforce/placements" />
           <WorkspaceCard icon={<ClockIcon size={18} />} title="Timesheets" subtitle="Log your hours" href="/techforce/timesheets" />
           <WorkspaceCard icon={<DollarIcon size={18} />} title="Payouts" subtitle="Earnings & history" href="/techforce/payouts" />

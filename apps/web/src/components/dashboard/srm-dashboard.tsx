@@ -18,7 +18,6 @@ import {
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   SUBMITTED: "mint",
   SCREENING: "cream",
-  INTERVIEWING: "warning",
   OFFER: "success",
   PLACED: "success",
   REJECTED: "muted",
@@ -49,7 +48,7 @@ export function SrmDashboard() {
   }, []);
 
   const { active, placed, pendingComm, earningsMonth, recent } = useMemo(() => {
-    const activeStatuses = new Set(["SUBMITTED", "SCREENING", "INTERVIEWING", "OFFER"]);
+    const activeStatuses = new Set(["SUBMITTED", "SCREENING", "OFFER"]);
     const a = submissions.filter((s) => activeStatuses.has(s.status)).length;
     const p = submissions.filter((s) => s.status === "PLACED").length;
     const sorted = [...submissions].sort((x, y) => new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime());

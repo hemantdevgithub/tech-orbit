@@ -76,7 +76,7 @@ export default function InvoiceDetailPage() {
         <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="text-mint-200 text-xs uppercase tracking-wider mb-1">
-              {inv.invoiceType === "INTERVIEWER_FEES" ? "Interviewer fees invoice" : "Weekly hours invoice"}
+              Weekly hours invoice
             </p>
             <h1 className="text-2xl font-bold text-cream-100">{money(inv.totalUsd)}</h1>
             <p className="text-sage-400 text-sm mt-1">

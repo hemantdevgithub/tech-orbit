@@ -93,7 +93,6 @@ export function ValueChainGraph({
   const crmRedacted = vc.redactedSlots.includes("CRM");
   const srmRedacted = vc.redactedSlots.includes("SRM");
   const msmeRedacted = vc.redactedSlots.includes("MSME");
-  const interviewerRedacted = vc.redactedSlots.includes("INTERVIEWER");
 
   const candidateName = useDisplayName(vc.candidateId ?? null, "candidate");
   const customerName = useDisplayName(vc.customerCompanyId ?? null, "customerByCompany");
@@ -103,7 +102,6 @@ export function ValueChainGraph({
   const candidateRule = ruleFor(rules, "CANDIDATE_W2", vc.candidateId);
   const msmeRule = ruleFor(rules, "MSME", undefined, vc.attributedMsmeId);
   const platformRule = rules.find((r) => r.slot === "PLATFORM");
-  const interviewerRules = rules.filter((r) => r.slot === "INTERVIEWER");
 
   // End-of-chain beneficiary depends on engagement type.
   const endNode = engagementType === "C2C"
@@ -144,7 +142,7 @@ export function ValueChainGraph({
         <Node icon={endNode.icon} label={endNode.label} sublabel={endNode.sublabel} highlight />
       </div>
 
-      {/* Platform + interviewer side-chain */}
+      {/* Platform side-chain */}
       <div className="flex flex-wrap gap-2 items-start">
         <div className="shrink-0 rounded-xl border border-surface-border bg-cream-50 p-3 min-w-[160px]">
           <p className="text-xs uppercase text-sage-500 tracking-wider mb-1">Platform</p>
@@ -153,28 +151,6 @@ export function ValueChainGraph({
             {platformRule ? hourlyLabel(platformRule) : "Confidential"}
           </p>
         </div>
-
-        {interviewerRedacted ? (
-          <div className="shrink-0 rounded-xl border border-surface-border bg-surface-soft p-3 min-w-[160px]">
-            <p className="text-xs uppercase text-sage-500 tracking-wider mb-1">Interviewers</p>
-            <p className="text-sm text-sage-500">Confidential</p>
-          </div>
-        ) : interviewerRules.length === 0 && vc.interviewerIds.length === 0 ? (
-          <div className="shrink-0 rounded-xl border border-dashed border-surface-border bg-cream-50 p-3 min-w-[160px]">
-            <p className="text-xs uppercase text-sage-500 tracking-wider mb-1">Interviewers</p>
-            <p className="text-sm text-sage-500">Self-conducted</p>
-          </div>
-        ) : (
-          interviewerRules.map((ir) => (
-            <div key={ir.id} className="shrink-0 rounded-xl border border-surface-border bg-cream-50 p-3 min-w-[160px]">
-              <p className="text-xs uppercase text-sage-500 tracking-wider mb-1">Interviewer</p>
-              <p className="text-sm font-semibold text-forest-900 font-mono">
-                {displayUserId(ir.beneficiaryUserId)}
-              </p>
-              <p className="text-xs text-sage-500 mt-0.5">{hourlyLabel(ir)}</p>
-            </div>
-          ))
-        )}
       </div>
 
       {vc.redactedSlots.length > 0 && (

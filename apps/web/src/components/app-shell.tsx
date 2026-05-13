@@ -11,7 +11,6 @@ import {
   ArrowRightIcon,
   BellIcon,
   BriefcaseIcon,
-  CalendarIcon,
   ClockIcon,
   DollarIcon,
   HandshakeIcon,
@@ -21,7 +20,6 @@ import {
   ReceiptIcon,
   SearchIcon,
   ShieldIcon,
-  TargetIcon,
 } from "@/components/icons";
 
 type RoleType = "CUSTOMER" | "CANDIDATE" | "CRM" | "SRM" | "MSME" | "ADMIN";
@@ -51,8 +49,6 @@ type NavItem = { label: string; href: string; Icon: IconComp; roles: RoleType[] 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/techforce/dashboard", Icon: HomeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
   { label: "Requirements", href: "/techforce/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
-  { label: "Interviewers", href: "/techforce/interviewers", Icon: TargetIcon, roles: ["CUSTOMER", "CRM"] },
-  { label: "Interviews", href: "/techforce/interviews", Icon: CalendarIcon, roles: ["CUSTOMER", "CANDIDATE", "SRM"] },
   { label: "Placements", href: "/techforce/placements", Icon: HandshakeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
   { label: "Timesheets", href: "/techforce/timesheets", Icon: ClockIcon, roles: ["CUSTOMER", "CANDIDATE"] },
   { label: "Invoices", href: "/techforce/invoices", Icon: ReceiptIcon, roles: ["CUSTOMER"] },
@@ -66,23 +62,23 @@ type SearchField = { placeholder: string; href: string };
 const SEARCH_FIELDS: Record<RoleType, SearchField[]> = {
   CUSTOMER: [
     { placeholder: "Find a requirement", href: "/techforce/requirements" },
-    { placeholder: "Find an interviewer", href: "/techforce/interviewers" },
+    { placeholder: "Find a candidate", href: "/techforce/candidates" },
     { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   CANDIDATE: [
     { placeholder: "Find a job", href: "/techforce/requirements" },
-    { placeholder: "Find an interviewer", href: "/techforce/interviewers" },
+    { placeholder: "Find a customer", href: "/techforce/customers" },
     { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   CRM: [
     { placeholder: "Find a requirement", href: "/techforce/requirements" },
-    { placeholder: "Find an interviewer", href: "/techforce/interviewers" },
+    { placeholder: "Find a customer", href: "/techforce/customers" },
     { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   SRM: [
     { placeholder: "Find a job", href: "/techforce/requirements" },
+    { placeholder: "Find a candidate", href: "/techforce/candidates" },
     { placeholder: "Find a submission", href: "/techforce/placements" },
-    { placeholder: "Find an interview", href: "/techforce/interviews" },
   ],
   MSME: [
     { placeholder: "Find a job", href: "/techforce/requirements" },

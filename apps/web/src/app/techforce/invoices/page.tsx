@@ -93,7 +93,7 @@ export default function InvoicesPage() {
                 <CardBody className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-forest-900">
-                      {inv.invoiceType === "INTERVIEWER_FEES" ? "Interviewer fees" : "Weekly invoice"} — {money(inv.totalUsd)}
+                      Weekly invoice — {money(inv.totalUsd)}
                     </p>
                     <p className="text-xs text-sage-500 mt-0.5">
                       Billing period {new Date(inv.billingPeriodStart).toLocaleDateString()}

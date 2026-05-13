@@ -36,7 +36,6 @@ const STATUS_VARIANT: Record<
 > = {
   SUBMITTED: "mint",
   SCREENING: "cream",
-  INTERVIEWING: "cream",
   OFFER: "warning",
   PLACED: "success",
   REJECTED: "danger",
@@ -45,8 +44,7 @@ const STATUS_VARIANT: Record<
 
 const NEXT_STATUSES: Partial<Record<SubmissionStatus, SubmissionStatus[]>> = {
   SUBMITTED: ["SCREENING", "REJECTED"],
-  SCREENING: ["INTERVIEWING", "REJECTED"],
-  INTERVIEWING: ["OFFER", "REJECTED"],
+  SCREENING: ["OFFER", "REJECTED"],
   OFFER: ["PLACED", "REJECTED"],
 };
 
@@ -386,21 +384,6 @@ export default function SubmissionDetailPage(): JSX.Element {
                 <Link href={`/techforce/submissions/${submission.id}/hire`} className="block">
                   <Button className="w-full">
                     Hire candidate →
-                  </Button>
-                </Link>
-              </CardBody>
-            </Card>
-          )}
-
-          {isOwner && submission.status !== "OFFER" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Interview</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <Link href={`/techforce/submissions/${submission.id}/schedule-interview`} className="block">
-                  <Button className="w-full" variant="primary">
-                    Schedule interview
                   </Button>
                 </Link>
               </CardBody>

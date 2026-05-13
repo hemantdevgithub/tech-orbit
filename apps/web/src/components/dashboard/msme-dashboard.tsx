@@ -18,7 +18,6 @@ import {
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
   SUBMITTED: "mint",
   SCREENING: "cream",
-  INTERVIEWING: "warning",
   OFFER: "success",
   PLACED: "success",
   REJECTED: "muted",
@@ -59,7 +58,7 @@ export function MsmeDashboard() {
 
   const { availableBench, activeSubmissions, pendingComm, earningsMonth, recentSubmissions } = useMemo(() => {
     const avail = benchEntries.filter((e) => e.availability === "AVAILABLE").length;
-    const activeStatuses = new Set(["SUBMITTED", "SCREENING", "INTERVIEWING", "OFFER"]);
+    const activeStatuses = new Set(["SUBMITTED", "SCREENING", "OFFER"]);
     const active = submissions.filter((s) => activeStatuses.has(s.status)).length;
     const sorted = [...submissions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     const now = new Date();
