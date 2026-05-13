@@ -79,7 +79,7 @@ export default function InterviewerOnboardingPage() {
     setServerError(null);
     try {
       await getProfileClient().createInterviewerProfile(data);
-      router.push("/dashboard");
+      router.push("/techforce/dashboard");
     } catch (err) {
       setServerError(err instanceof ApiError ? err.message : "Something went wrong");
     }

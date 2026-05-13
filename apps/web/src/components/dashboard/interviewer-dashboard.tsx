@@ -35,7 +35,7 @@ export function InterviewerDashboard() {
         subtitle="Manage your availability, interviews and earnings."
         action={
           <Link
-            href="/dashboard/interviewer"
+            href="/techforce/dashboard/interviewer"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-forest-800 text-cream-100 text-sm font-semibold hover:bg-forest-700 transition-colors"
           >
             <CalendarIcon size={16} /> Set availability
@@ -47,12 +47,12 @@ export function InterviewerDashboard() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <WorkspaceCard icon={<CalendarIcon size={18} />} title="Availability" subtitle="Set your schedule" href="/dashboard/interviewer" />
-          <WorkspaceCard icon={<TargetIcon size={18} />} title="Interviews" subtitle="Upcoming sessions" href="/interviews" />
-          <WorkspaceCard icon={<TargetIcon size={18} />} title="Past interviews" subtitle="History & ratings" href="/interviews" />
-          <WorkspaceCard icon={<DollarIcon size={18} />} title="Payouts" subtitle="Earnings & history" href="/payouts" />
-          <WorkspaceCard icon={<UserIcon size={18} />} title="Profile" subtitle="Your public listing" href="/settings/profile" />
-          <WorkspaceCard icon={<MessageIcon size={18} />} title="Messages" subtitle="Inbox & threads" href="/messages" />
+          <WorkspaceCard icon={<CalendarIcon size={18} />} title="Availability" subtitle="Set your schedule" href="/techforce/dashboard/interviewer" />
+          <WorkspaceCard icon={<TargetIcon size={18} />} title="Interviews" subtitle="Upcoming sessions" href="/techforce/interviews" />
+          <WorkspaceCard icon={<TargetIcon size={18} />} title="Past interviews" subtitle="History & ratings" href="/techforce/interviews" />
+          <WorkspaceCard icon={<DollarIcon size={18} />} title="Payouts" subtitle="Earnings & history" href="/techforce/payouts" />
+          <WorkspaceCard icon={<UserIcon size={18} />} title="Profile" subtitle="Your public listing" href="/techforce/settings/profile" />
+          <WorkspaceCard icon={<MessageIcon size={18} />} title="Messages" subtitle="Inbox & threads" href="/techforce/messages" />
         </div>
       </section>
 
@@ -60,9 +60,9 @@ export function InterviewerDashboard() {
       <StatStrip
         title="Pipeline overview"
         stats={[
-          { label: "Upcoming interviews", value: 0, href: "/interviews" },
-          { label: "Pending payout", value: "$0", href: "/payouts" },
-          { label: "Total earned", value: "$0", href: "/payouts" },
+          { label: "Upcoming interviews", value: 0, href: "/techforce/interviews" },
+          { label: "Pending payout", value: "$0", href: "/techforce/payouts" },
+          { label: "Total earned", value: "$0", href: "/techforce/payouts" },
         ]}
       />
 
@@ -70,7 +70,7 @@ export function InterviewerDashboard() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-sage-400">This week</p>
-          <Link href="/dashboard/interviewer" className="text-xs text-forest-700 hover:underline">Manage availability →</Link>
+          <Link href="/techforce/dashboard/interviewer" className="text-xs text-forest-700 hover:underline">Manage availability →</Link>
         </div>
         <div className="bg-white rounded-xl border border-sage-200 p-5">
           <div className="grid grid-cols-7 gap-2">

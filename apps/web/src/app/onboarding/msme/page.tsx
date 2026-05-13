@@ -27,7 +27,7 @@ export default function MsmeOnboardingPage() {
     setServerError(null);
     try {
       await getProfileClient().createMsmeProfile(data);
-      router.push("/dashboard");
+      router.push("/techforce/dashboard");
     } catch (err) {
       setServerError(err instanceof ApiError ? err.message : "Something went wrong");
     }

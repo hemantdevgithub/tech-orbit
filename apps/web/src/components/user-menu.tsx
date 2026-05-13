@@ -51,7 +51,7 @@ export function UserMenu(): JSX.Element | null {
     try {
       await logout();
     } finally {
-      router.replace("/login");
+      router.replace("/");
     }
   }
 
@@ -115,11 +115,11 @@ export function UserMenu(): JSX.Element | null {
 
           {/* Links */}
           <ul className="py-1">
-            <li><MenuLink href="/dashboard" onClick={() => setOpen(false)} Icon={HomeIcon} label="Dashboard" /></li>
-            <li><MenuLink href="/settings/profile" onClick={() => setOpen(false)} Icon={UserIcon} label="Profile settings" /></li>
-            <li><MenuLink href="/settings/notifications" onClick={() => setOpen(false)} Icon={BellIcon} label="Notification preferences" /></li>
+            <li><MenuLink href="/techforce/dashboard" onClick={() => setOpen(false)} Icon={HomeIcon} label="Dashboard" /></li>
+            <li><MenuLink href="/techforce/settings/profile" onClick={() => setOpen(false)} Icon={UserIcon} label="Profile settings" /></li>
+            <li><MenuLink href="/techforce/settings/notifications" onClick={() => setOpen(false)} Icon={BellIcon} label="Notification preferences" /></li>
             {isAdmin && (
-              <li><MenuLink href="/admin" onClick={() => setOpen(false)} Icon={ShieldIcon} label="Admin console" /></li>
+              <li><MenuLink href="/techforce/admin" onClick={() => setOpen(false)} Icon={ShieldIcon} label="Admin console" /></li>
             )}
           </ul>
 

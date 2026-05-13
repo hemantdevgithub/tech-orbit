@@ -39,60 +39,60 @@ const ROLE_LABEL: Record<string, string> = {
 // Primary CTA per role — the single most common action that role takes.
 type Cta = { label: string; href: string; Icon: IconComp };
 const PRIMARY_CTA: Partial<Record<RoleType, Cta>> = {
-  CUSTOMER: { label: "Post a requirement", href: "/requirements/new", Icon: PlusIcon },
-  CANDIDATE: { label: "Browse opportunities", href: "/requirements", Icon: ArrowRightIcon },
-  CRM: { label: "Claim a requirement", href: "/requirements", Icon: ArrowRightIcon },
-  SRM: { label: "Find requirements to fill", href: "/requirements", Icon: ArrowRightIcon },
-  MSME: { label: "Submit a consultant", href: "/requirements", Icon: ArrowRightIcon },
-  ADMIN: { label: "Admin console", href: "/admin", Icon: ShieldIcon },
+  CUSTOMER: { label: "Post a requirement", href: "/techforce/requirements/new", Icon: PlusIcon },
+  CANDIDATE: { label: "Browse opportunities", href: "/techforce/requirements", Icon: ArrowRightIcon },
+  CRM: { label: "Claim a requirement", href: "/techforce/requirements", Icon: ArrowRightIcon },
+  SRM: { label: "Find requirements to fill", href: "/techforce/requirements", Icon: ArrowRightIcon },
+  MSME: { label: "Submit a consultant", href: "/techforce/requirements", Icon: ArrowRightIcon },
+  ADMIN: { label: "Admin console", href: "/techforce/admin", Icon: ShieldIcon },
 };
 
 type NavItem = { label: string; href: string; Icon: IconComp; roles: RoleType[] };
 const NAV_ITEMS: NavItem[] = [
-  { label: "Home", href: "/dashboard", Icon: HomeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
-  { label: "Requirements", href: "/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
-  { label: "Interviewers", href: "/interviewers", Icon: TargetIcon, roles: ["CUSTOMER", "CRM"] },
-  { label: "Interviews", href: "/interviews", Icon: CalendarIcon, roles: ["CUSTOMER", "CANDIDATE", "SRM"] },
-  { label: "Placements", href: "/placements", Icon: HandshakeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
-  { label: "Timesheets", href: "/timesheets", Icon: ClockIcon, roles: ["CUSTOMER", "CANDIDATE"] },
-  { label: "Invoices", href: "/invoices", Icon: ReceiptIcon, roles: ["CUSTOMER"] },
-  { label: "Payouts", href: "/payouts", Icon: DollarIcon, roles: ["CANDIDATE", "CRM", "SRM", "MSME"] },
-  { label: "Messages", href: "/messages", Icon: MessageIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
-  { label: "Notifications", href: "/notifications", Icon: BellIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
+  { label: "Home", href: "/techforce/dashboard", Icon: HomeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
+  { label: "Requirements", href: "/techforce/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
+  { label: "Interviewers", href: "/techforce/interviewers", Icon: TargetIcon, roles: ["CUSTOMER", "CRM"] },
+  { label: "Interviews", href: "/techforce/interviews", Icon: CalendarIcon, roles: ["CUSTOMER", "CANDIDATE", "SRM"] },
+  { label: "Placements", href: "/techforce/placements", Icon: HandshakeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
+  { label: "Timesheets", href: "/techforce/timesheets", Icon: ClockIcon, roles: ["CUSTOMER", "CANDIDATE"] },
+  { label: "Invoices", href: "/techforce/invoices", Icon: ReceiptIcon, roles: ["CUSTOMER"] },
+  { label: "Payouts", href: "/techforce/payouts", Icon: DollarIcon, roles: ["CANDIDATE", "CRM", "SRM", "MSME"] },
+  { label: "Messages", href: "/techforce/messages", Icon: MessageIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
+  { label: "Notifications", href: "/techforce/notifications", Icon: BellIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
 ];
 
 // Three search prompts per role. Each submits to a list page with ?search=X.
 type SearchField = { placeholder: string; href: string };
 const SEARCH_FIELDS: Record<RoleType, SearchField[]> = {
   CUSTOMER: [
-    { placeholder: "Find a requirement", href: "/requirements" },
-    { placeholder: "Find an interviewer", href: "/interviewers" },
-    { placeholder: "Find a placement", href: "/placements" },
+    { placeholder: "Find a requirement", href: "/techforce/requirements" },
+    { placeholder: "Find an interviewer", href: "/techforce/interviewers" },
+    { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   CANDIDATE: [
-    { placeholder: "Find a job", href: "/requirements" },
-    { placeholder: "Find an interviewer", href: "/interviewers" },
-    { placeholder: "Find a placement", href: "/placements" },
+    { placeholder: "Find a job", href: "/techforce/requirements" },
+    { placeholder: "Find an interviewer", href: "/techforce/interviewers" },
+    { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   CRM: [
-    { placeholder: "Find a requirement", href: "/requirements" },
-    { placeholder: "Find an interviewer", href: "/interviewers" },
-    { placeholder: "Find a placement", href: "/placements" },
+    { placeholder: "Find a requirement", href: "/techforce/requirements" },
+    { placeholder: "Find an interviewer", href: "/techforce/interviewers" },
+    { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   SRM: [
-    { placeholder: "Find a job", href: "/requirements" },
-    { placeholder: "Find a submission", href: "/placements" },
-    { placeholder: "Find an interview", href: "/interviews" },
+    { placeholder: "Find a job", href: "/techforce/requirements" },
+    { placeholder: "Find a submission", href: "/techforce/placements" },
+    { placeholder: "Find an interview", href: "/techforce/interviews" },
   ],
   MSME: [
-    { placeholder: "Find a job", href: "/requirements" },
-    { placeholder: "Find a submission", href: "/placements" },
-    { placeholder: "Find a placement", href: "/placements" },
+    { placeholder: "Find a job", href: "/techforce/requirements" },
+    { placeholder: "Find a submission", href: "/techforce/placements" },
+    { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   ADMIN: [
-    { placeholder: "Find a user", href: "/admin/users" },
-    { placeholder: "Find a dispute", href: "/admin/disputes" },
-    { placeholder: "Find a role application", href: "/admin/role-applications" },
+    { placeholder: "Find a user", href: "/techforce/admin/users" },
+    { placeholder: "Find a dispute", href: "/techforce/admin/disputes" },
+    { placeholder: "Find a role application", href: "/techforce/admin/role-applications" },
   ],
 };
 
@@ -164,7 +164,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <aside className="w-64 shrink-0 bg-forest-800 text-cream-100 flex flex-col h-screen sticky top-0">
       {/* Logo */}
       <Link
-        href="/dashboard"
+        href="/techforce/dashboard"
         className="flex items-center gap-2.5 px-5 h-14 border-b border-forest-700/60 shrink-0"
       >
         <div className="w-8 h-8 rounded-lg bg-mint-200 flex items-center justify-center font-bold text-forest-800 text-sm">
@@ -209,7 +209,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {navItems.map((item) => {
               const active =
                 pathname === item.href ||
-                (item.href !== "/dashboard" && pathname?.startsWith(item.href));
+                (item.href !== "/techforce/dashboard" && pathname?.startsWith(item.href));
               return (
                 <li key={item.href}>
                   <Link

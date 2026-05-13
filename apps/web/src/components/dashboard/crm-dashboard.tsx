@@ -63,7 +63,7 @@ export function CrmDashboard() {
         subtitle="Live view of your attributions, pipeline and commission earnings."
         action={
           <Link
-            href="/requirements"
+            href="/techforce/requirements"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-forest-800 text-cream-100 text-sm font-semibold hover:bg-forest-700 transition-colors"
           >
             <span className="text-base leading-none">+</span> Claim requirement
@@ -75,12 +75,12 @@ export function CrmDashboard() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Claim Requirement" subtitle="Attribute a client" href="/requirements" />
-          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Requirements" subtitle="Your attributed jobs" href="/requirements" />
-          <WorkspaceCard icon={<UsersIcon size={18} />} title="Submissions" subtitle="Candidate pipeline" href="/requirements" />
-          <WorkspaceCard icon={<TargetIcon size={18} />} title="Placements" subtitle="Closed deals" href="/placements" />
-          <WorkspaceCard icon={<DollarIcon size={18} />} title="Commissions" subtitle="Earnings & payouts" href="/payouts" />
-          <WorkspaceCard icon={<MessageIcon size={18} />} title="Messages" subtitle="Inbox & threads" href="/messages" />
+          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Claim Requirement" subtitle="Attribute a client" href="/techforce/requirements" />
+          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Requirements" subtitle="Your attributed jobs" href="/techforce/requirements" />
+          <WorkspaceCard icon={<UsersIcon size={18} />} title="Submissions" subtitle="Candidate pipeline" href="/techforce/requirements" />
+          <WorkspaceCard icon={<TargetIcon size={18} />} title="Placements" subtitle="Closed deals" href="/techforce/placements" />
+          <WorkspaceCard icon={<DollarIcon size={18} />} title="Commissions" subtitle="Earnings & payouts" href="/techforce/payouts" />
+          <WorkspaceCard icon={<MessageIcon size={18} />} title="Messages" subtitle="Inbox & threads" href="/techforce/messages" />
         </div>
       </section>
 
@@ -89,10 +89,10 @@ export function CrmDashboard() {
         <StatStrip
           title="Pipeline overview"
           stats={[
-            { label: "Attributed requirements", value: openReqs, href: "/requirements" },
-            { label: "Pending attributions", value: pendingAttributions.length, href: "/requirements" },
-            { label: "Pending commissions", value: money(pendingComm), href: "/payouts" },
-            { label: "Earnings this month", value: money(earningsMonth), href: "/payouts" },
+            { label: "Attributed requirements", value: openReqs, href: "/techforce/requirements" },
+            { label: "Pending attributions", value: pendingAttributions.length, href: "/techforce/requirements" },
+            { label: "Pending commissions", value: money(pendingComm), href: "/techforce/payouts" },
+            { label: "Earnings this month", value: money(earningsMonth), href: "/techforce/payouts" },
           ]}
         />
       )}
@@ -101,7 +101,7 @@ export function CrmDashboard() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-sage-400">Attribution requests</p>
-          <Link href="/requirements" className="text-xs text-forest-700 hover:underline">View all →</Link>
+          <Link href="/techforce/requirements" className="text-xs text-forest-700 hover:underline">View all →</Link>
         </div>
         <div className="bg-white rounded-xl border border-sage-200 divide-y divide-sage-100">
           {loading ? (
@@ -109,7 +109,7 @@ export function CrmDashboard() {
           ) : recentAttributions.length === 0 ? (
             <div className="px-5 py-8 text-center">
               <p className="font-medium text-forest-900 text-sm mb-1">No pending attributions</p>
-              <Link href="/requirements" className="text-xs text-forest-700 hover:underline">Browse requirements to claim →</Link>
+              <Link href="/techforce/requirements" className="text-xs text-forest-700 hover:underline">Browse requirements to claim →</Link>
             </div>
           ) : (
             recentAttributions.map((a) => (
@@ -121,7 +121,7 @@ export function CrmDashboard() {
                     {a.createdAt && <> · {new Date(a.createdAt).toLocaleDateString()}</>}
                   </p>
                 </div>
-                <Link href={`/requirements/${a.requirementId}`} className="text-xs text-forest-700 hover:underline shrink-0">View →</Link>
+                <Link href={`/techforce/requirements/${a.requirementId}`} className="text-xs text-forest-700 hover:underline shrink-0">View →</Link>
               </div>
             ))
           )}

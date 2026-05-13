@@ -17,7 +17,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }): JSX.Ele
   useEffect(() => {
     if (!ready || !user) return;
     if (!user.roles.some((r) => r.roleType === "ADMIN")) {
-      router.replace("/dashboard");
+      router.replace("/techforce/dashboard");
     }
   }, [ready, user, router]);
 

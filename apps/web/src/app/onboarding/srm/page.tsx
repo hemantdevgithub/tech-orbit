@@ -69,7 +69,7 @@ export default function SrmOnboardingPage() {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={() => router.push("/dashboard")}>
+        <Button onClick={() => router.push("/techforce/dashboard")}>
           Go to dashboard →
         </Button>
       </div>

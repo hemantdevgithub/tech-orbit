@@ -149,7 +149,7 @@ export function NotificationBell(): JSX.Element {
           </div>
           <div className="px-4 py-2.5 border-t border-surface-border bg-cream-50">
             <Link
-              href="/notifications"
+              href="/techforce/notifications"
               onClick={() => setOpen(false)}
               className="text-xs font-semibold text-forest-700 hover:text-forest-900"
             >

@@ -29,7 +29,7 @@ export function useAuth() {
           store.setTokens(result.accessToken, result.expiresIn ?? 900);
           // Fetch user profile
           await fetchMe();
-          router.push("/dashboard");
+          router.push("/techforce/dashboard");
         }
       } catch (err) {
         const apiErr = err as ApiError;
@@ -74,7 +74,7 @@ export function useAuth() {
 
         store.setTokens(result.accessToken, result.expiresIn);
         await fetchMe();
-        router.push("/dashboard");
+        router.push("/techforce/dashboard");
       } catch (err) {
         const apiErr = err as ApiError;
         store.setError(apiErr.message ?? "2FA verification failed");

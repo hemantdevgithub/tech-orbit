@@ -77,7 +77,7 @@ export default function RegisterPage() {
       } finally {
         setAddingRole(false);
       }
-      const nextRoute = ONBOARDING_ROUTES[selectedRole] ?? "/dashboard";
+      const nextRoute = ONBOARDING_ROUTES[selectedRole] ?? "/techforce/dashboard";
       router.replace(nextRoute);
     } catch {
       // Error handled in store

@@ -1,21 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
-import RootPage from './page';
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import TechOrbitHomepage from './page';
 
-// Root page is a pure redirect — mock the deps it uses.
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn() }),
-}));
+describe('TechOrbitHomepage', () => {
+  it('renders the TechOrbit product selector with both cards', () => {
+    render(<TechOrbitHomepage />);
+    expect(screen.getByRole('heading', { level: 1, name: /techorbit/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: /techforce/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: /techproject/i })).toBeTruthy();
 
-vi.mock('@/store/auth.store', () => ({
-  useAuthStore: () => ({ status: 'unauthenticated', user: null }),
-}));
+    const techforce = screen.getByRole('link', { name: /enter techforce/i });
+    expect(techforce.getAttribute('href')).toBe('/techforce/dashboard');
 
-describe('RootPage', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
-
-  it('renders without crashing (returns null while redirecting)', () => {
-    const { container } = render(<RootPage />);
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByRole('link', { name: /sign in/i }).getAttribute('href')).toBe('/login');
+    expect(screen.getByRole('link', { name: /create account/i }).getAttribute('href')).toBe(
+      '/register',
+    );
   });
 });

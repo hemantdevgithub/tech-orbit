@@ -78,14 +78,14 @@ export function CandidateEarningsCards() {
         label="Earnings this month"
         value={money(earningsMonth)}
         sub="Completed payouts"
-        href="/payouts"
+        href="/techforce/payouts"
         tone="accent"
       />
       <StatCard
         label="Timesheets to submit"
         value={String(pendingCount)}
         sub={pendingCount > 0 ? "Draft or rejected — needs your action" : "You're all caught up"}
-        href="/timesheets"
+        href="/techforce/timesheets"
         tone={pendingCount > 0 ? "warn" : "default"}
       />
     </div>
@@ -124,14 +124,14 @@ export function CustomerEarningsCards() {
         label="Unpaid invoices"
         value={money(unpaid)}
         sub={unpaid > 0 ? "Awaiting payment" : "No balance due"}
-        href="/invoices"
+        href="/techforce/invoices"
         tone={unpaid > 0 ? "warn" : "default"}
       />
       <StatCard
         label="Timesheets to approve"
         value={String(toApprove)}
         sub={toApprove > 0 ? "Submitted by your candidates" : "Nothing pending"}
-        href="/timesheets"
+        href="/techforce/timesheets"
         tone={toApprove > 0 ? "accent" : "default"}
       />
     </div>
@@ -175,21 +175,21 @@ export function BrokerEarningsCards() {
         label="Pending commissions"
         value={money(pending)}
         sub="Awaiting invoice payment"
-        href="/payouts"
+        href="/techforce/payouts"
         tone={pending > 0 ? "warn" : "default"}
       />
       <StatCard
         label="Earnings this month"
         value={money(earningsMonth)}
         sub="Completed payouts"
-        href="/payouts"
+        href="/techforce/payouts"
         tone="accent"
       />
       <StatCard
         label="Lifetime earnings"
         value={money(lifetime)}
         sub={`${payouts.filter((p) => p.status === "COMPLETED").length} completed payouts`}
-        href="/payouts"
+        href="/techforce/payouts"
       />
     </div>
   );
@@ -226,14 +226,14 @@ export function VendorEarningsCards() {
         label="Pending commissions"
         value={money(pending)}
         sub="Awaiting invoice payment"
-        href="/payouts"
+        href="/techforce/payouts"
         tone="warn"
       />
       <StatCard
         label="Earnings this month"
         value={money(earningsMonth)}
         sub="Completed payouts"
-        href="/payouts"
+        href="/techforce/payouts"
         tone="accent"
       />
     </div>
