@@ -1,0 +1,144 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["interview"]
+}
+
+model Interview {
+  id                String          @id @default(uuid())
+  // Cross-service references — no DB-level FK; enforced at service layer.
+  requirementId     String          @map("requirement_id")
+  submissionId      String          @map("submission_id")
+  candidateId       String          @map("candidate_id")
+  scheduledByUserId String          @map("scheduled_by_user_id")
+  interviewerUserId String?         @map("interviewer_user_id")
+  conductedByRole   InterviewerRole @map("conducted_by_role")
+  scheduledStart    DateTime        @map("scheduled_start")
+  scheduledEnd      DateTime        @map("scheduled_end")
+  videoProviderId   String?         @map("video_provider_id")
+  videoRoomUrl      String?         @map("video_room_url")
+  videoRecordingUrl String?         @map("video_recording_url")
+
+  videoRecordingFileId      String?         @map("video_recording_file_id")
+  videoRecordingStatus      RecordingStatus @default(NONE) @map("video_recording_status")
+  videoRecordingStartedAt   DateTime?       @map("video_recording_started_at")
+  videoRecordingEndedAt     DateTime?       @map("video_recording_ended_at")
+  videoRecordingDurationSec Int?            @map("video_recording_duration_sec")
+
+  status            InterviewStatus @default(SCHEDULED)
+  startedAt         DateTime?       @map("started_at")
+  endedAt           DateTime?       @map("ended_at")
+  cancelledAt       DateTime?       @map("cancelled_at")
+  cancelledBy       String?         @map("cancelled_by")
+  cancelReason      String?         @map("cancel_reason")
+  interviewerFeeUsd Decimal?        @map("interviewer_fee_usd") @db.Decimal(10, 2)
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  scorecard Scorecard?
+
+  @@index([scheduledStart])
+  @@index([candidateId])
+  @@index([interviewerUserId])
+  @@index([requirementId])
+  @@index([submissionId])
+  @@map("interview")
+  @@schema("interview")
+}
+
+model Scorecard {
+  id                  String         @id @default(uuid())
+  interviewId         String         @unique @map("interview_id")
+  interview           Interview      @relation(fields: [interviewId], references: [id])
+  recommendation      Recommendation
+  technicalScore      Int?           @map("technical_score")
+  communicationScore  Int?           @map("communication_score")
+  problemSolvingScore Int?           @map("problem_solving_score")
+  culturalFitScore    Int?           @map("cultural_fit_score")
+  freeformFeedback    String         @map("freeform_feedback") @db.Text
+  redFlags            String?        @map("red_flags") @db.Text
+  wouldHireAgain      Boolean?       @map("would_hire_again")
+  submittedAt         DateTime       @default(now()) @map("submitted_at")
+  submittedBy         String         @map("submitted_by")
+
+  @@map("scorecard")
+  @@schema("interview")
+}
+
+// Idempotency guard for incoming events.
+model ProcessedEvent {
+  eventId     String   @id @map("event_id")
+  eventType   String   @map("event_type")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@map("processed_event")
+  @@schema("interview")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("interview")
+}
+
+enum InterviewerRole {
+  PLATFORM_INTERVIEWER
+  CUSTOMER_INTERNAL
+
+  @@schema("interview")
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+
+  @@schema("interview")
+}
+
+enum Recommendation {
+  STRONG_YES
+  YES
+  WEAK_YES
+  WEAK_NO
+  NO
+  STRONG_NO
+
+  @@schema("interview")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("interview")
+}
+
+enum RecordingStatus {
+  NONE
+  RECORDING
+  PROCESSING
+  READY
+  FAILED
+
+  @@schema("interview")
+}

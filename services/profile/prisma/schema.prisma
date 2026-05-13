@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Seniority {
+  JUNIOR
+  MID
+  SENIOR
+  STAFF
+  PRINCIPAL
+  PARTNER
+}
+
+enum BackgroundCheckStatus {
+  NOT_INITIATED
+  INITIATED
+  IN_PROGRESS
+  CLEAR
+  CONSIDER
+  FAILED
+}
+
+enum BenchAvailability {
+  AVAILABLE
+  ENGAGED
+  NOTICE_PERIOD
+  UNAVAILABLE
+}
+
+enum CompanySizeRange {
+  SIZE_1_10
+  SIZE_11_50
+  SIZE_51_200
+  SIZE_201_500
+  SIZE_501_1000
+  SIZE_1001_PLUS
+}
+
+enum CustomerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum InterviewType {
+  TECHNICAL_CODING
+  SYSTEM_DESIGN
+  BEHAVIORAL
+  CASE_STUDY
+  DOMAIN_SPECIFIC
+}
+
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+}
+
+enum InterviewerStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+}
+
+enum MsmeStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model CandidateProfile {
+  id                    String                @id @default(uuid())
+  userId                String                @unique @map("user_id")
+  headline              String?
+  bio                   String?
+  location              String?
+  seniority             Seniority?
+  skills                String[]
+  workAuthStatus        String?               @map("work_auth_status")
+  workAuthExpiry        DateTime?             @map("work_auth_expiry")
+  availableFrom         DateTime?             @map("available_from")
+  rateMin               Int?                  @map("rate_min")
+  rateMax               Int?                  @map("rate_max")
+  preferRemote          Boolean               @default(false) @map("prefer_remote")
+  preferHybrid          Boolean               @default(false) @map("prefer_hybrid")
+  preferOnsite          Boolean               @default(false) @map("prefer_onsite")
+  locationPreference    String?               @map("location_preference")
+  resumeFileId          String?               @map("resume_file_id")
+  backgroundCheckStatus BackgroundCheckStatus @default(NOT_INITIATED) @map("background_check_status")
+  backgroundCheckId     String?               @map("background_check_id")
+  kycVerified           Boolean               @default(false) @map("kyc_verified")
+  kycSessionId          String?               @map("kyc_session_id")
+  averageRating         Decimal?              @map("average_rating") @db.Decimal(3, 2)
+  ratingCount           Int                   @default(0) @map("rating_count")
+  featuredInterviewIds  String[]              @default([]) @map("featured_interview_ids")
+  isProfileComplete     Boolean               @default(false) @map("is_profile_complete")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([seniority])
+  @@index([backgroundCheckStatus])
+  @@index([availableFrom])
+  @@map("profile_candidate")
+}
+
+model MsmeProfile {
+  id                  String     @id @default(uuid())
+  ownerUserId         String     @unique @map("owner_user_id")
+  legalName           String     @map("legal_name")
+  dba                 String?
+  einEncrypted        Json?      @map("ein_encrypted")
+  gstin               String?
+  countryOfIncorp     String?    @map("country_of_incorp")
+  website             String?
+  yearsInBusiness     Int?       @map("years_in_business")
+  totalEmployees      Int?       @map("total_employees")
+  currentBenchSize    Int        @default(0) @map("current_bench_size")
+  w9FileId            String?    @map("w9_file_id")
+  primaryContactName  String?    @map("primary_contact_name")
+  primaryContactEmail String?    @map("primary_contact_email")
+  primaryContactPhone String?    @map("primary_contact_phone")
+  status              MsmeStatus @default(PENDING_VERIFICATION)
+  isProfileComplete   Boolean    @default(false) @map("is_profile_complete")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  benchEntries MsmeBenchEntry[]
+
+  @@index([ownerUserId])
+  @@index([status])
+  @@map("profile_msme")
+}
+
+model MsmeBenchEntry {
+  id              String            @id @default(uuid())
+  msmeId          String            @map("msme_id")
+  candidateUserId String            @map("candidate_user_id")
+  availability    BenchAvailability @default(AVAILABLE)
+  expectedRateMin Int?              @map("expected_rate_min")
+  expectedRateMax Int?              @map("expected_rate_max")
+  skills          String[]
+  notes           String?
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  msme MsmeProfile @relation(fields: [msmeId], references: [id], onDelete: Cascade)
+
+  @@unique([msmeId, candidateUserId])
+  @@index([msmeId])
+  @@index([candidateUserId])
+  @@index([availability])
+  @@map("profile_msme_bench_entry")
+}
+
+model CustomerCompanyProfile {
+  id                 String          @id @default(uuid())
+  primaryUserId      String          @unique @map("primary_user_id")
+  legalName          String          @map("legal_name")
+  dba                String?
+  einEncrypted       Json?           @map("ein_encrypted")
+  industry           String?
+  companySizeRange   CompanySizeRange? @map("company_size_range")
+  website            String?
+  billingStreet      String?         @map("billing_street")
+  billingCity        String?         @map("billing_city")
+  billingState       String?         @map("billing_state")
+  billingZip         String?         @map("billing_zip")
+  billingCountry     String?         @map("billing_country")
+  defaultNetTerms    Int             @default(30) @map("default_net_terms")
+  attributedCrmUserId String?        @map("attributed_crm_user_id")
+  status             CustomerStatus  @default(PENDING)
+  isProfileComplete  Boolean         @default(false) @map("is_profile_complete")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  @@index([primaryUserId])
+  @@index([status])
+  @@index([attributedCrmUserId])
+  @@map("profile_customer_company")
+}
+
+model InterviewerProfile {
+  id                       String            @id @default(uuid())
+  userId                   String            @unique @map("user_id")
+  displayName              String?           @map("display_name")
+  headline                 String?
+  bio                      String?
+  currentRole              String?           @map("current_role")
+  currentCompany           String?           @map("current_company")
+  specializations          String[]
+  seniorityLevelsCoverable Seniority[]       @map("seniority_levels_coverable")
+  interviewTypes           InterviewType[]   @map("interview_types")
+  perInterviewFeeUsd       Int?              @map("per_interview_fee_usd")
+  timezone                 String?
+  videoIntroFileId         String?           @map("video_intro_file_id")
+  linkedinVerified         Boolean           @default(false) @map("linkedin_verified")
+  calendarProvider         CalendarProvider? @map("calendar_provider")
+  calendarRefreshToken     String?           @map("calendar_refresh_token")
+  stripeAccountId          String?           @map("stripe_account_id")
+  availabilitySlots        Json              @default("[]") @map("availability_slots")
+  status                   InterviewerStatus @default(PENDING_VERIFICATION)
+  isProfileComplete        Boolean           @default(false) @map("is_profile_complete")
+  createdAt                DateTime          @default(now()) @map("created_at")
+  updatedAt                DateTime          @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@map("profile_interviewer")
+}

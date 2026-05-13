@@ -1,0 +1,35 @@
+# Production build for @techorbit/audit.
+
+# syntax=docker/dockerfile:1
+
+ARG NODE_VERSION=20-alpine
+
+FROM node:${NODE_VERSION} AS deps
+WORKDIR /repo
+RUN corepack enable pnpm
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc* ./
+COPY packages ./packages
+COPY services ./services
+COPY apps ./apps
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS builder
+WORKDIR /repo
+COPY . .
+RUN pnpm --filter @techorbit/audit build
+
+FROM builder AS deploy
+WORKDIR /repo
+RUN pnpm --filter @techorbit/audit --prod deploy /out
+
+FROM node:${NODE_VERSION} AS runtime
+RUN apk add --no-cache tini && addgroup -g 1001 -S app && adduser -S app -u 1001
+WORKDIR /app
+COPY --from=deploy --chown=app:app /out ./
+USER app
+EXPOSE 3013
+ENV NODE_ENV=production PORT=3013
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:'+process.env.PORT+'/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/index.js"]

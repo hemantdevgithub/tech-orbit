@@ -1,0 +1,404 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Notification Service
+  version: 0.1.0
+  description: In-app notifications + email/SMS fan-out consumers for Techorbit.
+    Subscribes to domain events and creates per-user notifications scoped by
+    user preferences.
+servers:
+  - url: http://localhost:3011
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    NotificationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - REQUIREMENT_PUBLISHED
+            - SUBMISSION_RECEIVED
+            - INTERVIEW_SCHEDULED
+            - TIMESHEET_SUBMITTED
+            - TIMESHEET_APPROVED
+            - INVOICE_GENERATED
+            - PAYOUT_COMPLETED
+            - MESSAGE_RECEIVED
+            - RATING_RECEIVED
+        title:
+          type: string
+        message:
+          type: string
+        linkUrl:
+          type: string
+          nullable: true
+        readAt:
+          type: string
+          nullable: true
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - type
+        - title
+        - message
+        - linkUrl
+        - readAt
+        - createdAt
+    NotificationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              userId:
+                type: string
+                format: uuid
+              type:
+                type: string
+                enum:
+                  - REQUIREMENT_PUBLISHED
+                  - SUBMISSION_RECEIVED
+                  - INTERVIEW_SCHEDULED
+                  - TIMESHEET_SUBMITTED
+                  - TIMESHEET_APPROVED
+                  - INVOICE_GENERATED
+                  - PAYOUT_COMPLETED
+                  - MESSAGE_RECEIVED
+                  - RATING_RECEIVED
+              title:
+                type: string
+              message:
+                type: string
+              linkUrl:
+                type: string
+                nullable: true
+              readAt:
+                type: string
+                nullable: true
+                format: date-time
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - userId
+              - type
+              - title
+              - message
+              - linkUrl
+              - readAt
+              - createdAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+        unreadCount:
+          type: integer
+          minimum: 0
+      required:
+        - data
+        - nextCursor
+        - hasMore
+        - unreadCount
+    NotificationPreferenceResponse:
+      type: object
+      properties:
+        emailEnabled:
+          type: boolean
+        smsEnabled:
+          type: boolean
+        perType:
+          type: object
+          properties:
+            REQUIREMENT_PUBLISHED:
+              type: boolean
+            SUBMISSION_RECEIVED:
+              type: boolean
+            INTERVIEW_SCHEDULED:
+              type: boolean
+            TIMESHEET_SUBMITTED:
+              type: boolean
+            TIMESHEET_APPROVED:
+              type: boolean
+            INVOICE_GENERATED:
+              type: boolean
+            PAYOUT_COMPLETED:
+              type: boolean
+            MESSAGE_RECEIVED:
+              type: boolean
+            RATING_RECEIVED:
+              type: boolean
+          default: {}
+        userId:
+          type: string
+          format: uuid
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - emailEnabled
+        - smsEnabled
+        - userId
+        - updatedAt
+    UpdateNotificationPreference:
+      type: object
+      properties:
+        emailEnabled:
+          type: boolean
+        smsEnabled:
+          type: boolean
+        perType:
+          type: object
+          properties:
+            REQUIREMENT_PUBLISHED:
+              type: boolean
+            SUBMISSION_RECEIVED:
+              type: boolean
+            INTERVIEW_SCHEDULED:
+              type: boolean
+            TIMESHEET_SUBMITTED:
+              type: boolean
+            TIMESHEET_APPROVED:
+              type: boolean
+            INVOICE_GENERATED:
+              type: boolean
+            PAYOUT_COMPLETED:
+              type: boolean
+            MESSAGE_RECEIVED:
+              type: boolean
+            RATING_RECEIVED:
+              type: boolean
+          default: {}
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/notifications:
+    get:
+      tags:
+        - Notifications
+      summary: List notifications for the current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: boolean
+            nullable: true
+            default: false
+          required: false
+          name: unreadOnly
+          in: query
+        - schema:
+            type: string
+            enum:
+              - REQUIREMENT_PUBLISHED
+              - SUBMISSION_RECEIVED
+              - INTERVIEW_SCHEDULED
+              - TIMESHEET_SUBMITTED
+              - TIMESHEET_APPROVED
+              - INVOICE_GENERATED
+              - PAYOUT_COMPLETED
+              - MESSAGE_RECEIVED
+              - RATING_RECEIVED
+          required: false
+          name: type
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/notifications/{id}/mark-read:
+    post:
+      tags:
+        - Notifications
+      summary: Mark a notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/notifications/mark-all-read:
+    post:
+      tags:
+        - Notifications
+      summary: Mark all unread notifications as read for current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Updated count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedCount:
+                    type: integer
+                required:
+                  - updatedCount
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/notification-preferences:
+    get:
+      tags:
+        - Preferences
+      summary: Get current user's notification preferences
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferenceResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags:
+        - Preferences
+      summary: Update current user's notification preferences
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationPreference"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferenceResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"

@@ -1,0 +1,13 @@
+{
+  "name": "@techorbit/config-vitest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./vitest.config.ts",
+    "./vitest.config.ts": "./vitest.config.ts"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.1"
+  }
+}

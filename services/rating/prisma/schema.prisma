@@ -1,0 +1,62 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["rating"]
+}
+
+model Rating {
+  id                   String    @id @default(uuid())
+  placementId          String    @map("placement_id")
+  ratedUserId          String    @map("rated_user_id")
+  raterUserId          String    @map("rater_user_id")
+  raterRole            RaterRole @map("rater_role")
+  overallScore         Int       @map("overall_score")
+  technicalScore       Int?      @map("technical_score")
+  communicationScore   Int?      @map("communication_score")
+  professionalismScore Int?      @map("professionalism_score")
+  feedback             String?   @db.Text
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  @@unique([placementId, raterUserId])
+  @@index([ratedUserId])
+  @@index([placementId])
+  @@map("rating")
+  @@schema("rating")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("rating")
+}
+
+enum RaterRole {
+  CUSTOMER
+  CANDIDATE
+
+  @@schema("rating")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("rating")
+}

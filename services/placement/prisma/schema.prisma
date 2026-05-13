@@ -1,0 +1,145 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["placement"]
+}
+
+model Placement {
+  id                 String          @id @default(uuid())
+  // Cross-service references — no DB-level FK; enforced at service layer.
+  requirementId      String          @map("requirement_id")
+  submissionId       String          @unique @map("submission_id")
+  candidateId        String          @map("candidate_id")
+  customerCompanyId  String          @map("customer_company_id")
+  createdByUserId    String          @map("created_by_user_id")
+  engagementType     EngagementType  @map("engagement_type")
+  billRateUsd        Decimal         @map("bill_rate_usd") @db.Decimal(10, 2)
+  payRateUsd         Decimal?        @map("pay_rate_usd") @db.Decimal(10, 2)
+  startDate          DateTime        @map("start_date")
+  endDate            DateTime        @map("end_date")
+  actualEndDate      DateTime?       @map("actual_end_date")
+  status             PlacementStatus @default(ACTIVE)
+  endReason          String?         @map("end_reason")
+  contractDocumentId String?         @map("contract_document_id")
+  workOrderId        String?         @map("work_order_id")
+  rtrDocumentId      String?         @map("rtr_document_id")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  valueChain      ValueChain?
+  commissionRules CommissionRule[]
+
+  @@index([customerCompanyId, status])
+  @@index([candidateId, status])
+  @@index([requirementId])
+  @@map("placement")
+  @@schema("placement")
+}
+
+model ValueChain {
+  id                String   @id @default(uuid())
+  placementId       String   @unique @map("placement_id")
+  customerCompanyId String   @map("customer_company_id")
+  attributedCrmId   String?  @map("attributed_crm_id")
+  attributedSrmId   String?  @map("attributed_srm_id")
+  attributedMsmeId  String?  @map("attributed_msme_id")
+  candidateId       String   @map("candidate_id")
+  interviewerIds    String[] @map("interviewer_ids")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  placement Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@map("value_chain")
+  @@schema("placement")
+}
+
+model CommissionRule {
+  id                String         @id @default(uuid())
+  placementId       String         @map("placement_id")
+  slot              CommissionSlot
+  beneficiaryUserId String?        @map("beneficiary_user_id")
+  beneficiaryMsmeId String?        @map("beneficiary_msme_id")
+  calculation       CommissionCalc
+  // 4-decimal precision: 0.0800 = 8%.  Supports up to 9.9999 (e.g. 2x bill).
+  percentOfBillRate Decimal?       @map("percent_of_bill_rate") @db.Decimal(5, 4)
+  flatFeeUsd        Decimal?       @map("flat_fee_usd") @db.Decimal(10, 2)
+  notes             String?
+  // Snapshotted at creation so auditors can see the same value even if
+  // source interview records get updated later.
+  interviewId       String?        @map("interview_id")
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  placement Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@index([placementId])
+  @@index([beneficiaryUserId])
+  @@index([beneficiaryMsmeId])
+  @@map("commission_rule")
+  @@schema("placement")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("placement")
+}
+
+enum EngagementType {
+  W2
+  C2C
+  IC_1099
+
+  @@schema("placement")
+}
+
+enum PlacementStatus {
+  ACTIVE
+  ENDED_COMPLETED
+  ENDED_EARLY
+  SUSPENDED
+
+  @@schema("placement")
+}
+
+enum CommissionSlot {
+  CRM
+  SRM
+  MSME
+  CANDIDATE_W2
+  INTERVIEWER
+  PLATFORM
+
+  @@schema("placement")
+}
+
+enum CommissionCalc {
+  PERCENT_OF_BILL
+  FLAT_FEE
+  RESIDUAL
+
+  @@schema("placement")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("placement")
+}

@@ -1,0 +1,64 @@
+node_modules/
+.turbo/
+dist/
+build/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Prisma generated clients (regenerated on build)
+services/*/src/generated/
+
+# Vitest stray temp files
+**/vitest.config.ts.timestamp-*.mjs
+
+# Claude Code local settings (per-machine overrides)
+.claude/settings.local.json
+
+# Next.js
+.next/
+out/
+
+# Prisma
+# migrations are version-controlled (removed from ignore)
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Build artifacts
+*.tgz
+
+# TypeScript incremental
+*.tsbuildinfo
+
+# Docker
+Dockerfile.dev
+
+# Local file storage (dev mode)
+services/*/uploads/
+services/uploads/
+
+# Session artifacts
+sprint*-audit.txt

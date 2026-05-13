@@ -1,0 +1,1291 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Payments Service
+  version: 0.1.0
+  description: Timesheet submission/approval, weekly invoice generation, Stripe +
+    Gusto payout processing, and interviewer-fees invoicing for the Techorbit
+    staffing marketplace.
+servers:
+  - url: http://localhost:3009
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    SubmitTimesheetRequest:
+      type: object
+      properties:
+        placementId:
+          type: string
+          format: uuid
+        weekStartDate:
+          type: string
+          format: date-time
+        hoursWorked:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 168
+        description:
+          type: string
+          maxLength: 2000
+      required:
+        - placementId
+        - weekStartDate
+        - hoursWorked
+    UpdateTimesheet:
+      type: object
+      properties:
+        hoursWorked:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 168
+        description:
+          type: string
+          maxLength: 2000
+    RejectTimesheet:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+        - reason
+    TimesheetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          format: uuid
+        candidateId:
+          type: string
+          format: uuid
+        weekStartDate:
+          type: string
+          format: date-time
+        weekEndDate:
+          type: string
+          format: date-time
+        hoursWorked:
+          type: number
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - SUBMITTED
+            - APPROVED
+            - REJECTED
+            - INVOICED
+        submittedAt:
+          type: string
+          nullable: true
+          format: date-time
+        approvedAt:
+          type: string
+          nullable: true
+          format: date-time
+        approvedBy:
+          type: string
+          nullable: true
+          format: uuid
+        rejectedAt:
+          type: string
+          nullable: true
+          format: date-time
+        rejectedBy:
+          type: string
+          nullable: true
+          format: uuid
+        rejectionReason:
+          type: string
+          nullable: true
+        invoiceId:
+          type: string
+          nullable: true
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - placementId
+        - candidateId
+        - weekStartDate
+        - weekEndDate
+        - hoursWorked
+        - description
+        - status
+        - submittedAt
+        - approvedAt
+        - approvedBy
+        - rejectedAt
+        - rejectedBy
+        - rejectionReason
+        - invoiceId
+        - createdAt
+        - updatedAt
+    TimesheetListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              placementId:
+                type: string
+                format: uuid
+              candidateId:
+                type: string
+                format: uuid
+              weekStartDate:
+                type: string
+                format: date-time
+              weekEndDate:
+                type: string
+                format: date-time
+              hoursWorked:
+                type: number
+              description:
+                type: string
+                nullable: true
+              status:
+                type: string
+                enum:
+                  - DRAFT
+                  - SUBMITTED
+                  - APPROVED
+                  - REJECTED
+                  - INVOICED
+              submittedAt:
+                type: string
+                nullable: true
+                format: date-time
+              approvedAt:
+                type: string
+                nullable: true
+                format: date-time
+              approvedBy:
+                type: string
+                nullable: true
+                format: uuid
+              rejectedAt:
+                type: string
+                nullable: true
+                format: date-time
+              rejectedBy:
+                type: string
+                nullable: true
+                format: uuid
+              rejectionReason:
+                type: string
+                nullable: true
+              invoiceId:
+                type: string
+                nullable: true
+                format: uuid
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - placementId
+              - candidateId
+              - weekStartDate
+              - weekEndDate
+              - hoursWorked
+              - description
+              - status
+              - submittedAt
+              - approvedAt
+              - approvedBy
+              - rejectedAt
+              - rejectedBy
+              - rejectionReason
+              - invoiceId
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    InvoiceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerCompanyId:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          nullable: true
+          format: uuid
+        invoiceType:
+          type: string
+          enum:
+            - WEEKLY_HOURS
+            - INTERVIEWER_FEES
+        billingPeriodStart:
+          type: string
+          format: date-time
+        billingPeriodEnd:
+          type: string
+          format: date-time
+        subtotalUsd:
+          type: number
+        taxUsd:
+          type: number
+        totalUsd:
+          type: number
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - SENT
+            - PAID
+            - OVERDUE
+            - SETTLED
+        sentAt:
+          type: string
+          nullable: true
+          format: date-time
+        dueDate:
+          type: string
+          nullable: true
+          format: date-time
+        paidAt:
+          type: string
+          nullable: true
+          format: date-time
+        stripeInvoiceId:
+          type: string
+          nullable: true
+        stripePaymentIntentId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lineItems:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              invoiceId:
+                type: string
+                format: uuid
+              placementId:
+                type: string
+                format: uuid
+              timesheetId:
+                type: string
+                nullable: true
+                format: uuid
+              interviewId:
+                type: string
+                nullable: true
+                format: uuid
+              description:
+                type: string
+              hoursWorked:
+                type: number
+                nullable: true
+              rateUsd:
+                type: number
+                nullable: true
+              amountUsd:
+                type: number
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - invoiceId
+              - placementId
+              - timesheetId
+              - interviewId
+              - description
+              - hoursWorked
+              - rateUsd
+              - amountUsd
+              - createdAt
+      required:
+        - id
+        - customerCompanyId
+        - placementId
+        - invoiceType
+        - billingPeriodStart
+        - billingPeriodEnd
+        - subtotalUsd
+        - taxUsd
+        - totalUsd
+        - status
+        - sentAt
+        - dueDate
+        - paidAt
+        - stripeInvoiceId
+        - stripePaymentIntentId
+        - createdAt
+        - updatedAt
+        - lineItems
+    InvoiceListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              customerCompanyId:
+                type: string
+                format: uuid
+              placementId:
+                type: string
+                nullable: true
+                format: uuid
+              invoiceType:
+                type: string
+                enum:
+                  - WEEKLY_HOURS
+                  - INTERVIEWER_FEES
+              billingPeriodStart:
+                type: string
+                format: date-time
+              billingPeriodEnd:
+                type: string
+                format: date-time
+              subtotalUsd:
+                type: number
+              taxUsd:
+                type: number
+              totalUsd:
+                type: number
+              status:
+                type: string
+                enum:
+                  - DRAFT
+                  - SENT
+                  - PAID
+                  - OVERDUE
+                  - SETTLED
+              sentAt:
+                type: string
+                nullable: true
+                format: date-time
+              dueDate:
+                type: string
+                nullable: true
+                format: date-time
+              paidAt:
+                type: string
+                nullable: true
+                format: date-time
+              stripeInvoiceId:
+                type: string
+                nullable: true
+              stripePaymentIntentId:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - customerCompanyId
+              - placementId
+              - invoiceType
+              - billingPeriodStart
+              - billingPeriodEnd
+              - subtotalUsd
+              - taxUsd
+              - totalUsd
+              - status
+              - sentAt
+              - dueDate
+              - paidAt
+              - stripeInvoiceId
+              - stripePaymentIntentId
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    CommissionPayoutResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoiceId:
+          type: string
+          format: uuid
+        placementId:
+          type: string
+          format: uuid
+        commissionRuleId:
+          type: string
+          format: uuid
+        beneficiaryUserId:
+          type: string
+          nullable: true
+          format: uuid
+        beneficiaryMsmeId:
+          type: string
+          nullable: true
+          format: uuid
+        slot:
+          type: string
+          enum:
+            - CRM
+            - SRM
+            - MSME
+            - CANDIDATE_W2
+            - INTERVIEWER
+            - PLATFORM
+        amountUsd:
+          type: number
+        status:
+          type: string
+          enum:
+            - PENDING
+            - PROCESSING
+            - COMPLETED
+            - FAILED
+            - SETTLED
+        processedAt:
+          type: string
+          nullable: true
+          format: date-time
+        stripeTransferId:
+          type: string
+          nullable: true
+        gustoPayrollId:
+          type: string
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - invoiceId
+        - placementId
+        - commissionRuleId
+        - beneficiaryUserId
+        - beneficiaryMsmeId
+        - slot
+        - amountUsd
+        - status
+        - processedAt
+        - stripeTransferId
+        - gustoPayrollId
+        - failureReason
+        - createdAt
+        - updatedAt
+    CommissionPayoutListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              invoiceId:
+                type: string
+                format: uuid
+              placementId:
+                type: string
+                format: uuid
+              commissionRuleId:
+                type: string
+                format: uuid
+              beneficiaryUserId:
+                type: string
+                nullable: true
+                format: uuid
+              beneficiaryMsmeId:
+                type: string
+                nullable: true
+                format: uuid
+              slot:
+                type: string
+                enum:
+                  - CRM
+                  - SRM
+                  - MSME
+                  - CANDIDATE_W2
+                  - INTERVIEWER
+                  - PLATFORM
+              amountUsd:
+                type: number
+              status:
+                type: string
+                enum:
+                  - PENDING
+                  - PROCESSING
+                  - COMPLETED
+                  - FAILED
+                  - SETTLED
+              processedAt:
+                type: string
+                nullable: true
+                format: date-time
+              stripeTransferId:
+                type: string
+                nullable: true
+              gustoPayrollId:
+                type: string
+                nullable: true
+              failureReason:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - invoiceId
+              - placementId
+              - commissionRuleId
+              - beneficiaryUserId
+              - beneficiaryMsmeId
+              - slot
+              - amountUsd
+              - status
+              - processedAt
+              - stripeTransferId
+              - gustoPayrollId
+              - failureReason
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    GenerateWeeklyInvoicesRequest:
+      type: object
+      properties:
+        billingPeriodStart:
+          type: string
+          format: date-time
+        billingPeriodEnd:
+          type: string
+          format: date-time
+      required:
+        - billingPeriodStart
+        - billingPeriodEnd
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/timesheets:
+    post:
+      tags:
+        - Timesheets
+      summary: Submit a timesheet for a placement week (CANDIDATE on ACTIVE placement)
+      security:
+        - bearerAuth: []
+      description: Candidate submits weekly hours for an ACTIVE placement. Week starts
+        Monday; hours are 0–168. Creates in SUBMITTED status. Idempotent per
+        (placementId, weekStartDate) — resubmit on a REJECTED row transitions
+        back to SUBMITTED.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitTimesheetRequest"
+      responses:
+        "201":
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimesheetResponse"
+        "400":
+          description: Validation error (e.g. week in future, hours out of range)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — caller is not the candidate on this placement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Placement not ACTIVE, or week already INVOICED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Timesheets
+      summary: List timesheets with filters (candidate=own, customer=placements they
+        own)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: placementId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: candidateId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - DRAFT
+              - SUBMITTED
+              - APPROVED
+              - REJECTED
+              - INVOICED
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: weekStartFrom
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: weekStartTo
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimesheetListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/timesheets/{id}:
+    get:
+      tags:
+        - Timesheets
+      summary: Get a single timesheet
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Timesheet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimesheetResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — caller is neither candidate nor customer on the placement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Timesheets
+      summary: Update a DRAFT or REJECTED timesheet (candidate only)
+      security:
+        - bearerAuth: []
+      description: Resubmits when called on a REJECTED row (transitions back to SUBMITTED).
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTimesheet"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimesheetResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the candidate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not in DRAFT or REJECTED status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/timesheets/{id}/approve:
+    post:
+      tags:
+        - Timesheets
+      summary: Approve a SUBMITTED timesheet (CUSTOMER only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimesheetResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the customer on this placement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not in SUBMITTED status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/timesheets/{id}/reject:
+    post:
+      tags:
+        - Timesheets
+      summary: Reject a SUBMITTED timesheet with reason (CUSTOMER only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectTimesheet"
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimesheetResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not in SUBMITTED status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/invoices:
+    get:
+      tags:
+        - Invoices
+      summary: List invoices (customer=own invoices, admin=all)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: customerCompanyId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - WEEKLY_HOURS
+              - INTERVIEWER_FEES
+          required: false
+          name: invoiceType
+          in: query
+        - schema:
+            type: string
+            enum:
+              - DRAFT
+              - SENT
+              - PAID
+              - OVERDUE
+              - SETTLED
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: billingPeriodFrom
+          in: query
+        - schema:
+            type: string
+            format: date-time
+          required: false
+          name: billingPeriodTo
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/invoices/{id}:
+    get:
+      tags:
+        - Invoices
+      summary: Get invoice with line items
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the customer on this invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/invoices/{id}/mark-paid:
+    post:
+      tags:
+        - Invoices
+      summary: Mark invoice as paid (ADMIN only — Stripe webhook replacement for v1)
+      security:
+        - bearerAuth: []
+      description: Transitions SENT → PAID, sets paidAt, and kicks off payout
+        processing (PENDING → PROCESSING → COMPLETED).
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — admin required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not in SENT status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/payouts:
+    get:
+      tags:
+        - Payouts
+      summary: List commission payouts (scoped to beneficiary)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: invoiceId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: placementId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: beneficiaryUserId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: beneficiaryMsmeId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - PENDING
+              - PROCESSING
+              - COMPLETED
+              - FAILED
+              - SETTLED
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommissionPayoutListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/payouts/{id}:
+    get:
+      tags:
+        - Payouts
+      summary: Get a single payout
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Payout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommissionPayoutResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — caller is not the beneficiary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/internal/invoices/generate-weekly:
+    post:
+      tags:
+        - Internal
+      summary: Generate WEEKLY_HOURS invoices for a billing window (SERVICE role)
+      description: Called by the weekly cron (Mon 00:01 UTC) or by admin scripts.
+        Idempotent on (customerCompanyId, invoiceType, billingPeriodStart).
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateWeeklyInvoicesRequest"
+      responses:
+        "202":
+          description: Generation accepted
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — SERVICE role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"

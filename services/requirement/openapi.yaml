@@ -1,0 +1,1134 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Requirement Service
+  version: 0.1.0
+  description: Requirement lifecycle (draft → publish → close), blind-posting, CRM
+    attribution, and outbox-based events for the Techorbit staffing marketplace.
+servers:
+  - url: http://localhost:3005
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    CreateRequirement:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        techStack:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+          maxItems: 20
+        seniority:
+          type: string
+          enum:
+            - JUNIOR
+            - MID
+            - SENIOR
+            - STAFF
+            - PRINCIPAL
+            - PARTNER
+        locationType:
+          type: string
+          enum:
+            - ONSITE
+            - HYBRID
+            - REMOTE
+        locationCity:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        locationState:
+          type: string
+          nullable: true
+          minLength: 2
+          maxLength: 2
+        billRateMinUsd:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 10000
+        billRateMaxUsd:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 10000
+        durationWeeks:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 260
+        startDate:
+          type: string
+          format: date-time
+        openings:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 100
+          default: 1
+        workAuthPrefs:
+          type: array
+          items:
+            type: string
+            enum:
+              - US_CITIZEN
+              - GREEN_CARD
+              - H1B
+              - L1
+              - OPT
+              - CPT
+              - TN
+              - OTHER
+          default: []
+        requiredInterviews:
+          type: integer
+          minimum: 1
+          maximum: 4
+          default: 2
+        blindPosting:
+          type: boolean
+          default: false
+      required:
+        - title
+        - description
+        - techStack
+        - seniority
+        - locationType
+        - billRateMinUsd
+        - billRateMaxUsd
+        - durationWeeks
+        - startDate
+    UpdateRequirement:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        techStack:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+          maxItems: 20
+        seniority:
+          type: string
+          enum:
+            - JUNIOR
+            - MID
+            - SENIOR
+            - STAFF
+            - PRINCIPAL
+            - PARTNER
+        locationType:
+          type: string
+          enum:
+            - ONSITE
+            - HYBRID
+            - REMOTE
+        locationCity:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        locationState:
+          type: string
+          nullable: true
+          minLength: 2
+          maxLength: 2
+        billRateMinUsd:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 10000
+        billRateMaxUsd:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 10000
+        durationWeeks:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 260
+        startDate:
+          type: string
+          format: date-time
+        openings:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 100
+          default: 1
+        workAuthPrefs:
+          type: array
+          items:
+            type: string
+            enum:
+              - US_CITIZEN
+              - GREEN_CARD
+              - H1B
+              - L1
+              - OPT
+              - CPT
+              - TN
+              - OTHER
+          default: []
+        requiredInterviews:
+          type: integer
+          minimum: 1
+          maximum: 4
+          default: 2
+        blindPosting:
+          type: boolean
+          default: false
+    CloseRequirement:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+        - reason
+    RequirementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerCompanyId:
+          type: string
+          nullable: true
+          format: uuid
+        createdByUserId:
+          type: string
+          nullable: true
+          format: uuid
+        attributedCrmId:
+          type: string
+          nullable: true
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        techStack:
+          type: array
+          items:
+            type: string
+        seniority:
+          type: string
+          enum:
+            - JUNIOR
+            - MID
+            - SENIOR
+            - STAFF
+            - PRINCIPAL
+            - PARTNER
+        locationType:
+          type: string
+          enum:
+            - ONSITE
+            - HYBRID
+            - REMOTE
+        locationCity:
+          type: string
+          nullable: true
+        locationState:
+          type: string
+          nullable: true
+        billRateMinUsd:
+          type: number
+        billRateMaxUsd:
+          type: number
+        durationWeeks:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        openings:
+          type: integer
+        workAuthPrefs:
+          type: array
+          items:
+            type: string
+            enum:
+              - US_CITIZEN
+              - GREEN_CARD
+              - H1B
+              - L1
+              - OPT
+              - CPT
+              - TN
+              - OTHER
+        requiredInterviews:
+          type: integer
+        blindPosting:
+          type: boolean
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - OPEN
+            - INTERVIEWING
+            - OFFER_EXTENDED
+            - PLACED
+            - CLOSED
+            - CANCELLED
+        publishedAt:
+          type: string
+          nullable: true
+          format: date-time
+        closedAt:
+          type: string
+          nullable: true
+          format: date-time
+        closedReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - customerCompanyId
+        - createdByUserId
+        - attributedCrmId
+        - title
+        - description
+        - techStack
+        - seniority
+        - locationType
+        - locationCity
+        - locationState
+        - billRateMinUsd
+        - billRateMaxUsd
+        - durationWeeks
+        - startDate
+        - openings
+        - workAuthPrefs
+        - requiredInterviews
+        - blindPosting
+        - status
+        - publishedAt
+        - closedAt
+        - closedReason
+        - createdAt
+        - updatedAt
+    RequirementListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              customerCompanyId:
+                type: string
+                nullable: true
+                format: uuid
+              createdByUserId:
+                type: string
+                nullable: true
+                format: uuid
+              attributedCrmId:
+                type: string
+                nullable: true
+                format: uuid
+              title:
+                type: string
+              description:
+                type: string
+              techStack:
+                type: array
+                items:
+                  type: string
+              seniority:
+                type: string
+                enum:
+                  - JUNIOR
+                  - MID
+                  - SENIOR
+                  - STAFF
+                  - PRINCIPAL
+                  - PARTNER
+              locationType:
+                type: string
+                enum:
+                  - ONSITE
+                  - HYBRID
+                  - REMOTE
+              locationCity:
+                type: string
+                nullable: true
+              locationState:
+                type: string
+                nullable: true
+              billRateMinUsd:
+                type: number
+              billRateMaxUsd:
+                type: number
+              durationWeeks:
+                type: integer
+              startDate:
+                type: string
+                format: date-time
+              openings:
+                type: integer
+              workAuthPrefs:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - US_CITIZEN
+                    - GREEN_CARD
+                    - H1B
+                    - L1
+                    - OPT
+                    - CPT
+                    - TN
+                    - OTHER
+              requiredInterviews:
+                type: integer
+              blindPosting:
+                type: boolean
+              status:
+                type: string
+                enum:
+                  - DRAFT
+                  - OPEN
+                  - INTERVIEWING
+                  - OFFER_EXTENDED
+                  - PLACED
+                  - CLOSED
+                  - CANCELLED
+              publishedAt:
+                type: string
+                nullable: true
+                format: date-time
+              closedAt:
+                type: string
+                nullable: true
+                format: date-time
+              closedReason:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - customerCompanyId
+              - createdByUserId
+              - attributedCrmId
+              - title
+              - description
+              - techStack
+              - seniority
+              - locationType
+              - locationCity
+              - locationState
+              - billRateMinUsd
+              - billRateMaxUsd
+              - durationWeeks
+              - startDate
+              - openings
+              - workAuthPrefs
+              - requiredInterviews
+              - blindPosting
+              - status
+              - publishedAt
+              - closedAt
+              - closedReason
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    AttributeCrm:
+      type: object
+      properties:
+        crmUserId:
+          type: string
+          format: uuid
+      required:
+        - crmUserId
+    CrmAttributionRequestResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        requirementId:
+          type: string
+          format: uuid
+        customerCompanyId:
+          type: string
+          format: uuid
+        crmUserId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - PENDING
+            - APPROVED
+            - REJECTED
+        approvedAt:
+          type: string
+          nullable: true
+          format: date-time
+        approvedBy:
+          type: string
+          nullable: true
+          format: uuid
+        rejectedAt:
+          type: string
+          nullable: true
+          format: date-time
+        rejectedBy:
+          type: string
+          nullable: true
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - requirementId
+        - customerCompanyId
+        - crmUserId
+        - status
+        - approvedAt
+        - approvedBy
+        - rejectedAt
+        - rejectedBy
+        - createdAt
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/requirements:
+    post:
+      tags:
+        - Requirements
+      summary: Create a draft requirement (CUSTOMER role required)
+      security:
+        - bearerAuth: []
+      description: Creates a DRAFT requirement. customerCompanyId is derived
+        server-side from the caller's CustomerCompanyProfile — callers do not
+        supply it in the request body.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequirement"
+      responses:
+        "201":
+          description: Draft created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequirementResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not a CUSTOMER, or profile not complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Requirements
+      summary: Browse requirements with filters and cursor pagination
+      security:
+        - bearerAuth: []
+      description: Non-admin users see only published requirements plus their own
+        drafts. CRMs also see requirements where they are the attributed CRM.
+      parameters:
+        - schema:
+            anyOf:
+              - type: string
+                enum:
+                  - DRAFT
+                  - OPEN
+                  - INTERVIEWING
+                  - OFFER_EXTENDED
+                  - PLACED
+                  - CLOSED
+                  - CANCELLED
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - DRAFT
+                    - OPEN
+                    - INTERVIEWING
+                    - OFFER_EXTENDED
+                    - PLACED
+                    - CLOSED
+                    - CANCELLED
+          required: false
+          name: status
+          in: query
+        - schema:
+            anyOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+          required: false
+          name: techStack
+          in: query
+        - schema:
+            anyOf:
+              - type: string
+                enum:
+                  - JUNIOR
+                  - MID
+                  - SENIOR
+                  - STAFF
+                  - PRINCIPAL
+                  - PARTNER
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - JUNIOR
+                    - MID
+                    - SENIOR
+                    - STAFF
+                    - PRINCIPAL
+                    - PARTNER
+          required: false
+          name: seniority
+          in: query
+        - schema:
+            anyOf:
+              - type: string
+                enum:
+                  - ONSITE
+                  - HYBRID
+                  - REMOTE
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - ONSITE
+                    - HYBRID
+                    - REMOTE
+          required: false
+          name: locationType
+          in: query
+        - schema:
+            anyOf:
+              - type: string
+                enum:
+                  - US_CITIZEN
+                  - GREEN_CARD
+                  - H1B
+                  - L1
+                  - OPT
+                  - CPT
+                  - TN
+                  - OTHER
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - US_CITIZEN
+                    - GREEN_CARD
+                    - H1B
+                    - L1
+                    - OPT
+                    - CPT
+                    - TN
+                    - OTHER
+          required: false
+          name: workAuthPrefs
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: customerCompanyId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: attributedCrmId
+          in: query
+        - schema:
+            type: string
+            maxLength: 200
+          required: false
+          name: search
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequirementListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/requirements/{id}:
+    get:
+      tags:
+        - Requirements
+      summary: Get a single requirement
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Requirement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequirementResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — draft not owned by caller
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags:
+        - Requirements
+      summary: Update a draft requirement (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRequirement"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequirementResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the owner or not in DRAFT
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/requirements/{id}/publish:
+    post:
+      tags:
+        - Requirements
+      summary: Publish a draft requirement (DRAFT → OPEN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequirementResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not in DRAFT status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/requirements/{id}/close:
+    post:
+      tags:
+        - Requirements
+      summary: Close a requirement with a reason (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CloseRequirement"
+      responses:
+        "200":
+          description: Closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequirementResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/requirements/{id}/attribute-crm:
+    post:
+      tags:
+        - CRM Attribution
+      summary: CRM claims attribution on a requirement
+      security:
+        - bearerAuth: []
+      description: "Three outcomes: (1) 200 — CRM is already attributed; (2) 200 —
+        customer already has this CRM linked, auto-confirmed; (3) 202 — pending
+        customer approval."
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttributeCrm"
+      responses:
+        "200":
+          description: Attributed (auto-confirmed)
+        "202":
+          description: Pending customer approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAttributionRequestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not a CRM role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Requirement not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Another CRM is already attributed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/crm-attribution-requests:
+    get:
+      tags:
+        - CRM Attribution
+      summary: List pending CRM attribution requests for the caller's company
+        (CUSTOMER only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Attribution queue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CrmAttributionRequestResponse"
+                required:
+                  - data
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not a CUSTOMER
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/crm-attribution-requests/{id}/approve:
+    post:
+      tags:
+        - CRM Attribution
+      summary: Approve a pending CRM attribution request (CUSTOMER only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAttributionRequestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the owning customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/crm-attribution-requests/{id}/reject:
+    post:
+      tags:
+        - CRM Attribution
+      summary: Reject a pending CRM attribution request (CUSTOMER only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAttributionRequestResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the owning customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"

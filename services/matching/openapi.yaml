@@ -1,0 +1,708 @@
+openapi: 3.0.3
+info:
+  title: Techorbit Matching Service
+  version: 0.1.0
+  description: Submission lifecycle (create → status updates → withdraw),
+    rule-based matching engine, event-driven precompute
+    (requirement.published.v1), and transactional outbox for downstream events.
+servers:
+  - url: http://localhost:3006
+    description: Local dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties:
+                nullable: true
+          required:
+            - code
+            - message
+      required:
+        - error
+    SubmissionRequest:
+      type: object
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        candidateId:
+          type: string
+          format: uuid
+        coverNote:
+          type: string
+          maxLength: 500
+        proposedBillRate:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 10000
+      required:
+        - requirementId
+        - candidateId
+    SubmissionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        requirementId:
+          type: string
+          format: uuid
+        candidateId:
+          type: string
+          format: uuid
+        submittedByUserId:
+          type: string
+          format: uuid
+        submitterRole:
+          type: string
+          enum:
+            - CANDIDATE_SELF
+            - SRM
+            - MSME
+        attributedSrmId:
+          type: string
+          nullable: true
+          format: uuid
+        attributedMsmeId:
+          type: string
+          nullable: true
+          format: uuid
+        status:
+          type: string
+          enum:
+            - SUBMITTED
+            - SCREENING
+            - INTERVIEWING
+            - OFFER
+            - PLACED
+            - REJECTED
+            - WITHDRAWN
+        matchScore:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 100
+        coverNote:
+          type: string
+          nullable: true
+        proposedBillRate:
+          type: number
+          nullable: true
+        withdrawnAt:
+          type: string
+          nullable: true
+          format: date-time
+        withdrawnReason:
+          type: string
+          nullable: true
+        rejectedAt:
+          type: string
+          nullable: true
+          format: date-time
+        rejectionReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - requirementId
+        - candidateId
+        - submittedByUserId
+        - submitterRole
+        - attributedSrmId
+        - attributedMsmeId
+        - status
+        - matchScore
+        - coverNote
+        - proposedBillRate
+        - withdrawnAt
+        - withdrawnReason
+        - rejectedAt
+        - rejectionReason
+        - createdAt
+        - updatedAt
+    SubmissionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              requirementId:
+                type: string
+                format: uuid
+              candidateId:
+                type: string
+                format: uuid
+              submittedByUserId:
+                type: string
+                format: uuid
+              submitterRole:
+                type: string
+                enum:
+                  - CANDIDATE_SELF
+                  - SRM
+                  - MSME
+              attributedSrmId:
+                type: string
+                nullable: true
+                format: uuid
+              attributedMsmeId:
+                type: string
+                nullable: true
+                format: uuid
+              status:
+                type: string
+                enum:
+                  - SUBMITTED
+                  - SCREENING
+                  - INTERVIEWING
+                  - OFFER
+                  - PLACED
+                  - REJECTED
+                  - WITHDRAWN
+              matchScore:
+                type: integer
+                nullable: true
+                minimum: 0
+                maximum: 100
+              coverNote:
+                type: string
+                nullable: true
+              proposedBillRate:
+                type: number
+                nullable: true
+              withdrawnAt:
+                type: string
+                nullable: true
+                format: date-time
+              withdrawnReason:
+                type: string
+                nullable: true
+              rejectedAt:
+                type: string
+                nullable: true
+                format: date-time
+              rejectionReason:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - requirementId
+              - candidateId
+              - submittedByUserId
+              - submitterRole
+              - attributedSrmId
+              - attributedMsmeId
+              - status
+              - matchScore
+              - coverNote
+              - proposedBillRate
+              - withdrawnAt
+              - withdrawnReason
+              - rejectedAt
+              - rejectionReason
+              - createdAt
+              - updatedAt
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - data
+        - nextCursor
+        - hasMore
+    UpdateSubmissionStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - SUBMITTED
+            - SCREENING
+            - INTERVIEWING
+            - OFFER
+            - PLACED
+            - REJECTED
+            - WITHDRAWN
+        rejectionReason:
+          type: string
+          maxLength: 500
+      required:
+        - status
+    WithdrawSubmission:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+        - reason
+    MatchingSignalResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        requirementId:
+          type: string
+          format: uuid
+        candidateId:
+          type: string
+          format: uuid
+        skillOverlap:
+          type: integer
+          minimum: 0
+        seniorityMatch:
+          type: boolean
+        locationMatch:
+          type: boolean
+        workAuthMatch:
+          type: boolean
+        candidateRating:
+          type: number
+        matchScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        computedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - requirementId
+        - candidateId
+        - skillOverlap
+        - seniorityMatch
+        - locationMatch
+        - workAuthMatch
+        - candidateRating
+        - matchScore
+        - computedAt
+    MatchingSignalListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              requirementId:
+                type: string
+                format: uuid
+              candidateId:
+                type: string
+                format: uuid
+              skillOverlap:
+                type: integer
+                minimum: 0
+              seniorityMatch:
+                type: boolean
+              locationMatch:
+                type: boolean
+              workAuthMatch:
+                type: boolean
+              candidateRating:
+                type: number
+              matchScore:
+                type: integer
+                minimum: 0
+                maximum: 100
+              computedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - requirementId
+              - candidateId
+              - skillOverlap
+              - seniorityMatch
+              - locationMatch
+              - workAuthMatch
+              - candidateRating
+              - matchScore
+              - computedAt
+      required:
+        - data
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        service:
+          type: string
+        version:
+          type: string
+      required:
+        - status
+        - service
+        - version
+  parameters: {}
+paths:
+  /api/v1/submissions:
+    post:
+      tags:
+        - Submissions
+      summary: Create a submission
+      security:
+        - bearerAuth: []
+      description: submitterRole is derived server-side from the caller's roles
+        (CANDIDATE / SRM / MSME). Candidates may only submit themselves.
+        Attribution fields (attributedSrmId, attributedMsmeId) are set
+        server-side based on the submitter's role. Match score is resolved from
+        a precomputed MatchingSignal or computed on the fly.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionRequest"
+      responses:
+        "201":
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResponse"
+        "400":
+          description: Requirement is not OPEN, or candidate profile is incomplete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Caller cannot submit for this candidate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Requirement or candidate not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: A submission for this candidate already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Submissions
+      summary: List submissions with filters and cursor pagination
+      security:
+        - bearerAuth: []
+      description: "Visibility-scoped: customers see submissions for their own
+        requirements AND their own submitted rows; candidates see only their
+        own; admins see all."
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: requirementId
+          in: query
+        - schema:
+            type: string
+            format: uuid
+          required: false
+          name: candidateId
+          in: query
+        - schema:
+            type: string
+            enum:
+              - SUBMITTED
+              - SCREENING
+              - INTERVIEWING
+              - OFFER
+              - PLACED
+              - REJECTED
+              - WITHDRAWN
+          required: false
+          name: status
+          in: query
+        - schema:
+            type: string
+            enum:
+              - CANDIDATE_SELF
+              - SRM
+              - MSME
+          required: false
+          name: submitterRole
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: cursor
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/submissions/{id}:
+    get:
+      tags:
+        - Submissions
+      summary: Get a single submission
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        "200":
+          description: Submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — caller is not a viewer of this submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/submissions/{id}/status:
+    patch:
+      tags:
+        - Submissions
+      summary: Update submission status (requirement owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSubmissionStatus"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — only the requirement owner can update status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Submission is in a terminal state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/submissions/{id}/withdraw:
+    post:
+      tags:
+        - Submissions
+      summary: Withdraw a submission (submitter only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawSubmission"
+      responses:
+        "200":
+          description: Withdrawn
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — only the submitter can withdraw
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/matches/for-requirement/{reqId}:
+    get:
+      tags:
+        - Matches
+      summary: Top-ranked MatchingSignal rows for a requirement
+      security:
+        - bearerAuth: []
+      description: Returns the top `limit` candidates ranked by matchScore. Gated on
+        requirement ownership, attributed CRM, or ADMIN.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: reqId
+          in: path
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Ranked matches
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchingSignalListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — not the owner / attributed CRM
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Requirement not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"

@@ -1,0 +1,148 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/client"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["requirement"]
+}
+
+model Requirement {
+  id                 String           @id @default(uuid())
+  // Stores CustomerCompanyProfile.id from profile-svc (not User.id).
+  // No DB-level FK because profile-svc lives in public schema (not a separate
+  // Postgres schema); constraint enforced at the service layer.
+  customerCompanyId  String           @map("customer_company_id")
+  createdByUserId    String           @map("created_by_user_id")
+  attributedCrmId    String?          @map("attributed_crm_id")
+  title              String
+  description        String           @db.Text
+  techStack          String[]         @map("tech_stack")
+  seniority          Seniority
+  locationType       LocationType     @map("location_type")
+  locationCity       String?          @map("location_city")
+  locationState      String?          @map("location_state")
+  billRateMinUsd     Decimal          @map("bill_rate_min_usd") @db.Decimal(10, 2)
+  billRateMaxUsd     Decimal          @map("bill_rate_max_usd") @db.Decimal(10, 2)
+  durationWeeks      Int              @map("duration_weeks")
+  startDate          DateTime         @map("start_date")
+  openings           Int              @default(1)
+  workAuthPrefs      WorkAuthStatus[] @map("work_auth_prefs")
+  requiredInterviews Int              @default(2) @map("required_interviews")
+  blindPosting       Boolean          @default(false) @map("blind_posting")
+  status             RequirementStatus @default(DRAFT)
+  publishedAt        DateTime?        @map("published_at")
+  closedAt           DateTime?        @map("closed_at")
+  closedReason       String?          @map("closed_reason")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt       @map("updated_at")
+
+  crmAttributionRequests CrmAttributionRequest[]
+
+  @@index([status, publishedAt])
+  @@index([customerCompanyId])
+  @@index([createdByUserId])
+  @@index([attributedCrmId])
+  @@map("requirement")
+  @@schema("requirement")
+}
+
+model CrmAttributionRequest {
+  id                String               @id @default(uuid())
+  requirementId     String               @map("requirement_id")
+  customerCompanyId String               @map("customer_company_id")
+  crmUserId         String               @map("crm_user_id")
+  status            CrmAttributionStatus @default(PENDING)
+  approvedAt        DateTime?            @map("approved_at")
+  approvedBy        String?              @map("approved_by")
+  rejectedAt        DateTime?            @map("rejected_at")
+  rejectedBy        String?              @map("rejected_by")
+  createdAt         DateTime             @default(now()) @map("created_at")
+
+  requirement Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  @@index([status, crmUserId])
+  @@index([customerCompanyId, status])
+  @@index([requirementId])
+  @@map("crm_attribution_request")
+  @@schema("requirement")
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("outgoing_event")
+  @@schema("requirement")
+}
+
+enum RequirementStatus {
+  DRAFT
+  OPEN
+  INTERVIEWING
+  OFFER_EXTENDED
+  PLACED
+  CLOSED
+  CANCELLED
+
+  @@schema("requirement")
+}
+
+enum LocationType {
+  ONSITE
+  HYBRID
+  REMOTE
+
+  @@schema("requirement")
+}
+
+enum Seniority {
+  JUNIOR
+  MID
+  SENIOR
+  STAFF
+  PRINCIPAL
+  PARTNER
+
+  @@schema("requirement")
+}
+
+enum WorkAuthStatus {
+  US_CITIZEN
+  GREEN_CARD
+  H1B
+  L1
+  OPT
+  CPT
+  TN
+  OTHER
+
+  @@schema("requirement")
+}
+
+enum CrmAttributionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("requirement")
+}
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("requirement")
+}
