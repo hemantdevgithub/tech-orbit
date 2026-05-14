@@ -155,7 +155,7 @@ export default function NewRequirementPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-forest-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">
           Post a requirement
         </h1>
         <p className="text-sage-600 mt-1">Step {step} of 3</p>

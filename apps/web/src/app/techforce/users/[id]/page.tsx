@@ -37,7 +37,7 @@ export default function UserProfilePage() {
         ]}
       />
       <div>
-        <h1 className="text-2xl font-bold text-forest-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">
           {isSelf ? `${me.firstName} ${me.lastName}` : "User profile"}
         </h1>
         {isSelf && me.email && (

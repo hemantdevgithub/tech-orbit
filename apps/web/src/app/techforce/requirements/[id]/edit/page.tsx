@@ -139,7 +139,7 @@ export default function EditRequirementPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-forest-900 mb-6">Edit draft</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-forest-900 mb-6">Edit draft</h1>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card>

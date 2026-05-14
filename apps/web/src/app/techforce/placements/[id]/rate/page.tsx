@@ -189,7 +189,7 @@ function RateHeader({
   const subjectName = isCustomer ? candidateName : customerName;
   return (
     <div>
-      <h1 className="text-2xl font-bold text-forest-900">Rate this {raterRoleLabel}</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Rate this {raterRoleLabel}</h1>
       <p className="text-sage-700 text-sm mt-1">{subjectName}</p>
     </div>
   );

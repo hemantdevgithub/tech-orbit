@@ -161,7 +161,7 @@ export default function SubmitCandidatePage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-forest-900 mb-1">
+      <h1 className="text-2xl sm:text-3xl font-bold text-forest-900 mb-1">
         Submit candidate
       </h1>
       <p className="text-sage-600 mb-6">

@@ -100,7 +100,7 @@ export default function DisputeDetailPage() {
           ← All disputes
         </Link>
         <div className="mt-2 flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl font-bold text-forest-900">{dispute.type} dispute</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">{dispute.type} dispute</h1>
           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_PILL[dispute.status]}`}>
             {dispute.status}
           </span>

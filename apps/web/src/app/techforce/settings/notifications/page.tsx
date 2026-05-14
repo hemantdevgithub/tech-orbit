@@ -80,7 +80,7 @@ export default function NotificationPreferencesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-forest-900">Notification preferences</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Notification preferences</h1>
         <p className="text-sage-500 text-sm mt-0.5">
           Control how you receive updates. In-app notifications are always on.
         </p>

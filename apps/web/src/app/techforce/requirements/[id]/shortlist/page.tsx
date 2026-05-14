@@ -237,7 +237,7 @@ export default function ShortlistPage(): JSX.Element {
 
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-forest-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">
             Shortlist: {req.title}
           </h1>
           <p className="text-sage-600 text-sm">

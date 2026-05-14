@@ -67,7 +67,7 @@ export default function CrmAttributionSettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-forest-900 mb-2">CRM attribution</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-forest-900 mb-2">CRM attribution</h1>
       <p className="text-sage-600 mb-6">
         CRMs can claim attribution on your published requirements. Approve the
         ones you want; reject the rest.

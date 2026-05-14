@@ -100,7 +100,7 @@ export default function NewTimesheetPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-forest-900 mb-1">Submit timesheet</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-forest-900 mb-1">Submit timesheet</h1>
       <p className="text-sage-500 text-sm mb-6">
         Placement: {placement.engagementType} · ${placement.billRateUsd.toFixed(2)}/hr
       </p>

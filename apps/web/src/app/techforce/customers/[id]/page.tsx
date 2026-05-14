@@ -53,7 +53,7 @@ export default function CustomerDetailPage() {
       />
 
       <div>
-        <h1 className="text-2xl font-bold text-forest-900">{profile.legalName}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">{profile.legalName}</h1>
         {profile.dba && (
           <p className="text-sage-700 mt-1">dba {profile.dba}</p>
         )}

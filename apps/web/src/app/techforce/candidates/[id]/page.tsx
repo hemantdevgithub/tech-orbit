@@ -103,9 +103,9 @@ export default function CandidateDetailPage() {
         ]}
       />
 
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-forest-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">
             {profile.headline ?? "Candidate"}
           </h1>
           <p className="text-sage-500 text-xs mt-1 font-mono">{profile.userId}</p>

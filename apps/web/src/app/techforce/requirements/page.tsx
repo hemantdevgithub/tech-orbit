@@ -229,7 +229,7 @@ export default function BrowseRequirementsPage() {
       />
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-forest-900">Requirements</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Requirements</h1>
           <p className="text-sage-500 text-sm mt-0.5">
             {loading && rows.length === 0
               ? "Loading…"

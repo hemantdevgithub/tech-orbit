@@ -167,7 +167,7 @@ export default function HireCandidatePage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-forest-900 mb-1">Hire candidate</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-forest-900 mb-1">Hire candidate</h1>
       <p className="text-sage-500 text-sm mb-6">
         Candidate: <span className="font-mono text-xs">{submission.candidateId.slice(0, 8)}…</span> · Match score {submission.matchScore ?? "—"}
       </p>
