@@ -9,7 +9,6 @@ import { DashboardHeader, WorkspaceCard, StatStrip } from "./dashboard-shell";
 import {
   BriefcaseIcon,
   ClockIcon,
-  DollarIcon,
   HandshakeIcon,
   ReceiptIcon,
 } from "@/components/icons";

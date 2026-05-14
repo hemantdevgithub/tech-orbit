@@ -2,6 +2,7 @@ import type {
   LocationType,
   Prisma,
   Requirement,
+  RequirementCrmOwner,
   Seniority,
   WorkAuthStatus,
 } from "../generated/client/index.js";
@@ -124,7 +125,7 @@ export const requirementRepository = {
     });
   },
 
-  async findById(ctx: AuthContext, id: string): Promise<Requirement & { crmOwners: import("../generated/client/index.js").RequirementCrmOwner[] }> {
+  async findById(ctx: AuthContext, id: string): Promise<Requirement & { crmOwners: RequirementCrmOwner[] }> {
     const req = await prisma.requirement.findUnique({
       where: { id },
       include: { crmOwners: { orderBy: { acceptedAt: "asc" } } },
@@ -145,7 +146,7 @@ export const requirementRepository = {
   async findByIdWithOwners(
     id: string,
     tx?: Prisma.TransactionClient,
-  ): Promise<(Requirement & { crmOwners: import("../generated/client/index.js").RequirementCrmOwner[] }) | null> {
+  ): Promise<(Requirement & { crmOwners: RequirementCrmOwner[] }) | null> {
     const db = tx ?? prisma;
     return db.requirement.findUnique({
       where: { id },

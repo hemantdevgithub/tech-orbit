@@ -28,15 +28,6 @@ import {
 type RoleType = "CUSTOMER" | "CANDIDATE" | "CRM" | "SRM" | "MSME" | "ADMIN";
 type IconComp = (p: { size?: number; className?: string }) => JSX.Element;
 
-const ROLE_LABEL: Record<string, string> = {
-  CUSTOMER: "Customer",
-  CANDIDATE: "Candidate",
-  CRM: "Business Developer",
-  SRM: "Recruiter",
-  MSME: "Vendor Firm",
-  ADMIN: "Admin",
-};
-
 // Primary CTA per role — the single most common action that role takes.
 type Cta = { label: string; href: string; Icon: IconComp };
 const PRIMARY_CTA: Partial<Record<RoleType, Cta>> = {

@@ -158,7 +158,8 @@
       "Bash(pnpm --filter @techorbit/profile test -- --run)",
       "Bash(perl -i -pe 's|JWT_ISSUER = \"techorbit-matching\"|JWT_ISSUER = \"techorbit-notification\"|' services/notification/src/lib/service-token.ts)",
       "Bash(pnpm --filter @techorbit/notification test -- --run)",
-      "Bash(pnpm --filter @techorbit/identity test -- --run)"
+      "Bash(pnpm --filter @techorbit/identity test -- --run)",
+      "Bash(grep -E \"src/.*\\\\.tsx?$\")"
     ],
     "additionalDirectories": [
       "/Users/hemant/techorbit/.git",

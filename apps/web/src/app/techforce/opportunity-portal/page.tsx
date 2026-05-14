@@ -1,25 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge, Button, Card, CardBody } from "@techorbit/ui";
-import type {
-  RequirementResponse,
-  SrmPortfolioMembershipResponse,
-} from "@techorbit/types";
+import type { RequirementResponse } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
-import {
-  getProfileClient,
-  getRequirementClient,
-} from "@/lib/api-client";
+import { getRequirementClient } from "@/lib/api-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import {
-  ArrowRightIcon,
-  BriefcaseIcon,
-  HandshakeIcon,
-  PlusIcon,
-} from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 
 type Tab = "available" | "owned" | "assigned";
 
