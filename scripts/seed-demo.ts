@@ -382,6 +382,80 @@ async function main(): Promise<void> {
     }, candidate.token));
   console.log(`  open dispute: candidate → timesheet hours`);
 
+  // ────────────────────────────────────────────────────────────────────────
+  // Sprint 12 — multi-CRM ownership + SRM portfolio + invite-to-submit
+  // ────────────────────────────────────────────────────────────────────────
+  console.log("\n━━━ Sprint 12: Opportunity Portal + Roster + Invitations ━━━");
+
+  // A second requirement to walk the new flow without disturbing the existing
+  // pipeline (which uses candidate1 already).
+  const req12 = await tryCall("sprint12 requirement", () =>
+    call(`${REQUIREMENT}/api/v1/requirements`, "POST", {
+      title: "Backend Engineer — Payments Reconciliation",
+      description:
+        "Reconciliation tooling for our weekly payouts. Need someone strong on PostgreSQL, money math, and event-driven systems.",
+      techStack: ["PostgreSQL", "Node.js", "TypeScript", "RabbitMQ"],
+      seniority: "SENIOR",
+      locationType: "REMOTE",
+      billRateMinUsd: 110,
+      billRateMaxUsd: 150,
+      durationWeeks: 16,
+      startDate: new Date(Date.now() + 21 * 86400_000).toISOString(),
+      openings: 1,
+      workAuthAccepted: ["US_CITIZEN", "GREEN_CARD", "H1B"],
+      requiredInterviewCount: 2,
+      blindPosting: false,
+    }, customer.token));
+
+  if (req12) {
+    const reqId12 = req12.id as string;
+    await tryCall("sprint12 publish", () =>
+      call(`${REQUIREMENT}/api/v1/requirements/${reqId12}/publish`, "POST", {}, customer.token));
+    console.log(`  published sprint12 requirement: ${reqId12.slice(0, 8)}…`);
+
+    // CRM accepts (becomes co-owner; primary since first).
+    await tryCall("crm accept", () =>
+      call(`${REQUIREMENT}/api/v1/requirements/${reqId12}/accept`, "POST", {}, crm.token));
+    console.log(`  ${"crm@demo.test"} accepted (primary co-owner)`);
+
+    // CRM assigns SRM to source.
+    await tryCall("assign srm", () =>
+      call(`${REQUIREMENT}/api/v1/requirements/${reqId12}/assign-srm`, "POST",
+        { srmUserId: srm.userId }, crm.token));
+    console.log(`  CRM assigned SRM to source candidates`);
+
+    // SRM invites candidate2 to their portfolio → candidate2 approves.
+    const inviteCand = await tryCall("srm invite candidate2", () =>
+      call(`${PROFILE}/api/v1/me/srm-roster/invite`, "POST",
+        { memberUserId: candidate2.userId, memberType: "CANDIDATE" }, srm.token));
+    if (inviteCand) {
+      await tryCall("candidate2 approves srm invite", () =>
+        call(`${PROFILE}/api/v1/srm-portfolio-requests/${inviteCand.id}/approve`,
+          "POST", {}, candidate2.token));
+      console.log(`  SRM ↔ candidate2 portfolio approved`);
+    }
+
+    // SRM invites MSME to their portfolio → MSME approves.
+    const inviteMsme = await tryCall("srm invite msme", () =>
+      call(`${PROFILE}/api/v1/me/srm-roster/invite`, "POST",
+        { memberUserId: msme.userId, memberType: "MSME" }, srm.token));
+    if (inviteMsme) {
+      await tryCall("msme approves srm invite", () =>
+        call(`${PROFILE}/api/v1/srm-portfolio-requests/${inviteMsme.id}/approve`,
+          "POST", {}, msme.token));
+      console.log(`  SRM ↔ MSME portfolio approved`);
+    }
+
+    // SRM invites candidate2 to the requirement — submission lands in INVITED.
+    await tryCall("srm invites candidate2 to req", () =>
+      call(`${MATCHING}/api/v1/requirements/${reqId12}/invite-candidate`, "POST",
+        {
+          candidateId: candidate2.userId,
+          coverNote: "Saw your previous reconciliation work — strong fit. Open to a chat?",
+        }, srm.token));
+    console.log(`  candidate2 has a pending invitation in /techforce/invitations`);
+  }
+
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("  DEMO SEED COMPLETE");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
