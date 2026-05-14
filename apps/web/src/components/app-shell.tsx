@@ -62,22 +62,18 @@ type SearchField = { placeholder: string; href: string };
 const SEARCH_FIELDS: Record<RoleType, SearchField[]> = {
   CUSTOMER: [
     { placeholder: "Find a requirement", href: "/techforce/requirements" },
-    { placeholder: "Find a candidate", href: "/techforce/candidates" },
     { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   CANDIDATE: [
     { placeholder: "Find a job", href: "/techforce/requirements" },
-    { placeholder: "Find a customer", href: "/techforce/customers" },
     { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   CRM: [
     { placeholder: "Find a requirement", href: "/techforce/requirements" },
-    { placeholder: "Find a customer", href: "/techforce/customers" },
     { placeholder: "Find a placement", href: "/techforce/placements" },
   ],
   SRM: [
     { placeholder: "Find a job", href: "/techforce/requirements" },
-    { placeholder: "Find a candidate", href: "/techforce/candidates" },
     { placeholder: "Find a submission", href: "/techforce/placements" },
   ],
   MSME: [
