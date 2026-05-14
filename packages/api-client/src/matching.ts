@@ -1,5 +1,7 @@
 import type { ApiClient } from "./client.js";
 import type {
+  DeclineInvite,
+  InviteCandidate,
   MatchingSignalResponse,
   SubmissionFilter,
   SubmissionListResponse,
@@ -43,6 +45,35 @@ export class MatchingApiClient {
     const search = limit ? `?limit=${limit}` : "";
     return this.client.get(
       `/api/v1/matches/for-requirement/${requirementId}${search}`,
+    );
+  }
+
+  // ─── Sprint 12 — invite-to-submit ─────────────────────────────────────────
+
+  inviteCandidate(
+    requirementId: string,
+    data: InviteCandidate,
+  ): Promise<SubmissionResponse> {
+    return this.client.post(
+      `/api/v1/requirements/${requirementId}/invite-candidate`,
+      data,
+    );
+  }
+
+  acceptInvite(submissionId: string): Promise<SubmissionResponse> {
+    return this.client.post(
+      `/api/v1/submissions/${submissionId}/accept-invite`,
+      {},
+    );
+  }
+
+  declineInvite(
+    submissionId: string,
+    data: DeclineInvite,
+  ): Promise<SubmissionResponse> {
+    return this.client.post(
+      `/api/v1/submissions/${submissionId}/decline-invite`,
+      data,
     );
   }
 }

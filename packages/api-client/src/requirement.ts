@@ -1,5 +1,6 @@
 import type { ApiClient } from "./client.js";
 import type {
+  AssignSrm,
   AttributeCrm,
   CloseRequirement,
   CreateRequirement,
@@ -73,6 +74,36 @@ export class RequirementApiClient {
   rejectAttribution(id: string): Promise<CrmAttributionRequestResponse> {
     return this.client.post(
       `/api/v1/crm-attribution-requests/${id}/reject`,
+      {},
+    );
+  }
+
+  // ─── Sprint 12 — co-ownership + SRM assignment ────────────────────────────
+
+  // Idempotent: a CRM that already owns the requirement gets back the
+  // current state with no new accept event. First-time accepts make the
+  // caller primary and recompute shares to 1/N.
+  acceptByCrm(requirementId: string): Promise<RequirementResponse> {
+    return this.client.post(`/api/v1/requirements/${requirementId}/accept`, {});
+  }
+
+  releaseByCrm(requirementId: string): Promise<RequirementResponse> {
+    return this.client.post(`/api/v1/requirements/${requirementId}/release`, {});
+  }
+
+  assignSrm(
+    requirementId: string,
+    data: AssignSrm,
+  ): Promise<RequirementResponse> {
+    return this.client.post(
+      `/api/v1/requirements/${requirementId}/assign-srm`,
+      data,
+    );
+  }
+
+  unassignSrm(requirementId: string): Promise<RequirementResponse> {
+    return this.client.post(
+      `/api/v1/requirements/${requirementId}/unassign-srm`,
       {},
     );
   }

@@ -20,7 +20,15 @@ const POLL_MS = 30_000;
 type IconComp = (p: { size?: number; className?: string }) => JSX.Element;
 const TYPE_ICON: Record<NotificationType, IconComp> = {
   REQUIREMENT_PUBLISHED: BriefcaseIcon,
+  REQUIREMENT_ASSIGNED: BriefcaseIcon,
   SUBMISSION_RECEIVED: UserIcon,
+  SUBMISSION_INVITED: UserIcon,
+  SUBMISSION_INVITE_ACCEPTED: UserIcon,
+  SUBMISSION_INVITE_DECLINED: UserIcon,
+  PORTFOLIO_INVITATION: UserIcon,
+  PORTFOLIO_REQUEST: UserIcon,
+  PORTFOLIO_APPROVED: UserIcon,
+  MSME_ASSIGNMENT: BriefcaseIcon,
   INTERVIEW_SCHEDULED: CalendarIcon,
   TIMESHEET_SUBMITTED: ClockIcon,
   TIMESHEET_APPROVED: ClockIcon,

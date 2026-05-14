@@ -22,6 +22,14 @@ import type {
   FileUploadUrlRequest,
   FileUploadUrlResponse,
   FileResponse,
+  // Sprint 12 — SRM portfolio
+  MemberRequestJoin,
+  PortfolioMemberType,
+  PortfolioMembershipStatus,
+  PortfolioReject,
+  SrmInviteMember,
+  SrmPortfolioListResponse,
+  SrmPortfolioMembershipResponse,
 } from "@techorbit/types";
 
 export class ProfileApiClient {
@@ -161,6 +169,67 @@ export class ProfileApiClient {
   getDownloadUrl(fileId: string): Promise<{ downloadUrl: string }> {
     return this.client.get(`/api/v1/files/${fileId}/download-url`);
   }
+
+  // ─── Sprint 12 — SRM portfolio (two-sided handshake) ─────────────────────
+
+  invitePortfolioMember(
+    data: SrmInviteMember,
+  ): Promise<SrmPortfolioMembershipResponse> {
+    return this.client.post("/api/v1/me/srm-roster/invite", data);
+  }
+
+  requestJoinPortfolio(
+    data: MemberRequestJoin,
+  ): Promise<SrmPortfolioMembershipResponse> {
+    return this.client.post("/api/v1/srm-roster/request-join", data);
+  }
+
+  approvePortfolioRequest(
+    id: string,
+  ): Promise<SrmPortfolioMembershipResponse> {
+    return this.client.post(`/api/v1/srm-portfolio-requests/${id}/approve`, {});
+  }
+
+  rejectPortfolioRequest(
+    id: string,
+    data: PortfolioReject,
+  ): Promise<SrmPortfolioMembershipResponse> {
+    return this.client.post(
+      `/api/v1/srm-portfolio-requests/${id}/reject`,
+      data,
+    );
+  }
+
+  listSrmRoster(filters?: {
+    status?: PortfolioMembershipStatus;
+    memberType?: PortfolioMemberType;
+  }): Promise<SrmPortfolioListResponse> {
+    const search = filters
+      ? toPortfolioQueryString(filters as Record<string, unknown>)
+      : "";
+    return this.client.get(`/api/v1/me/srm-roster${search}`);
+  }
+
+  listMyPortfolio(filters?: {
+    status?: PortfolioMembershipStatus;
+  }): Promise<SrmPortfolioListResponse> {
+    const search = filters
+      ? toPortfolioQueryString(filters as Record<string, unknown>)
+      : "";
+    return this.client.get(`/api/v1/me/srm-portfolio${search}`);
+  }
+}
+
+function toPortfolioQueryString(
+  filters: Record<string, unknown>,
+): string {
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(filters)) {
+    if (v === undefined || v === null) continue;
+    params.set(k, String(v));
+  }
+  const s = params.toString();
+  return s ? `?${s}` : "";
 }
 
 export function createProfileApiClient(

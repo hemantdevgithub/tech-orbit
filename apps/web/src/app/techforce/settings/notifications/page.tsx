@@ -8,7 +8,15 @@ import { getNotificationClient } from "@/lib/api-client";
 
 const TYPE_LABELS: Record<NotificationType, string> = {
   REQUIREMENT_PUBLISHED: "New requirements matching your skills",
+  REQUIREMENT_ASSIGNED: "A CRM assigned you a requirement",
   SUBMISSION_RECEIVED: "New submissions for your requirements",
+  SUBMISSION_INVITED: "An SRM invited you to apply",
+  SUBMISSION_INVITE_ACCEPTED: "A candidate accepted your invitation",
+  SUBMISSION_INVITE_DECLINED: "A candidate declined your invitation",
+  PORTFOLIO_INVITATION: "An SRM invited you to their portfolio",
+  PORTFOLIO_REQUEST: "Someone requested to join your portfolio",
+  PORTFOLIO_APPROVED: "Portfolio membership approved",
+  MSME_ASSIGNMENT: "An SRM assigned you a requirement",
   INTERVIEW_SCHEDULED: "Interview scheduled",
   TIMESHEET_SUBMITTED: "Timesheets awaiting your approval",
   TIMESHEET_APPROVED: "Your timesheet was approved",
@@ -20,8 +28,15 @@ const TYPE_LABELS: Record<NotificationType, string> = {
 
 const TYPES: NotificationType[] = [
   "REQUIREMENT_PUBLISHED",
+  "REQUIREMENT_ASSIGNED",
   "SUBMISSION_RECEIVED",
-  "INTERVIEW_SCHEDULED",
+  "SUBMISSION_INVITED",
+  "SUBMISSION_INVITE_ACCEPTED",
+  "SUBMISSION_INVITE_DECLINED",
+  "PORTFOLIO_INVITATION",
+  "PORTFOLIO_REQUEST",
+  "PORTFOLIO_APPROVED",
+  "MSME_ASSIGNMENT",
   "TIMESHEET_SUBMITTED",
   "TIMESHEET_APPROVED",
   "INVOICE_GENERATED",

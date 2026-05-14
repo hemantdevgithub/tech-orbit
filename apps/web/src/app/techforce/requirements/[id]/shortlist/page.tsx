@@ -170,6 +170,7 @@ export default function ShortlistPage(): JSX.Element {
 
   const grouped = useMemo(() => {
     const map: Record<SubmissionStatus, SubmissionResponse[]> = {
+      INVITED: [],
       SUBMITTED: [],
       SCREENING: [],
       INTERVIEWING: [],
