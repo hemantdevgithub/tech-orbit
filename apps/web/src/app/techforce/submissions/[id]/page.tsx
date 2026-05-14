@@ -36,6 +36,7 @@ const STATUS_VARIANT: Record<
 > = {
   SUBMITTED: "mint",
   SCREENING: "cream",
+  INTERVIEWING: "cream", // Sprint 11: interviews hidden, enum value retained for legacy rows
   OFFER: "warning",
   PLACED: "success",
   REJECTED: "danger",

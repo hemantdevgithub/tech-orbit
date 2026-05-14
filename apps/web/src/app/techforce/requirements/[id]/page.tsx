@@ -28,6 +28,7 @@ const STATUS_VARIANT: Record<
 > = {
   DRAFT: "muted",
   OPEN: "mint",
+  INTERVIEWING: "cream", // Sprint 11: interviews hidden, enum value retained for legacy rows
   OFFER_EXTENDED: "warning",
   PLACED: "success",
   CLOSED: "muted",

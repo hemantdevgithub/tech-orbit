@@ -28,6 +28,7 @@ const LOCATION_OPTIONS: LocationType[] = ["ONSITE", "HYBRID", "REMOTE"];
 const STATUS_STYLES: Record<RequirementStatus, string> = {
   DRAFT:          "bg-surface-soft text-sage-500 border-surface-border",
   OPEN:           "bg-success/10 text-success border-success/30",
+  INTERVIEWING:   "bg-surface-soft text-sage-500 border-surface-border",
   OFFER_EXTENDED: "bg-warning/10 text-warning border-warning/30",
   PLACED:         "bg-success/20 text-success border-success/40",
   CLOSED:         "bg-surface-soft text-sage-500 border-surface-border",

@@ -172,6 +172,7 @@ export default function ShortlistPage(): JSX.Element {
     const map: Record<SubmissionStatus, SubmissionResponse[]> = {
       SUBMITTED: [],
       SCREENING: [],
+      INTERVIEWING: [],
       OFFER: [],
       PLACED: [],
       REJECTED: [],
