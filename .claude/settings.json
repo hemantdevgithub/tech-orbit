@@ -155,7 +155,10 @@
       "Bash(pnpm --filter @techorbit/profile exec prisma migrate deploy)",
       "Bash(pnpm --filter @techorbit/matching test -- --run)",
       "Bash(pnpm --filter @techorbit/requirement test -- --run)",
-      "Bash(pnpm --filter @techorbit/profile test -- --run)"
+      "Bash(pnpm --filter @techorbit/profile test -- --run)",
+      "Bash(perl -i -pe 's|JWT_ISSUER = \"techorbit-matching\"|JWT_ISSUER = \"techorbit-notification\"|' services/notification/src/lib/service-token.ts)",
+      "Bash(pnpm --filter @techorbit/notification test -- --run)",
+      "Bash(pnpm --filter @techorbit/identity test -- --run)"
     ],
     "additionalDirectories": [
       "/Users/hemant/techorbit/.git",

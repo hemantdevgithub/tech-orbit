@@ -10,6 +10,9 @@ const configSchema = z.object({
   DATABASE_URL: z.string(),
   RABBITMQ_URL: z.string().optional(),
   JWT_PUBLIC_KEY: z.string(),
+  // Sprint 12 — required for S2S fan-out queries (e.g. "list all CRMs").
+  JWT_PRIVATE_KEY: z.string().optional(),
+  IDENTITY_SVC_URL: z.string().optional(),
   ALLOWED_ORIGINS: z.string().optional(),
   SENDGRID_API_KEY: z.string().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),

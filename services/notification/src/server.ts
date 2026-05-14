@@ -11,6 +11,8 @@ import { createTwilioMock } from "./lib/twilio-mock.js";
 import { createNotificationService } from "./services/notification.service.js";
 import { notificationRoutes } from "./routes/notification.routes.js";
 import { registerNotificationConsumers } from "./consumers/event-consumers.js";
+import { createServiceTokenSigner } from "./lib/service-token.js";
+import { createIdentityApi } from "./lib/identity-api.js";
 
 const VERSION = process.env.npm_package_version ?? "0.0.0";
 
@@ -53,6 +55,17 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   await fastify.register(notificationRoutes, { notificationService });
 
+  // Sprint 12 — identity-svc S2S client for the CRM fan-out. Optional: when
+  // not configured, requirement.published.v1 logs a warning instead of
+  // fanning out (everything else still works).
+  const identityApi =
+    config.IDENTITY_SVC_URL && config.JWT_PRIVATE_KEY
+      ? createIdentityApi(
+          config.IDENTITY_SVC_URL,
+          createServiceTokenSigner(config.JWT_PRIVATE_KEY, config.SERVICE_NAME),
+        )
+      : null;
+
   if (config.RABBITMQ_URL) {
     const eventBus = createEventBus(
       { url: config.RABBITMQ_URL, exchange: "techorbit.events" },
@@ -62,6 +75,7 @@ export async function buildServer(): Promise<FastifyInstance> {
       await eventBus.connect();
       await registerNotificationConsumers(eventBus, {
         notificationService,
+        identityApi,
         logger: fastify.log,
       });
       fastify.log.info("Event bus connected, notification consumers registered");

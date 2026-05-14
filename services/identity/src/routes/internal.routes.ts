@@ -167,4 +167,38 @@ export async function internalIdentityRoutes(fastify: FastifyInstance): Promise<
       return reply.status(200).send({ value });
     },
   );
+
+  // Sprint 12 — GET /api/v1/internal/users/by-role?role=CRM
+  // Paginated list of users with an ACTIVE role membership. Used by
+  // notification-svc to fan out REQUIREMENT_PUBLISHED to every CRM.
+  fastify.get(
+    "/api/v1/internal/users/by-role",
+    { preHandler: [gate] },
+    async (request, reply) => {
+      const query = z
+        .object({
+          role: z.enum(["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "INTERVIEWER", "ADMIN"]),
+          cursor: z.string().uuid().optional(),
+          limit: z.coerce.number().int().min(1).max(500).default(200),
+        })
+        .parse(request.query);
+
+      const take = query.limit + 1;
+      const rows = await prisma.user.findMany({
+        where: {
+          status: "ACTIVE",
+          roles: { some: { roleType: query.role, status: "ACTIVE" } },
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        take,
+        cursor: query.cursor ? { id: query.cursor } : undefined,
+        skip: query.cursor ? 1 : 0,
+        select: { id: true, email: true, firstName: true, lastName: true },
+      });
+      const hasMore = rows.length > query.limit;
+      const data = hasMore ? rows.slice(0, query.limit) : rows;
+      const nextCursor = hasMore ? data[data.length - 1]?.id ?? null : null;
+      return reply.status(200).send({ data, nextCursor, hasMore });
+    },
+  );
 }
