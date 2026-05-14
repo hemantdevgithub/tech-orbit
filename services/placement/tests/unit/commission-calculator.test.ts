@@ -331,3 +331,123 @@ describe("projectHourly dollar math", () => {
     expect(projectHourly(interviewer, input).toFixed(2)).toBe("150.00");
   });
 });
+
+// ─── Sprint 12 — multi-CRM co-ownership ─────────────────────────────────────
+
+describe("Sprint 12 — multi-CRM co-ownership", () => {
+  const baseW2: CommissionInput = {
+    engagementType: "W2",
+    billRateUsd: d(120),
+    payRateUsd: d(90),
+    attributedCrmId: null,
+    attributedSrmId: "srm-1",
+    attributedMsmeId: null,
+    candidateId: "cand-1",
+    interviewerFees: [],
+  };
+
+  it("falls back to attributedCrmId when crmOwners is undefined", () => {
+    const input: CommissionInput = {
+      ...baseW2,
+      attributedCrmId: "crm-1",
+    };
+    const rules = calculateCommissionRules(input);
+    const crmRules = rules.filter((r) => r.slot === "CRM");
+    expect(crmRules).toHaveLength(1);
+    expect(crmRules[0]?.beneficiaryUserId).toBe("crm-1");
+    expect(crmRules[0]?.percentOfBillRate?.toString()).toBe("0.08");
+  });
+
+  it("splits 8% evenly across two co-owners (each gets 4%)", () => {
+    const input: CommissionInput = {
+      ...baseW2,
+      crmOwners: [
+        { crmUserId: "crm-a", share: d("0.5") },
+        { crmUserId: "crm-b", share: d("0.5") },
+      ],
+    };
+    const rules = calculateCommissionRules(input);
+    const crmRules = rules.filter((r) => r.slot === "CRM");
+    expect(crmRules).toHaveLength(2);
+    expect(crmRules[0]?.beneficiaryUserId).toBe("crm-a");
+    expect(crmRules[1]?.beneficiaryUserId).toBe("crm-b");
+    expect(crmRules[0]?.percentOfBillRate?.toString()).toBe("0.04");
+    expect(crmRules[1]?.percentOfBillRate?.toString()).toBe("0.04");
+    // Aggregate CRM cost still 8% of bill rate
+    const totalCrm = crmRules.reduce(
+      (acc, r) => acc.plus(r.percentOfBillRate ?? d(0)),
+      d(0),
+    );
+    expect(totalCrm.toString()).toBe("0.08");
+  });
+
+  it("splits 8% across three co-owners with 1/3 + 1/3 + 1/3", () => {
+    const oneThird = d(1).div(3);
+    const input: CommissionInput = {
+      ...baseW2,
+      crmOwners: [
+        { crmUserId: "crm-a", share: oneThird },
+        { crmUserId: "crm-b", share: oneThird },
+        { crmUserId: "crm-c", share: oneThird },
+      ],
+    };
+    const rules = calculateCommissionRules(input);
+    const crmRules = rules.filter((r) => r.slot === "CRM");
+    expect(crmRules).toHaveLength(3);
+    // Each gets ~0.02666... ≈ 8% / 3
+    const totalCrm = crmRules.reduce(
+      (acc, r) => acc.plus(r.percentOfBillRate ?? d(0)),
+      d(0),
+    );
+    expect(totalCrm.toFixed(4)).toBe("0.0800");
+  });
+
+  it("crmOwners takes precedence over attributedCrmId when both provided", () => {
+    const input: CommissionInput = {
+      ...baseW2,
+      attributedCrmId: "legacy-crm",
+      crmOwners: [{ crmUserId: "owner-1", share: d(1) }],
+    };
+    const rules = calculateCommissionRules(input);
+    const crmRules = rules.filter((r) => r.slot === "CRM");
+    expect(crmRules).toHaveLength(1);
+    expect(crmRules[0]?.beneficiaryUserId).toBe("owner-1");
+  });
+
+  it("empty crmOwners array falls back to attributedCrmId", () => {
+    const input: CommissionInput = {
+      ...baseW2,
+      attributedCrmId: "fallback-crm",
+      crmOwners: [],
+    };
+    const rules = calculateCommissionRules(input);
+    const crmRules = rules.filter((r) => r.slot === "CRM");
+    expect(crmRules).toHaveLength(1);
+    expect(crmRules[0]?.beneficiaryUserId).toBe("fallback-crm");
+  });
+
+  it("residual math accounts for co-owned CRM the same as single-CRM", () => {
+    // W2 platform residual = bill_rate - candidate(75%) - CRM(8% total) - SRM(5%) = 12%
+    const inputSingle: CommissionInput = {
+      ...baseW2,
+      attributedCrmId: "crm-solo",
+    };
+    const inputCoOwned: CommissionInput = {
+      ...baseW2,
+      crmOwners: [
+        { crmUserId: "crm-a", share: d("0.5") },
+        { crmUserId: "crm-b", share: d("0.5") },
+      ],
+    };
+
+    const platformSolo = calculateCommissionRules(inputSingle).find(
+      (r) => r.slot === "PLATFORM",
+    )!;
+    const platformCo = calculateCommissionRules(inputCoOwned).find(
+      (r) => r.slot === "PLATFORM",
+    )!;
+    expect(projectHourly(platformSolo, inputSingle).toFixed(2)).toBe(
+      projectHourly(platformCo, inputCoOwned).toFixed(2),
+    );
+  });
+});

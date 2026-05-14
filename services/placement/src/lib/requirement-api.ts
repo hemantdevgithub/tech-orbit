@@ -1,11 +1,22 @@
 import { InternalError } from "@techorbit/errors";
 import type { ServiceTokenSigner } from "./service-token.js";
 
+export type CrmOwnerSummary = {
+  crmUserId: string;
+  isPrimary: boolean;
+  commissionShare: number;
+  acceptedAt: string;
+};
+
 export type RequirementSummary = {
   id: string;
   customerCompanyId: string;
   createdByUserId: string;
   attributedCrmId: string | null;
+  // Sprint 12 — co-ownership. When non-empty, placement-svc splits the CRM
+  // slot proportionally; when empty, falls back to the legacy single-CRM
+  // attributedCrmId path.
+  crmOwners?: CrmOwnerSummary[];
   title: string;
   status: string;
   locationType: string;

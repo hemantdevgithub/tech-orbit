@@ -24,11 +24,21 @@ export type InterviewerFee = {
   feeUsd: Decimal;
 };
 
+// Sprint 12 — co-owning CRM. Each owner gets `share` of the CRM commission
+// slot (where share is 0..1 and sums to 1.0 across owners). When `crmOwners`
+// is present and non-empty, it takes precedence over `attributedCrmId`.
+export type CrmOwnerInput = {
+  crmUserId: string;
+  share: Decimal;
+};
+
 export type CommissionInput = {
   engagementType: EngagementType;
   billRateUsd: Decimal;
   payRateUsd: Decimal | null;
   attributedCrmId: string | null;
+  // Sprint 12 — present when the requirement has co-owning CRMs.
+  crmOwners?: CrmOwnerInput[];
   attributedSrmId: string | null;
   attributedMsmeId: string | null;
   candidateId: string;
@@ -67,7 +77,28 @@ export function calculateCommissionRules(
 
   const rules: CommissionRuleDraft[] = [];
 
-  if (input.attributedCrmId) {
+  // Sprint 12 — multi-CRM co-ownership takes precedence over the legacy
+  // single-CRM attributedCrmId path. Each co-owner gets `8% * their_share`
+  // of the bill rate; their_share sums to 1.0, so aggregate CRM cost stays
+  // at the existing 8% weight (residual math unchanged below).
+  const owners = input.crmOwners ?? [];
+  if (owners.length > 0) {
+    for (const owner of owners) {
+      rules.push({
+        slot: "CRM",
+        beneficiaryUserId: owner.crmUserId,
+        beneficiaryMsmeId: null,
+        calculation: "PERCENT_OF_BILL",
+        percentOfBillRate: COMMISSION_WEIGHTS.CRM.mul(owner.share),
+        flatFeeUsd: null,
+        interviewId: null,
+        notes:
+          owners.length === 1
+            ? "CRM attribution commission (8% of bill rate)"
+            : `CRM co-ownership commission (8% × ${owner.share.toFixed(4)} share of ${owners.length} co-owners)`,
+      });
+    }
+  } else if (input.attributedCrmId) {
     rules.push({
       slot: "CRM",
       beneficiaryUserId: input.attributedCrmId,
@@ -115,7 +146,10 @@ export function calculateCommissionRules(
     // Fixed shares check: candidate + CRM + SRM must be <= 1.0, or there's
     // nothing left for the platform.  We don't cap platform's residual at
     // 0 silently — that would hide a bad deal.
-    const crmShare = input.attributedCrmId ? COMMISSION_WEIGHTS.CRM : new Decimal(0);
+    // Sprint 12 — co-owning CRMs share the same 8% weight in aggregate,
+    // so the cap math is unchanged whether there's one CRM or N.
+    const hasCrm = owners.length > 0 || input.attributedCrmId !== null;
+    const crmShare = hasCrm ? COMMISSION_WEIGHTS.CRM : new Decimal(0);
     const srmShare = input.attributedSrmId ? COMMISSION_WEIGHTS.SRM : new Decimal(0);
     const fixedTotal = candidateShare.plus(crmShare).plus(srmShare);
     if (fixedTotal.gte(1)) {

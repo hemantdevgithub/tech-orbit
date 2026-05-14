@@ -19,7 +19,9 @@ export async function internalRequirementRoutes(
     { preHandler: [gate] },
     async (request, reply) => {
       const { id } = IdParams.parse(request.params);
-      const req = await requirementRepository.findByIdRaw(id);
+      // Sprint 12 — include crmOwners so placement-svc can split the CRM
+      // commission slot across co-owners.
+      const req = await requirementRepository.findByIdWithOwners(id);
       if (!req) throw new NotFoundError("Requirement not found");
       return reply.status(200).send({
         id: req.id,
@@ -27,6 +29,12 @@ export async function internalRequirementRoutes(
         createdByUserId: req.createdByUserId,
         attributedCrmId: req.attributedCrmId,
         assignedSrmId: req.assignedSrmId,
+        crmOwners: req.crmOwners.map((o) => ({
+          crmUserId: o.crmUserId,
+          isPrimary: o.isPrimary,
+          commissionShare: Number(o.commissionShare),
+          acceptedAt: o.acceptedAt.toISOString(),
+        })),
         title: req.title,
         description: req.description,
         techStack: req.techStack,

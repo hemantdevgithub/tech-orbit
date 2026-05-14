@@ -107,11 +107,19 @@ export function createPlacementService(deps: Deps) {
         }));
 
       // 4. Build the commission input.
+      // Sprint 12 — when the requirement has co-owning CRMs, pass them through
+      // so the calculator splits the CRM slot proportionally. Falls back to
+      // the legacy single-CRM attributedCrmId path when crmOwners is empty.
+      const crmOwners = (requirement.crmOwners ?? []).map((o) => ({
+        crmUserId: o.crmUserId,
+        share: new Decimal(o.commissionShare),
+      }));
       const input: CommissionInput = {
         engagementType: body.engagementType,
         billRateUsd: new Decimal(body.billRateUsd),
         payRateUsd: body.payRateUsd !== undefined ? new Decimal(body.payRateUsd) : null,
         attributedCrmId: requirement.attributedCrmId,
+        crmOwners: crmOwners.length > 0 ? crmOwners : undefined,
         attributedSrmId: submission.attributedSrmId,
         attributedMsmeId: body.engagementType === "C2C" ? submission.attributedMsmeId : null,
         candidateId: submission.candidateId,
@@ -140,7 +148,14 @@ export function createPlacementService(deps: Deps) {
           payRateUsd: body.payRateUsd ?? null,
           startDate: body.startDate,
           endDate: body.endDate,
-          attributedCrmId: requirement.attributedCrmId,
+          attributedCrmId:
+            (requirement.crmOwners ?? []).find((o) => o.isPrimary)?.crmUserId ??
+            requirement.attributedCrmId,
+          // Sprint 12 — additional co-owners (excluding primary) flow downstream
+          // alongside the legacy single attributedCrmId for backwards-compat.
+          coOwnerCrmIds: (requirement.crmOwners ?? [])
+            .filter((o) => !o.isPrimary)
+            .map((o) => o.crmUserId),
           attributedSrmId: submission.attributedSrmId,
           attributedMsmeId: body.engagementType === "C2C" ? submission.attributedMsmeId : null,
           interviewerIds: Array.from(new Set(interviewerFees.map((f) => f.interviewerUserId))),
@@ -169,7 +184,12 @@ export function createPlacementService(deps: Deps) {
           },
           {
             customerCompanyId: requirement.customerCompanyId,
-            attributedCrmId: requirement.attributedCrmId,
+            // Sprint 12 — value chain stores the primary co-owning CRM in the
+            // legacy attributedCrmId field; non-primary co-owners are visible
+            // through their CRM-slot commission rules (beneficiaryUserId).
+            attributedCrmId:
+              (requirement.crmOwners ?? []).find((o) => o.isPrimary)?.crmUserId ??
+              requirement.attributedCrmId,
             attributedSrmId: submission.attributedSrmId,
             attributedMsmeId:
               body.engagementType === "C2C" ? submission.attributedMsmeId : null,
