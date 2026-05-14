@@ -217,3 +217,50 @@ model InterviewerProfile {
   @@index([status])
   @@map("profile_interviewer")
 }
+
+// ─── Sprint 12 — SRM portfolio (two-sided handshake) ─────────────────────────
+
+enum PortfolioMembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PortfolioInitiator {
+  SRM     // SRM invited the member
+  MEMBER  // candidate / MSME requested to join the SRM's roster
+}
+
+enum PortfolioMemberType {
+  CANDIDATE
+  MSME
+}
+
+// A single SRM ↔ {candidate | MSME} relationship row. Either party can
+// initiate by creating a PENDING row; the OTHER party approves or rejects.
+// The unique (srmUserId, memberUserId, memberType) constraint prevents
+// duplicate active requests for the same pair.
+model SrmPortfolioMembership {
+  id                String                    @id @default(uuid())
+  srmUserId         String                    @map("srm_user_id")
+  // For CANDIDATE: candidate's userId. For MSME: msme primary userId.
+  memberUserId      String                    @map("member_user_id")
+  memberType        PortfolioMemberType       @map("member_type")
+  status            PortfolioMembershipStatus @default(PENDING)
+  initiatedBy       PortfolioInitiator        @map("initiated_by")
+  initiatedByUserId String                    @map("initiated_by_user_id")
+
+  approvedAt        DateTime? @map("approved_at")
+  approvedByUserId  String?   @map("approved_by_user_id")
+  rejectedAt        DateTime? @map("rejected_at")
+  rejectedByUserId  String?   @map("rejected_by_user_id")
+  rejectionReason   String?   @map("rejection_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([srmUserId, memberUserId, memberType])
+  @@index([srmUserId, status])
+  @@index([memberUserId, status])
+  @@map("srm_portfolio_membership")
+}

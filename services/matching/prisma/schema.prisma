@@ -28,6 +28,16 @@ model Submission {
   withdrawnReason   String?          @map("withdrawn_reason")
   rejectedAt        DateTime?        @map("rejected_at")
   rejectionReason   String?          @map("rejection_reason")
+
+  // Sprint 12 — invite-to-submit flow: SRM invites a candidate from their
+  // portfolio; the candidate accepts (INVITED → SUBMITTED) or declines
+  // (INVITED → WITHDRAWN). When initiated this way the submission is created
+  // with status INVITED and these fields populated.
+  invitedAt         DateTime? @map("invited_at")
+  invitedBySrmId    String?   @map("invited_by_srm_id")
+  inviteAcceptedAt  DateTime? @map("invite_accepted_at")
+  inviteDeclinedAt  DateTime? @map("invite_declined_at")
+
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
@@ -37,6 +47,7 @@ model Submission {
   @@index([candidateId])
   @@index([attributedSrmId])
   @@index([attributedMsmeId])
+  @@index([invitedBySrmId])
   @@map("submission")
   @@schema("matching")
 }
@@ -97,6 +108,7 @@ enum SubmitterRole {
 }
 
 enum SubmissionStatus {
+  INVITED
   SUBMITTED
   SCREENING
   INTERVIEWING

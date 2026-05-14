@@ -144,6 +144,7 @@ export const SubmitterRole = z.enum(["CANDIDATE_SELF", "SRM", "MSME"]);
 export type SubmitterRole = z.infer<typeof SubmitterRole>;
 
 export const SubmissionStatus = z.enum([
+  "INVITED",
   "SUBMITTED",
   "SCREENING",
   "INTERVIEWING",
@@ -245,7 +246,15 @@ export type ThreadContextType = z.infer<typeof ThreadContextType>;
 
 export const NotificationType = z.enum([
   "REQUIREMENT_PUBLISHED",
+  "REQUIREMENT_ASSIGNED",
   "SUBMISSION_RECEIVED",
+  "SUBMISSION_INVITED",
+  "SUBMISSION_INVITE_ACCEPTED",
+  "SUBMISSION_INVITE_DECLINED",
+  "PORTFOLIO_INVITATION",
+  "PORTFOLIO_REQUEST",
+  "PORTFOLIO_APPROVED",
+  "MSME_ASSIGNMENT",
   "INTERVIEW_SCHEDULED",
   "TIMESHEET_SUBMITTED",
   "TIMESHEET_APPROVED",
@@ -255,6 +264,16 @@ export const NotificationType = z.enum([
   "RATING_RECEIVED",
 ]);
 export type NotificationType = z.infer<typeof NotificationType>;
+
+// Sprint 12 — SRM portfolio (two-sided handshake) enums
+export const PortfolioMembershipStatus = z.enum(["PENDING", "APPROVED", "REJECTED"]);
+export type PortfolioMembershipStatus = z.infer<typeof PortfolioMembershipStatus>;
+
+export const PortfolioInitiator = z.enum(["SRM", "MEMBER"]);
+export type PortfolioInitiator = z.infer<typeof PortfolioInitiator>;
+
+export const PortfolioMemberType = z.enum(["CANDIDATE", "MSME"]);
+export type PortfolioMemberType = z.infer<typeof PortfolioMemberType>;
 
 export const RaterRole = z.enum(["CUSTOMER", "CANDIDATE"]);
 export type RaterRole = z.infer<typeof RaterRole>;

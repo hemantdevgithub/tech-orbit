@@ -37,16 +37,44 @@ model Requirement {
   publishedAt        DateTime?        @map("published_at")
   closedAt           DateTime?        @map("closed_at")
   closedReason       String?          @map("closed_reason")
+
+  // Sprint 12 — SRM assignment by an owning CRM
+  assignedSrmId      String?   @map("assigned_srm_id")
+  assignedSrmAt      DateTime? @map("assigned_srm_at")
+  assignedSrmByCrmId String?   @map("assigned_srm_by_crm_id")
+
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt       @map("updated_at")
 
   crmAttributionRequests CrmAttributionRequest[]
+  crmOwners              RequirementCrmOwner[]
 
   @@index([status, publishedAt])
   @@index([customerCompanyId])
   @@index([createdByUserId])
   @@index([attributedCrmId])
+  @@index([assignedSrmId])
   @@map("requirement")
+  @@schema("requirement")
+}
+
+// Sprint 12 — multi-CRM co-ownership of a requirement.
+// First CRM to accept = primary. commissionShare = 1/N by default and is
+// recomputed by the placement-svc commission calculator at placement time.
+model RequirementCrmOwner {
+  id              String   @id @default(uuid())
+  requirementId   String   @map("requirement_id")
+  crmUserId       String   @map("crm_user_id")
+  acceptedAt      DateTime @default(now()) @map("accepted_at")
+  isPrimary       Boolean  @default(false) @map("is_primary")
+  commissionShare Decimal  @default(0) @map("commission_share") @db.Decimal(5, 4)
+
+  requirement Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  @@unique([requirementId, crmUserId])
+  @@index([crmUserId])
+  @@index([requirementId])
+  @@map("requirement_crm_owner")
   @@schema("requirement")
 }
 
