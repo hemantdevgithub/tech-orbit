@@ -14,7 +14,7 @@ import {
 export const metadata = {
   title: "TechOrbit — Empowering the future of tech work",
   description:
-    "TechOrbit is the platform for IT staffing — transparent commission splits, owned payroll, verified vendors, and in-platform delivery for customers, recruiters, and talent.",
+    "TechOrbit is the platform for the technology workforce — transparent commission splits, owned payroll, verified vendors, and in-platform delivery for customers, recruiters, and talent.",
 };
 
 export default function TechOrbitHomepage(): JSX.Element {
@@ -121,7 +121,7 @@ function Hero(): JSX.Element {
         <div className="lg:col-span-7">
           <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-100 text-forest-700 text-xs font-semibold uppercase tracking-wider mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-success" />
-            Now serving US IT staffing marketplaces
+            Now powering the technology workforce
           </p>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight text-forest-900">
             Empowering the future
@@ -276,8 +276,8 @@ function ProductSelector(): JSX.Element {
                 </span>
               </div>
               <p className="text-sage-600 mb-6">
-                IT staffing marketplace with transparent commission splits.
-                Connect customers with verified tech talent end-to-end.
+                The technology talent marketplace with transparent commission
+                splits. Connect customers with verified tech talent end-to-end.
               </p>
               <div className="inline-flex items-center text-forest-700 font-semibold text-sm group-hover:text-forest-900">
                 Enter TechForce
