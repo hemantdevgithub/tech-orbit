@@ -44,8 +44,8 @@ type NavItem = { label: string; href: string; Icon: IconComp; roles: RoleType[] 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/techforce/dashboard", Icon: HomeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
   // Sprint 12 — Opportunity Portal is the CRM/SRM entry for the new workflow.
-  { label: "Opportunity Portal", href: "/techforce/opportunity-portal", Icon: BriefcaseIcon, roles: ["CRM", "SRM"] },
-  { label: "Requirements", href: "/techforce/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE", "MSME"] },
+  { label: "Opportunity Portal", href: "/techforce/opportunity-portal", Icon: BriefcaseIcon, roles: ["CRM", "SRM", "MSME"] },
+  { label: "Requirements", href: "/techforce/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE"] },
   // Sprint 12 — SRM roster (two-sided portfolio).
   { label: "Roster", href: "/techforce/roster", Icon: UsersIcon, roles: ["SRM"] },
   // Sprint 12 — Candidate invitations inbox.

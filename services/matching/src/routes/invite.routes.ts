@@ -61,7 +61,8 @@ export async function inviteRoutes(
   );
 
   // POST /api/v1/requirements/:id/assign-to-msme — SRM-only
-  // Emits requirement.assigned-msme.v1; notification-svc fans out to the MSME.
+  // Persists a RequirementMsmeAssignment row and emits
+  // requirement.assigned-msme.v1; notification-svc fans out to the MSME.
   fastify.post(
     "/api/v1/requirements/:id/assign-to-msme",
     { preHandler: [fastify.authenticate] },
@@ -72,6 +73,39 @@ export async function inviteRoutes(
         request.auth,
         id,
         body,
+      );
+      return reply.status(200).send(response);
+    },
+  );
+
+  // GET /api/v1/me/msme-assignments — MSME's inbox
+  fastify.get(
+    "/api/v1/me/msme-assignments",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const query = z
+        .object({
+          status: z.enum(["ACTIVE", "SUBMITTED", "DECLINED", "EXPIRED"]).optional(),
+        })
+        .parse(request.query);
+      const data = await submissionService.listMyMsmeAssignments(request.auth, query);
+      return reply.status(200).send({ data });
+    },
+  );
+
+  // POST /api/v1/me/msme-assignments/:id/decline — MSME declines
+  fastify.post(
+    "/api/v1/me/msme-assignments/:id/decline",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = IdParams.parse(request.params);
+      const body = z
+        .object({ reason: z.string().min(1).max(500) })
+        .parse(request.body);
+      const response = await submissionService.declineMsmeAssignment(
+        request.auth,
+        id,
+        body.reason,
       );
       return reply.status(200).send(response);
     },

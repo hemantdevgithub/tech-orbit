@@ -502,9 +502,41 @@ export function createSubmissionService(deps: SubmissionServiceDeps) {
           throw new ForbiddenError("MSME is not in your approved portfolio");
         }
       }
-      // Emit-only flow — no DB row written. Idempotency is handled by the
-      // notification-svc ProcessedEvent dedupe.
+      // Sprint 12 — persist the assignment so the MSME has a stable inbox,
+      // and emit the event so notification-svc fans out MSME_ASSIGNMENT.
+      // Idempotent: re-assigning the same MSME twice is a no-op (we update
+      // updatedAt + the note, but skip the event).
       await prisma.$transaction(async (tx) => {
+        const existing = await tx.requirementMsmeAssignment.findUnique({
+          where: {
+            requirementId_msmePrimaryUserId: {
+              requirementId,
+              msmePrimaryUserId: body.msmePrimaryUserId,
+            },
+          },
+        });
+        if (existing) {
+          // Reassignment from a different SRM, or same SRM updating the note —
+          // just bump updatedAt + note. Don't emit a fresh notification.
+          await tx.requirementMsmeAssignment.update({
+            where: { id: existing.id },
+            data: {
+              note: body.note ?? existing.note,
+              assignedBySrmId: ctx.userId,
+              status: existing.status === "DECLINED" ? "ACTIVE" : existing.status,
+            },
+          });
+          return;
+        }
+        await tx.requirementMsmeAssignment.create({
+          data: {
+            requirementId,
+            msmePrimaryUserId: body.msmePrimaryUserId,
+            assignedBySrmId: ctx.userId,
+            note: body.note ?? null,
+            status: "ACTIVE",
+          },
+        });
         const event = buildEvent("requirement.assigned-msme.v1", {
           requirementId,
           msmePrimaryUserId: body.msmePrimaryUserId,
@@ -512,6 +544,64 @@ export function createSubmissionService(deps: SubmissionServiceDeps) {
           requirementTitle: requirement.title,
         });
         await enqueueEvent(tx, event, requirementId);
+      });
+      return { ok: true };
+    },
+
+    // Sprint 12 — list a MSME's current requirement assignments. Optional
+    // status filter; defaults to ACTIVE.
+    async listMyMsmeAssignments(
+      ctx: AuthContext,
+      filters: { status?: "ACTIVE" | "SUBMITTED" | "DECLINED" | "EXPIRED" } = {},
+    ): Promise<Array<{
+      id: string;
+      requirementId: string;
+      assignedBySrmId: string;
+      note: string | null;
+      status: "ACTIVE" | "SUBMITTED" | "DECLINED" | "EXPIRED";
+      createdAt: string;
+    }>> {
+      if (!ctx.roles.includes("MSME") && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError("Only MSMEs can list their assignments");
+      }
+      const rows = await prisma.requirementMsmeAssignment.findMany({
+        where: {
+          msmePrimaryUserId: ctx.userId,
+          ...(filters.status ? { status: filters.status } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return rows.map((r) => ({
+        id: r.id,
+        requirementId: r.requirementId,
+        assignedBySrmId: r.assignedBySrmId,
+        note: r.note,
+        status: r.status,
+        createdAt: r.createdAt.toISOString(),
+      }));
+    },
+
+    async declineMsmeAssignment(
+      ctx: AuthContext,
+      id: string,
+      reason: string,
+    ): Promise<{ ok: true }> {
+      const row = await prisma.requirementMsmeAssignment.findUnique({
+        where: { id },
+      });
+      if (!row) throw new NotFoundError("Assignment not found");
+      if (row.msmePrimaryUserId !== ctx.userId && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError(
+          "Only the assigned MSME can decline this assignment",
+        );
+      }
+      await prisma.requirementMsmeAssignment.update({
+        where: { id },
+        data: {
+          status: "DECLINED",
+          declinedAt: new Date(),
+          declineReason: reason,
+        },
       });
       return { ok: true };
     },

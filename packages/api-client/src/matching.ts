@@ -2,8 +2,11 @@ import type { ApiClient } from "./client.js";
 import type {
   AssignMsme,
   DeclineInvite,
+  DeclineMsmeAssignment,
   InviteCandidate,
   MatchingSignalResponse,
+  MsmeAssignmentListResponse,
+  MsmeAssignmentStatus,
   SubmissionFilter,
   SubmissionListResponse,
   SubmissionRequest,
@@ -84,6 +87,23 @@ export class MatchingApiClient {
   ): Promise<{ ok: true }> {
     return this.client.post(
       `/api/v1/requirements/${requirementId}/assign-to-msme`,
+      data,
+    );
+  }
+
+  listMyMsmeAssignments(filters?: {
+    status?: MsmeAssignmentStatus;
+  }): Promise<MsmeAssignmentListResponse> {
+    const search = filters?.status ? `?status=${filters.status}` : "";
+    return this.client.get(`/api/v1/me/msme-assignments${search}`);
+  }
+
+  declineMsmeAssignment(
+    id: string,
+    data: DeclineMsmeAssignment,
+  ): Promise<{ ok: true }> {
+    return this.client.post(
+      `/api/v1/me/msme-assignments/${id}/decline`,
       data,
     );
   }

@@ -3,14 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge, Button, Card, CardBody } from "@techorbit/ui";
-import type { RequirementResponse } from "@techorbit/types";
+import type {
+  MsmeAssignmentResponse,
+  RequirementResponse,
+} from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
-import { getRequirementClient } from "@/lib/api-client";
+import { getMatchingClient, getRequirementClient } from "@/lib/api-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ArrowRightIcon } from "@/components/icons";
 
-type Tab = "available" | "owned" | "assigned";
+type Tab = "available" | "owned" | "assigned" | "msme";
 
 // Sprint 12 — Opportunity Portal: role-aware entry point for CRMs and SRMs.
 // CRM: Available (unowned OPEN requirements) + Owned (where they're a
@@ -23,13 +26,21 @@ export default function OpportunityPortalPage(): JSX.Element {
     .map((r) => r.roleType);
   const isCrm = roles.includes("CRM");
   const isSrm = roles.includes("SRM");
+  const isMsme = roles.includes("MSME");
   const isAdmin = roles.includes("ADMIN");
 
-  const defaultTab: Tab = isCrm ? "available" : isSrm ? "assigned" : "available";
+  const defaultTab: Tab = isCrm
+    ? "available"
+    : isSrm
+      ? "assigned"
+      : isMsme
+        ? "msme"
+        : "available";
   const [tab, setTab] = useState<Tab>(defaultTab);
   const [available, setAvailable] = useState<RequirementResponse[]>([]);
   const [owned, setOwned] = useState<RequirementResponse[]>([]);
   const [assigned, setAssigned] = useState<RequirementResponse[]>([]);
+  const [msmeAssignments, setMsmeAssignments] = useState<MsmeAssignmentResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState<string | null>(null);
@@ -41,7 +52,7 @@ export default function OpportunityPortalPage(): JSX.Element {
     setError(null);
     const client = getRequirementClient();
     try {
-      const [a, o, s] = await Promise.all([
+      const [a, o, s, m] = await Promise.all([
         isCrm || isAdmin
           ? client.list({ available: true, limit: 50 })
           : Promise.resolve({ data: [], nextCursor: null, hasMore: false }),
@@ -51,16 +62,20 @@ export default function OpportunityPortalPage(): JSX.Element {
         isSrm || isAdmin
           ? client.list({ assignedSrmId: user.id, limit: 50 })
           : Promise.resolve({ data: [], nextCursor: null, hasMore: false }),
+        isMsme || isAdmin
+          ? getMatchingClient().listMyMsmeAssignments({ status: "ACTIVE" })
+          : Promise.resolve({ data: [] }),
       ]);
       setAvailable(a.data);
       setOwned(o.data);
       setAssigned(s.data);
+      setMsmeAssignments(m.data);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load");
     } finally {
       setLoading(false);
     }
-  }, [user, isCrm, isSrm, isAdmin]);
+  }, [user, isCrm, isSrm, isMsme, isAdmin]);
 
   useEffect(() => {
     void load();
@@ -140,6 +155,14 @@ export default function OpportunityPortalPage(): JSX.Element {
             count={assigned.length}
           />
         )}
+        {(isMsme || isAdmin) && (
+          <TabButton
+            active={tab === "msme"}
+            onClick={() => setTab("msme")}
+            label="MSME assignments"
+            count={msmeAssignments.length}
+          />
+        )}
       </div>
 
       {loading ? (
@@ -152,8 +175,10 @@ export default function OpportunityPortalPage(): JSX.Element {
         />
       ) : tab === "owned" ? (
         <OwnedList items={owned} reload={load} />
-      ) : (
+      ) : tab === "assigned" ? (
         <AssignedList items={assigned} />
+      ) : (
+        <MsmeAssignmentList items={msmeAssignments} reload={load} />
       )}
     </div>
   );
@@ -377,6 +402,99 @@ function AssignedList({ items }: { items: RequirementResponse[] }) {
             >
               Invite candidates <ArrowRightIcon size={14} />
             </Link>
+          </CardBody>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// Sprint 12 — MSME's inbox of requirements that an SRM has asked them to
+// source for. From here they jump into the requirement detail to submit a
+// bench consultant, or decline the assignment.
+function MsmeAssignmentList({
+  items,
+  reload,
+}: {
+  items: MsmeAssignmentResponse[];
+  reload: () => void | Promise<void>;
+}) {
+  const [working, setWorking] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function decline(id: string) {
+    const reason = window.prompt("Reason for declining?")?.trim();
+    if (!reason) return;
+    setWorking(id);
+    setError(null);
+    try {
+      await getMatchingClient().declineMsmeAssignment(id, { reason });
+      await reload();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to decline");
+    } finally {
+      setWorking(null);
+    }
+  }
+
+  if (items.length === 0) {
+    return (
+      <Card>
+        <CardBody>
+          <p className="text-sage-500 text-sm">
+            No active assignments. When an SRM asks you to source for a
+            requirement, it'll appear here.
+          </p>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {error && (
+        <div className="mb-2 p-3 rounded-lg bg-danger/10 text-danger text-sm border border-danger/20">
+          {error}
+        </div>
+      )}
+      {items.map((a) => (
+        <Card
+          key={a.id}
+          className="hover:border-forest-300 transition-colors motion-reduce:transition-none"
+        >
+          <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0 space-y-1">
+              <Link
+                href={`/techforce/requirements/${a.requirementId}`}
+                className="font-semibold text-forest-900 text-sm hover:text-forest-700 font-mono"
+              >
+                Requirement {a.requirementId.slice(0, 8)}…
+              </Link>
+              <p className="text-xs text-sage-500">
+                Assigned by SRM {a.assignedBySrmId.slice(0, 8)}… ·{" "}
+                {new Date(a.createdAt).toLocaleDateString()}
+              </p>
+              {a.note && (
+                <p className="text-xs text-sage-700 italic line-clamp-2">"{a.note}"</p>
+              )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <Badge variant="success">ACTIVE</Badge>
+              <Link
+                href={`/techforce/requirements/${a.requirementId}/submit`}
+                className="px-3 py-1.5 rounded-lg bg-forest-800 text-cream-100 text-xs font-semibold hover:bg-forest-700 transition-colors motion-reduce:transition-none"
+              >
+                Submit consultant
+              </Link>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => decline(a.id)}
+                disabled={working === a.id}
+              >
+                Decline
+              </Button>
+            </div>
           </CardBody>
         </Card>
       ))}

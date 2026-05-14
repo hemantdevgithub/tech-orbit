@@ -79,13 +79,43 @@ export type DeclineInvite = z.infer<typeof DeclineInviteSchema>;
 
 // Sprint 12 — SRM assigns an MSME to source a bench consultant for a requirement.
 // Notifies the MSME (MSME_ASSIGNMENT); MSME then submits via the regular
-// POST /api/v1/submissions flow when they pick a bench candidate. No
-// Submission row is created at assignment time.
+// POST /api/v1/submissions flow when they pick a bench candidate. A
+// RequirementMsmeAssignment row is persisted so the MSME has a stable inbox.
 export const AssignMsmeSchema = z.object({
   msmePrimaryUserId: z.string().uuid(),
   note: z.string().max(500).optional(),
 });
 export type AssignMsme = z.infer<typeof AssignMsmeSchema>;
+
+export const MsmeAssignmentStatus = z.enum([
+  "ACTIVE",
+  "SUBMITTED",
+  "DECLINED",
+  "EXPIRED",
+]);
+export type MsmeAssignmentStatus = z.infer<typeof MsmeAssignmentStatus>;
+
+export const MsmeAssignmentResponseSchema = z.object({
+  id: z.string().uuid(),
+  requirementId: z.string().uuid(),
+  assignedBySrmId: z.string().uuid(),
+  note: z.string().nullable(),
+  status: MsmeAssignmentStatus,
+  createdAt: z.string().datetime(),
+});
+export type MsmeAssignmentResponse = z.infer<typeof MsmeAssignmentResponseSchema>;
+
+export const MsmeAssignmentListResponseSchema = z.object({
+  data: z.array(MsmeAssignmentResponseSchema),
+});
+export type MsmeAssignmentListResponse = z.infer<
+  typeof MsmeAssignmentListResponseSchema
+>;
+
+export const DeclineMsmeAssignmentSchema = z.object({
+  reason: z.string().min(1).max(500),
+});
+export type DeclineMsmeAssignment = z.infer<typeof DeclineMsmeAssignmentSchema>;
 
 // Sprint 12 — events
 const EventEnvelope = z.object({

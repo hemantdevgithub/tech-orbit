@@ -89,7 +89,7 @@ export function MsmeDashboard() {
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Portfolio" subtitle="Earnings & projections" href="/techforce/payouts" />
-          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Opportunity Portal" subtitle="Roles, levels, status" href="/techforce/requirements" />
+          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Opportunity Portal" subtitle="SRM assignments" href="/techforce/opportunity-portal" />
           <WorkspaceCard icon={<GitBranchIcon size={18} />} title="Value Chain" subtitle="Capped earnings" href="/techforce/placements" />
           <WorkspaceCard icon={<UsersIcon size={18} />} title="Team" subtitle="Members and roles" href="/techforce/messages" />
           <WorkspaceCard icon={<AwardIcon size={18} />} title="Perform" subtitle="Levels & calendar" href="/techforce/placements" />

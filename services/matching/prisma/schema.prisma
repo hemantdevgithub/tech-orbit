@@ -120,6 +120,39 @@ enum SubmissionStatus {
   @@schema("matching")
 }
 
+// Sprint 12 — when an SRM assigns a requirement to an MSME (from their
+// approved portfolio), we persist this record so the MSME has a stable
+// inbox of "requirements I was asked to source for." No Submission row
+// is created here — that happens later via POST /submissions when the
+// MSME picks a bench candidate.
+enum MsmeAssignmentStatus {
+  ACTIVE       // freshly assigned, waiting on the MSME
+  SUBMITTED    // MSME has at least one submission against this requirement
+  DECLINED     // MSME explicitly declined to source
+  EXPIRED      // requirement closed/cancelled while still ACTIVE
+
+  @@schema("matching")
+}
+
+model RequirementMsmeAssignment {
+  id                String               @id @default(uuid())
+  requirementId     String               @map("requirement_id")
+  msmePrimaryUserId String               @map("msme_primary_user_id")
+  assignedBySrmId   String               @map("assigned_by_srm_id")
+  note              String?              @db.Text
+  status            MsmeAssignmentStatus @default(ACTIVE)
+  declinedAt        DateTime?            @map("declined_at")
+  declineReason     String?              @map("decline_reason")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+
+  @@unique([requirementId, msmePrimaryUserId])
+  @@index([msmePrimaryUserId, status])
+  @@index([assignedBySrmId])
+  @@map("requirement_msme_assignment")
+  @@schema("matching")
+}
+
 enum OutgoingEventStatus {
   PENDING
   SENT
