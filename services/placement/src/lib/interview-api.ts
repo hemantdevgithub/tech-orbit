@@ -1,4 +1,3 @@
-import { InternalError } from "@techorbit/errors";
 import type { ServiceTokenSigner } from "./service-token.js";
 
 export type InterviewRecord = {
@@ -14,6 +13,19 @@ export type InterviewApi = {
   listCompletedForSubmission(submissionId: string): Promise<InterviewRecord[]>;
 };
 
+// Sprint 12 cleanup — when interview-svc is unreachable or unconfigured,
+// placement-svc treats it as "no interviews exist." This matches the
+// post-Sprint-11 worldview where interviews happen externally (Zoom etc.)
+// and don't enter the value chain. Returning [] means commission rules
+// won't include INTERVIEWER rows, which is the correct behavior.
+export function createNullInterviewApi(): InterviewApi {
+  return {
+    async listCompletedForSubmission() {
+      return [];
+    },
+  };
+}
+
 export function createInterviewApi(
   interviewSvcUrl: string,
   signer: ServiceTokenSigner,
@@ -21,18 +33,18 @@ export function createInterviewApi(
   return {
     async listCompletedForSubmission(submissionId) {
       const token = await signer.getToken();
-      let res: Response;
       try {
-        res = await fetch(
+        const res = await fetch(
           `${interviewSvcUrl}/api/v1/internal/interviews?submissionId=${submissionId}&status=COMPLETED`,
           { headers: { authorization: `Bearer ${token}` } },
         );
-      } catch (err) {
-        throw new InternalError(`interview-svc unreachable: ${(err as Error).message}`);
+        if (!res.ok) return []; // treat any error as "no interviews"
+        const body = (await res.json()) as { data: InterviewRecord[] };
+        return body.data;
+      } catch {
+        // Network error / DNS failure / etc. — same fallback.
+        return [];
       }
-      if (!res.ok) throw new InternalError(`interview-svc returned ${res.status}`);
-      const body = (await res.json()) as { data: InterviewRecord[] };
-      return body.data;
     },
   };
 }

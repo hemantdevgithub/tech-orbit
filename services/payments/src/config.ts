@@ -17,7 +17,6 @@ const configSchema = z.object({
   PROFILE_SVC_URL: z.string().default("http://localhost:3004"),
   REQUIREMENT_SVC_URL: z.string().default("http://localhost:3005"),
   MATCHING_SVC_URL: z.string().default("http://localhost:3006"),
-  INTERVIEW_SVC_URL: z.string().default("http://localhost:3007"),
   PLACEMENT_SVC_URL: z.string().default("http://localhost:3008"),
   // Cron — only run in prod-like environments, opt-in locally.
   ENABLE_CRON_JOBS: z.coerce.boolean().default(false),

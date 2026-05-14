@@ -8,7 +8,7 @@ import { getConfig } from "./config.js";
 import { createServiceTokenSigner } from "./lib/service-token.js";
 import { createMatchingApi } from "./lib/matching-api.js";
 import { createRequirementApi } from "./lib/requirement-api.js";
-import { createInterviewApi } from "./lib/interview-api.js";
+import { createInterviewApi, createNullInterviewApi } from "./lib/interview-api.js";
 import { createPlacementService } from "./services/placement.service.js";
 import { placementRoutes } from "./routes/placement.routes.js";
 import { internalPlacementRoutes } from "./routes/internal.routes.js";
@@ -49,7 +49,11 @@ export async function buildServer(): Promise<FastifyInstance> {
   const signer = createServiceTokenSigner(config.JWT_PRIVATE_KEY, config.SERVICE_NAME);
   const matchingApi = createMatchingApi(config.MATCHING_SVC_URL, signer);
   const requirementApi = createRequirementApi(config.REQUIREMENT_SVC_URL, signer);
-  const interviewApi = createInterviewApi(config.INTERVIEW_SVC_URL, signer);
+  // Sprint 12 cleanup — interview-svc is being removed. When INTERVIEW_SVC_URL
+  // is unset, use the null implementation so placement-svc still works.
+  const interviewApi = config.INTERVIEW_SVC_URL
+    ? createInterviewApi(config.INTERVIEW_SVC_URL, signer)
+    : createNullInterviewApi();
 
   const placementService = createPlacementService({
     config,

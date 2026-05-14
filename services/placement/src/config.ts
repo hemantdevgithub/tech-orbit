@@ -16,7 +16,10 @@ const configSchema = z.object({
   PROFILE_SVC_URL: z.string().default("http://localhost:3004"),
   REQUIREMENT_SVC_URL: z.string().default("http://localhost:3005"),
   MATCHING_SVC_URL: z.string().default("http://localhost:3006"),
-  INTERVIEW_SVC_URL: z.string().default("http://localhost:3007"),
+  // Sprint 12 cleanup — interview-svc is removed; URL is optional. When
+  // unset, placement-svc treats every submission as having no interviews
+  // (interviews happen externally now).
+  INTERVIEW_SVC_URL: z.string().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

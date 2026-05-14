@@ -11,7 +11,9 @@ export type ParticipantResolverDeps = {
   placementSvcUrl: string;
   requirementSvcUrl: string;
   matchingSvcUrl: string;
-  interviewSvcUrl: string;
+  // Sprint 12 cleanup — optional; when unset, INTERVIEW-context threads
+  // fall back to caller-only participants.
+  interviewSvcUrl?: string;
 };
 
 export type ResolvedParticipants = {
@@ -93,18 +95,30 @@ export function createParticipantResolver(deps: ParticipantResolverDeps) {
       }
 
       if (contextType === "INTERVIEW") {
-        const res = await svcFetch(`${deps.interviewSvcUrl}/api/v1/internal/interviews/${contextId}`);
-        if (res.status === 404) throw new NotFoundError("Interview not found");
-        if (!res.ok) throw new InternalError(`interview-svc returned ${res.status}`);
-        const i = (await res.json()) as {
-          candidateId?: string;
-          interviewerUserId?: string;
-          scheduledByUserId?: string;
-        };
-        return {
-          participantIds: dedupe([callerUserId, i.candidateId, i.interviewerUserId, i.scheduledByUserId]),
-          allowCustom: false,
-        };
+        // Sprint 12 cleanup — interview-svc is removed (interviews now
+        // happen externally). Legacy INTERVIEW-context threads remain in
+        // the DB but can't resolve fresh participants; fall back to the
+        // caller only so existing threads still load instead of erroring.
+        if (!deps.interviewSvcUrl) {
+          return { participantIds: [callerUserId], allowCustom: false };
+        }
+        try {
+          const res = await svcFetch(`${deps.interviewSvcUrl}/api/v1/internal/interviews/${contextId}`);
+          if (!res.ok) {
+            return { participantIds: [callerUserId], allowCustom: false };
+          }
+          const i = (await res.json()) as {
+            candidateId?: string;
+            interviewerUserId?: string;
+            scheduledByUserId?: string;
+          };
+          return {
+            participantIds: dedupe([callerUserId, i.candidateId, i.interviewerUserId, i.scheduledByUserId]),
+            allowCustom: false,
+          };
+        } catch {
+          return { participantIds: [callerUserId], allowCustom: false };
+        }
       }
 
       throw new InternalError(`unsupported contextType: ${contextType satisfies never}`);

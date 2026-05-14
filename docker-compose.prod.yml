@@ -118,14 +118,9 @@ services:
       PROFILE_SVC_URL: http://profile:3004
       REQUIREMENT_SVC_URL: http://requirement:3005
 
-  interview:
-    <<: *svc-base
-    build: { context: ., dockerfile: services/interview/Dockerfile.prod }
-    environment:
-      <<: *node-env
-      PORT: 3007
-      MATCHING_SVC_URL: http://matching:3006
-      REQUIREMENT_SVC_URL: http://requirement:3005
+  # Sprint 12 cleanup — interview-svc removed. Interviews happen externally
+  # (Zoom etc.). placement-svc, payments-svc, and messaging-svc are tolerant
+  # of the service being absent (INTERVIEW_SVC_URL is now optional).
 
   placement:
     <<: *svc-base
@@ -136,7 +131,6 @@ services:
       PROFILE_SVC_URL: http://profile:3004
       REQUIREMENT_SVC_URL: http://requirement:3005
       MATCHING_SVC_URL: http://matching:3006
-      INTERVIEW_SVC_URL: http://interview:3007
 
   payments:
     <<: *svc-base
@@ -146,7 +140,6 @@ services:
       PORT: 3009
       PROFILE_SVC_URL: http://profile:3004
       PLACEMENT_SVC_URL: http://placement:3008
-      INTERVIEW_SVC_URL: http://interview:3007
       ENABLE_CRON_JOBS: "true"
 
   messaging:
@@ -158,7 +151,6 @@ services:
       PLACEMENT_SVC_URL: http://placement:3008
       REQUIREMENT_SVC_URL: http://requirement:3005
       MATCHING_SVC_URL: http://matching:3006
-      INTERVIEW_SVC_URL: http://interview:3007
 
   notification:
     <<: *svc-base
