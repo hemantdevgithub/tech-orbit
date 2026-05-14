@@ -115,6 +115,14 @@ export const GitBranchIcon = (p: IconProps) => (
   <Svg {...p}><circle cx="6" cy="5" r="2" /><circle cx="6" cy="19" r="2" /><circle cx="18" cy="7" r="2" /><path d="M6 7v10" /><path d="M18 9c0 4-6 5-6 9" /></Svg>
 );
 
+export const MenuIcon = (p: IconProps) => (
+  <Svg {...p}><path d="M4 6h16M4 12h16M4 18h16" /></Svg>
+);
+
+export const XIcon = (p: IconProps) => (
+  <Svg {...p}><path d="M6 6l12 12M18 6l-12 12" /></Svg>
+);
+
 // Role → icon lookup used in several places.
 export const ROLE_ICON_COMPONENT: Record<string, (p: IconProps) => JSX.Element> = {
   CUSTOMER: BuildingIcon,

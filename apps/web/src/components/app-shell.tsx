@@ -15,11 +15,13 @@ import {
   DollarIcon,
   HandshakeIcon,
   HomeIcon,
+  MenuIcon,
   MessageIcon,
   PlusIcon,
   ReceiptIcon,
   SearchIcon,
   ShieldIcon,
+  XIcon,
 } from "@/components/icons";
 
 type RoleType = "CUSTOMER" | "CANDIDATE" | "CRM" | "SRM" | "MSME" | "ADMIN";
@@ -162,7 +164,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="w-8 h-8 rounded-lg bg-mint-200 flex items-center justify-center font-bold text-forest-800 text-sm">
           T
         </div>
-        <span className="text-[15px] font-semibold tracking-tight">Techorbit</span>
+        <div className="leading-tight">
+          <p className="text-[10px] uppercase tracking-widest text-sage-400 font-semibold">
+            TechOrbit
+          </p>
+          <p className="text-[14px] font-semibold tracking-tight">TechForce</p>
+        </div>
       </Link>
 
       {/* Scrollable body */}
@@ -234,30 +241,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="hidden md:block">{sidebar}</div>
 
       {/* Mobile drawer */}
-      {mobileOpen && (
-        <>
-          <div
-            className="md:hidden fixed inset-0 bg-black/40 z-40"
+      <div
+        className={`md:hidden fixed inset-0 bg-black/40 z-40 transition-opacity duration-200 motion-reduce:transition-none ${
+          mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden={!mobileOpen}
+      />
+      <div
+        className={`md:hidden fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 motion-reduce:transition-none ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="relative">
+          {sidebar}
+          <button
             onClick={() => setMobileOpen(false)}
-            aria-hidden
-          />
-          <div className="md:hidden fixed inset-y-0 left-0 z-50">{sidebar}</div>
-        </>
-      )}
+            className="absolute top-3 right-3 p-2 rounded-md text-sage-300 hover:text-cream-100 hover:bg-forest-700/60 transition-colors motion-reduce:transition-none"
+            aria-label="Close menu"
+          >
+            <XIcon size={18} />
+          </button>
+        </div>
+      </div>
 
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top bar — thin, just hamburger on mobile + notification bell */}
-        <header className="sticky top-0 z-30 h-14 bg-cream-50/80 backdrop-blur border-b border-sage-200 flex items-center justify-between px-4 md:px-8">
+        <header className="sticky top-0 z-30 h-14 bg-cream-50/80 backdrop-blur border-b border-sage-200 flex items-center justify-between px-3 sm:px-4 md:px-8">
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden p-2 -ml-2 rounded-md hover:bg-sage-100"
+            className="md:hidden p-2 -ml-2 rounded-md text-forest-900 hover:bg-sage-100 transition-colors motion-reduce:transition-none"
             aria-label="Open menu"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <MenuIcon size={20} />
           </button>
-          <div className="md:block hidden" />
+          <div className="md:hidden flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-forest-800 text-mint-200 flex items-center justify-center font-bold text-xs">
+              T
+            </div>
+            <span className="text-sm font-semibold text-forest-900">TechForce</span>
+          </div>
+          <div className="hidden md:block" />
           <div className="flex items-center gap-1">
             <NotificationBell />
             <div className="w-px h-6 bg-sage-200 mx-1" />
@@ -265,7 +289,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-8">
           {children}
         </main>
       </div>
