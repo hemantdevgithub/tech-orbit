@@ -96,15 +96,18 @@ export default function NotificationsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-forest-900">Notifications</h1>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Notifications</h1>
           <p className="text-sage-500 text-sm mt-0.5">
             {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/techforce/settings/notifications" className="text-xs text-forest-700 hover:underline">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/techforce/settings/notifications"
+            className="text-xs text-forest-700 hover:underline"
+          >
             Preferences →
           </Link>
           {unreadCount > 0 && (
@@ -115,15 +118,15 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 overflow-x-auto -mx-1 px-1 pb-1">
         {(["ALL", "UNREAD"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors shrink-0 ${
               filter === f
                 ? "bg-forest-800 text-cream-100 border-forest-800"
-                : "bg-surface-elevated text-sage-600 border-surface-border hover:border-forest-300"
+                : "bg-surface text-sage-600 border-surface-border hover:border-forest-300"
             }`}
           >
             {f}
@@ -149,24 +152,32 @@ export default function NotificationsPage() {
           {rows.map((n) => {
             const unread = !n.readAt;
             const content = (
-              <Card className={`hover:border-forest-300 transition-colors ${unread ? "border-l-4 border-l-forest-700" : ""}`}>
+              <Card
+                className={`hover:border-forest-300 transition-colors motion-reduce:transition-none ${
+                  unread ? "border-l-4 border-l-forest-700" : ""
+                }`}
+              >
                 <CardBody className="flex items-start gap-3">
-                  <span className="shrink-0 text-forest-700 mt-1">
+                  <span className="shrink-0 w-9 h-9 rounded-lg bg-forest-100 text-forest-700 flex items-center justify-center">
                     {(() => {
                       const Icon = TYPE_ICON[n.type];
-                      return <Icon size={22} />;
+                      return <Icon size={18} />;
                     })()}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className={`text-sm ${unread ? "font-semibold text-forest-900" : "text-sage-700"}`}>
+                    <div className="flex items-baseline justify-between gap-2 sm:gap-3">
+                      <p
+                        className={`text-sm truncate ${
+                          unread ? "font-semibold text-forest-900" : "text-sage-700"
+                        }`}
+                      >
                         {n.title}
                       </p>
                       <span className="text-xs text-sage-500 shrink-0">{timeAgo(n.createdAt)}</span>
                     </div>
-                    <p className="text-xs text-sage-600 mt-0.5">{n.message}</p>
+                    <p className="text-xs sm:text-sm text-sage-600 mt-0.5 line-clamp-3">{n.message}</p>
                   </div>
-                  {unread && <span className="w-2 h-2 rounded-full bg-forest-700 shrink-0 mt-2" />}
+                  {unread && <span className="w-2 h-2 rounded-full bg-forest-700 shrink-0 mt-2" aria-label="Unread" />}
                 </CardBody>
               </Card>
             );

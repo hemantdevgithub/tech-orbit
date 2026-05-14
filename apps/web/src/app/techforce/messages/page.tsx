@@ -11,7 +11,7 @@ import type {
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { getMessagingClient } from "@/lib/api-client";
-import { MessageIcon } from "@/components/icons";
+import { ArrowRightIcon, MessageIcon } from "@/components/icons";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 
 const POLL_MS = 10_000;
@@ -119,8 +119,8 @@ export default function MessagesPage() {
           { label: "Messages" },
         ]}
       />
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-forest-900">Messages</h1>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Messages</h1>
         <p className="text-sage-500 text-sm mt-0.5">
           {threads.length > 0
             ? `${threads.length} thread${threads.length === 1 ? "" : "s"} · refreshes every ${POLL_MS / 1000}s`
@@ -130,14 +130,25 @@ export default function MessagesPage() {
 
       {error && <div className="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm border border-danger/20">{error}</div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
-        {/* Left: thread list */}
-        <div className="rounded-2xl border border-surface-border bg-surface overflow-hidden flex flex-col">
+      {/*
+        Mobile: thread list and chat are mutually exclusive (one or the other).
+        Desktop (md+): split view with thread list on the left, chat on the right.
+        Mobile chat height: viewport minus AppShell top bar (h-14) and breadcrumb / heading area (~140px).
+      */}
+      <div className="md:grid md:grid-cols-3 md:gap-4 md:h-[600px]">
+        {/* Thread list — hidden on mobile when a thread is open */}
+        <aside
+          className={`rounded-2xl border border-surface-border bg-surface overflow-hidden flex flex-col h-[calc(100vh-220px)] md:h-auto ${
+            selectedId ? "hidden md:flex" : "flex"
+          }`}
+        >
           <div className="px-4 py-3 border-b border-surface-border">
             <p className="text-xs font-semibold text-sage-500 uppercase tracking-wider">All threads</p>
           </div>
           {threads.length === 0 ? (
-            <p className="p-4 text-sage-500 text-sm">No messages yet. Threads will appear here when someone reaches out to you.</p>
+            <p className="p-4 text-sage-500 text-sm">
+              No messages yet. Threads will appear here when someone reaches out to you.
+            </p>
           ) : (
             <ul className="overflow-y-auto flex-1">
               {threads.map((t) => {
@@ -146,12 +157,16 @@ export default function MessagesPage() {
                   <li key={t.id}>
                     <button
                       onClick={() => setSelectedId(t.id)}
-                      className={`w-full text-left px-4 py-3 border-b border-surface-border/50 hover:bg-cream-50 transition-colors ${
-                        isActive ? "bg-forest-50" : ""
+                      className={`w-full text-left px-4 py-3 border-b border-surface-border/50 hover:bg-cream-50 transition-colors motion-reduce:transition-none focus:outline-none focus:bg-cream-50 ${
+                        isActive ? "bg-forest-50 md:bg-forest-50" : ""
                       }`}
                     >
                       <div className="flex items-baseline justify-between gap-2">
-                        <p className={`text-sm ${t.unreadCount > 0 ? "font-semibold text-forest-900" : "text-forest-900"}`}>
+                        <p
+                          className={`text-sm truncate ${
+                            t.unreadCount > 0 ? "font-semibold text-forest-900" : "text-forest-900"
+                          }`}
+                        >
                           {t.subject ?? t.contextType.toLowerCase()}
                         </p>
                         <span className="text-xs text-sage-500 shrink-0">{timeAgo(t.lastMessageAt)}</span>
@@ -170,14 +185,20 @@ export default function MessagesPage() {
               })}
             </ul>
           )}
-        </div>
+        </aside>
 
-        {/* Right: chat window */}
-        <div className="md:col-span-2 rounded-2xl border border-surface-border bg-surface overflow-hidden flex flex-col">
+        {/* Chat window — hidden on mobile when no thread is selected */}
+        <section
+          className={`md:col-span-2 rounded-2xl border border-surface-border bg-surface overflow-hidden flex flex-col h-[calc(100vh-220px)] md:h-auto ${
+            selectedId ? "flex" : "hidden md:flex"
+          }`}
+        >
           {!selectedId ? (
             <div className="flex-1 flex items-center justify-center text-center p-6">
               <div>
-                <div className="flex justify-center mb-2 text-sage-400"><MessageIcon size={28} /></div>
+                <div className="flex justify-center mb-2 text-sage-400">
+                  <MessageIcon size={28} />
+                </div>
                 <p className="text-sage-600 text-sm">Select a conversation to get started</p>
               </div>
             </div>
@@ -187,14 +208,28 @@ export default function MessagesPage() {
             </div>
           ) : (
             <>
-              <div className="px-5 py-4 border-b border-surface-border">
-                <p className="text-sm font-semibold text-forest-900">{selectedHeader?.title}</p>
-                <p className="text-xs text-sage-500 mt-0.5">{selectedHeader?.subtitle}</p>
+              <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-surface-border flex items-center gap-2">
+                {/* Mobile back button */}
+                <button
+                  onClick={() => setSelectedId(null)}
+                  className="md:hidden -ml-1 p-1.5 rounded-md text-sage-600 hover:bg-cream-100 transition-colors motion-reduce:transition-none"
+                  aria-label="Back to threads"
+                >
+                  <span className="inline-block rotate-180">
+                    <ArrowRightIcon size={18} />
+                  </span>
+                </button>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-forest-900 truncate">{selectedHeader?.title}</p>
+                  <p className="text-xs text-sage-500 mt-0.5 truncate">{selectedHeader?.subtitle}</p>
+                </div>
               </div>
-              <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                {thread.messages.map((m) => <MessageBubble key={m.id} message={m} isMe={m.senderUserId === user?.id} />)}
+              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-3 bg-cream-50/40">
+                {thread.messages.map((m) => (
+                  <MessageBubble key={m.id} message={m} isMe={m.senderUserId === user?.id} />
+                ))}
               </div>
-              <div className="px-5 py-3 border-t border-surface-border flex gap-2">
+              <div className="px-3 sm:px-5 py-3 border-t border-surface-border flex gap-2">
                 <input
                   type="text"
                   value={draft}
@@ -207,7 +242,7 @@ export default function MessagesPage() {
                   }}
                   placeholder="Type a message…"
                   disabled={sending}
-                  className="flex-1 px-3 py-2 rounded-lg border border-surface-border bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm"
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-surface-border bg-surface focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm"
                 />
                 <Button onClick={send} disabled={sending || !draft.trim()}>
                   {sending ? "…" : "Send"}
@@ -215,7 +250,7 @@ export default function MessagesPage() {
               </div>
             </>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
@@ -225,7 +260,7 @@ function MessageBubble({ message, isMe }: { message: MessageResponse; isMe: bool
   return (
     <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+        className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2 ${
           isMe ? "bg-forest-700 text-cream-100 rounded-br-sm" : "bg-surface-soft text-forest-900 rounded-bl-sm"
         }`}
       >
