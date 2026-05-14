@@ -22,6 +22,12 @@ export type ProfileApi = {
     limit?: number;
   }): Promise<{ data: CandidateSummary[]; nextCursor: string | null; hasMore: boolean }>;
   getCandidateByUserId(userId: string, bearerToken: string): Promise<CandidateSummary | null>;
+  // Sprint 12 — S2S check: is this candidate / MSME in this SRM's APPROVED portfolio?
+  hasApprovedPortfolioLink(opts: {
+    srmUserId: string;
+    memberUserId: string;
+    memberType: "CANDIDATE" | "MSME";
+  }): Promise<boolean>;
 };
 
 export function createProfileApi(
@@ -58,6 +64,20 @@ export function createProfileApi(
         hasMore: boolean;
       };
       return body;
+    },
+
+    async hasApprovedPortfolioLink({ srmUserId, memberUserId, memberType }) {
+      const q = new URLSearchParams({ srmUserId, memberUserId, memberType });
+      const res = await serviceFetch(
+        `/api/v1/internal/srm-portfolio/has-approved-link?${q.toString()}`,
+      );
+      if (!res.ok) {
+        // Treat any non-200 as "no link" rather than failing the SRM's invite —
+        // the user-facing error is "candidate not in your portfolio".
+        return false;
+      }
+      const body = (await res.json()) as { hasLink: boolean };
+      return body.hasLink === true;
     },
 
     async getCandidateByUserId(userId, bearerToken) {

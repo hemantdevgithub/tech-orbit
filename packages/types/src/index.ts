@@ -171,9 +171,14 @@ export {
   RequirementFilterSchema,
   RequirementResponseSchema,
   RequirementListResponseSchema,
+  RequirementCrmOwnerSchema,
+  AssignSrmSchema,
   CrmAttributionRequestResponseSchema,
   RequirementPublishedEventSchema,
   RequirementClosedEventSchema,
+  RequirementCrmAcceptedEventSchema,
+  RequirementSrmAssignedEventSchema,
+  RequirementAssignedMsmeEventSchema,
 } from "./requirement.js";
 
 export type {
@@ -184,9 +189,14 @@ export type {
   RequirementFilter,
   RequirementResponse,
   RequirementListResponse,
+  RequirementCrmOwner,
+  AssignSrm,
   CrmAttributionRequestResponse,
   RequirementPublishedEvent,
   RequirementClosedEvent,
+  RequirementCrmAcceptedEvent,
+  RequirementSrmAssignedEvent,
+  RequirementAssignedMsmeEvent,
 } from "./requirement.js";
 
 // ─── Matching / submission types (re-exported from matching.ts) ──────────────
@@ -197,11 +207,16 @@ export {
   SubmissionFilterSchema,
   SubmissionResponseSchema,
   SubmissionListResponseSchema,
+  InviteCandidateSchema,
+  DeclineInviteSchema,
   MatchingSignalResponseSchema,
   MatchingSignalListResponseSchema,
   SubmissionCreatedEventSchema,
   SubmissionStatusChangedEventSchema,
   SubmissionWithdrawnEventSchema,
+  SubmissionInvitedEventSchema,
+  SubmissionInviteAcceptedEventSchema,
+  SubmissionInviteDeclinedEventSchema,
 } from "./matching.js";
 
 export type {
@@ -211,11 +226,16 @@ export type {
   SubmissionFilter,
   SubmissionResponse,
   SubmissionListResponse,
+  InviteCandidate,
+  DeclineInvite,
   MatchingSignalResponse,
   MatchingSignalListResponse,
   SubmissionCreatedEvent,
   SubmissionStatusChangedEvent,
   SubmissionWithdrawnEvent,
+  SubmissionInvitedEvent,
+  SubmissionInviteAcceptedEvent,
+  SubmissionInviteDeclinedEvent,
 } from "./matching.js";
 
 // ─── Interview types (re-exported from interview.ts) ─────────────────────────

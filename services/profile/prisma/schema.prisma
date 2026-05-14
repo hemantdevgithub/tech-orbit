@@ -218,6 +218,29 @@ model InterviewerProfile {
   @@map("profile_interviewer")
 }
 
+// ─── Sprint 12 — outbox (events emitted by profile-svc) ─────────────────────
+
+enum OutgoingEventStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model OutgoingEvent {
+  id          String              @id @default(uuid())
+  eventType   String              @map("event_type")
+  aggregateId String              @map("aggregate_id")
+  payload     Json
+  status      OutgoingEventStatus @default(PENDING)
+  attempts    Int                 @default(0)
+  lastError   String?             @map("last_error")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  sentAt      DateTime?           @map("sent_at")
+
+  @@index([status, createdAt])
+  @@map("profile_outgoing_event")
+}
+
 // ─── Sprint 12 — SRM portfolio (two-sided handshake) ─────────────────────────
 
 enum PortfolioMembershipStatus {

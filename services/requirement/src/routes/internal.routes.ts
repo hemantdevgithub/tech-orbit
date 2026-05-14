@@ -26,6 +26,7 @@ export async function internalRequirementRoutes(
         customerCompanyId: req.customerCompanyId,
         createdByUserId: req.createdByUserId,
         attributedCrmId: req.attributedCrmId,
+        assignedSrmId: req.assignedSrmId,
         title: req.title,
         description: req.description,
         techStack: req.techStack,

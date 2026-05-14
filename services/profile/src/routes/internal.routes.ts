@@ -4,6 +4,7 @@ import { requireServiceRole } from "@techorbit/auth-middleware";
 import { Decimal } from "@prisma/client/runtime/library";
 import { candidateRepository } from "../repositories/candidate.repository.js";
 import { customerRepository } from "../repositories/customer.repository.js";
+import { srmPortfolioRepository } from "../repositories/srm-portfolio.repository.js";
 
 // Service-to-service routes.  Verified via the shared JWT public key and
 // gated on roles=["SERVICE"].  Never call these from a browser — no CORS
@@ -68,6 +69,28 @@ export async function internalRoutes(fastify: FastifyInstance): Promise<void> {
         attributedCrmUserId: company.attributedCrmUserId,
         isProfileComplete: company.isProfileComplete,
       });
+    },
+  );
+
+  // Sprint 12 — S2S check for matching-svc: does the SRM have an APPROVED
+  // portfolio link with this candidate / MSME? Used to gate invite-to-submit.
+  fastify.get(
+    "/api/v1/internal/srm-portfolio/has-approved-link",
+    { preHandler: [gate] },
+    async (request, reply) => {
+      const query = z
+        .object({
+          srmUserId: z.string().uuid(),
+          memberUserId: z.string().uuid(),
+          memberType: z.enum(["CANDIDATE", "MSME"]),
+        })
+        .parse(request.query);
+      const hasLink = await srmPortfolioRepository.hasApprovedLink(
+        query.srmUserId,
+        query.memberUserId,
+        query.memberType,
+      );
+      return reply.status(200).send({ hasLink });
     },
   );
 }

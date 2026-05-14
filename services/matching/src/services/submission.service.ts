@@ -1,4 +1,6 @@
 import type {
+  DeclineInvite,
+  InviteCandidate,
   SubmissionRequest,
   SubmissionResponse,
   SubmissionListResponse,
@@ -296,6 +298,167 @@ export function createSubmissionService(deps: SubmissionServiceDeps) {
         });
         await enqueueEvent(tx, event, row.id);
         return row;
+      });
+      return toSubmissionResponse(updated);
+    },
+
+    // Sprint 12 — SRM invites a candidate from their APPROVED portfolio to
+    // apply for a requirement they're assigned to. Creates a Submission with
+    // status INVITED; the candidate must accept (→ SUBMITTED) or decline
+    // (→ WITHDRAWN) before the submission enters the screening pipeline.
+    async inviteCandidate(
+      ctx: AuthContext,
+      requirementId: string,
+      body: InviteCandidate,
+    ): Promise<SubmissionResponse> {
+      if (!ctx.roles.includes("SRM") && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError("Only SRMs can invite candidates");
+      }
+
+      const requirement = await requirementApi.getRequirement(requirementId);
+      if (!requirement) throw new NotFoundError("Requirement not found");
+      if (requirement.status !== "OPEN") {
+        throw new ValidationError(
+          `Cannot invite to a requirement in status ${requirement.status}`,
+        );
+      }
+      // Caller must be the assigned SRM (or admin).
+      if (
+        !ctx.roles.includes("ADMIN") &&
+        requirement.assignedSrmId !== ctx.userId
+      ) {
+        throw new ForbiddenError(
+          "You can only invite candidates to requirements assigned to you",
+        );
+      }
+
+      // Candidate must be in this SRM's APPROVED portfolio.
+      if (!ctx.roles.includes("ADMIN")) {
+        const inRoster = await profileApi.hasApprovedPortfolioLink({
+          srmUserId: ctx.userId,
+          memberUserId: body.candidateId,
+          memberType: "CANDIDATE",
+        });
+        if (!inRoster) {
+          throw new ForbiddenError(
+            "Candidate is not in your approved portfolio",
+          );
+        }
+      }
+
+      // Duplicate guard: one submission per (requirement, candidate).
+      const existing = await submissionRepository.findByPair(
+        requirementId,
+        body.candidateId,
+      );
+      if (existing) {
+        throw new ConflictError(
+          `A submission for this candidate already exists (status=${existing.status})`,
+        );
+      }
+
+      const created = await prisma.$transaction(async (tx) => {
+        const row = await submissionRepository.createInvited(
+          {
+            requirementId,
+            candidateId: body.candidateId,
+            invitedBySrmId: ctx.userId,
+            coverNote: body.coverNote ?? null,
+          },
+          tx,
+        );
+        const event = buildEvent("submission.invited.v1", {
+          submissionId: row.id,
+          requirementId: row.requirementId,
+          candidateId: row.candidateId,
+          invitedBySrmId: ctx.userId,
+          invitedAt: row.invitedAt!.toISOString(),
+        });
+        await enqueueEvent(tx, event, row.id);
+        return row;
+      });
+
+      return toSubmissionResponse(created);
+    },
+
+    // The invited candidate accepts the invitation. Transitions INVITED → SUBMITTED
+    // and emits submission.invite-accepted.v1 (notifies the SRM) plus the regular
+    // submission.created.v1 so the standard screening pipeline picks it up.
+    async acceptInvite(
+      ctx: AuthContext,
+      submissionId: string,
+    ): Promise<SubmissionResponse> {
+      const row = await submissionRepository.findByIdRaw(submissionId);
+      if (!row) throw new NotFoundError("Submission not found");
+      if (row.candidateId !== ctx.userId && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError("Only the invited candidate can accept");
+      }
+      if (row.status !== "INVITED") {
+        throw new ConflictError(
+          `Submission is not pending (status=${row.status})`,
+        );
+      }
+      const updated = await prisma.$transaction(async (tx) => {
+        const next = await submissionRepository.acceptInvite(submissionId, tx);
+        const acceptedAt = next.inviteAcceptedAt!.toISOString();
+        const accEvent = buildEvent("submission.invite-accepted.v1", {
+          submissionId: next.id,
+          requirementId: next.requirementId,
+          candidateId: next.candidateId,
+          invitedBySrmId: next.invitedBySrmId,
+          acceptedAt,
+        });
+        await enqueueEvent(tx, accEvent, next.id);
+        // Reuse the regular submission.created pipeline so downstream
+        // matching / notification consumers run.
+        const createdEvent = buildEvent("submission.created.v1", {
+          submissionId: next.id,
+          requirementId: next.requirementId,
+          candidateId: next.candidateId,
+          submittedByUserId: next.submittedByUserId,
+          submitterRole: next.submitterRole,
+          attributedSrmId: next.attributedSrmId,
+          attributedMsmeId: next.attributedMsmeId,
+          matchScore: next.matchScore,
+          createdAt: next.createdAt.toISOString(),
+        });
+        await enqueueEvent(tx, createdEvent, next.id);
+        return next;
+      });
+      return toSubmissionResponse(updated);
+    },
+
+    async declineInvite(
+      ctx: AuthContext,
+      submissionId: string,
+      body: DeclineInvite,
+    ): Promise<SubmissionResponse> {
+      const row = await submissionRepository.findByIdRaw(submissionId);
+      if (!row) throw new NotFoundError("Submission not found");
+      if (row.candidateId !== ctx.userId && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError("Only the invited candidate can decline");
+      }
+      if (row.status !== "INVITED") {
+        throw new ConflictError(
+          `Submission is not pending (status=${row.status})`,
+        );
+      }
+      const updated = await prisma.$transaction(async (tx) => {
+        const next = await submissionRepository.declineInvite(
+          submissionId,
+          body.reason,
+          tx,
+        );
+        const event = buildEvent("submission.invite-declined.v1", {
+          submissionId: next.id,
+          requirementId: next.requirementId,
+          candidateId: next.candidateId,
+          invitedBySrmId: next.invitedBySrmId,
+          declinedAt: next.inviteDeclinedAt!.toISOString(),
+          reason: body.reason,
+        });
+        await enqueueEvent(tx, event, next.id);
+        return next;
       });
       return toSubmissionResponse(updated);
     },

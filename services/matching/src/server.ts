@@ -11,6 +11,7 @@ import { createRequirementApi } from "./lib/requirement-api.js";
 import { registerRequirementPublishedConsumer } from "./consumers/requirement-published.consumer.js";
 import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
 import { submissionRoutes } from "./routes/submission.routes.js";
+import { inviteRoutes } from "./routes/invite.routes.js";
 import { internalMatchingRoutes } from "./routes/internal.routes.js";
 import { createSubmissionService } from "./services/submission.service.js";
 
@@ -62,6 +63,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   });
 
   await fastify.register(submissionRoutes, { submissionService });
+  await fastify.register(inviteRoutes, { submissionService });
   await fastify.register(internalMatchingRoutes);
 
   // Event-driven: consume requirement.published.v1 and relay our own

@@ -1,4 +1,5 @@
 import type {
+  AssignSrm,
   CloseRequirement,
   CreateRequirement,
   RequirementFilter,
@@ -7,11 +8,12 @@ import type {
   UpdateRequirement,
 } from "@techorbit/types";
 import type { AuthContext } from "@techorbit/auth-middleware";
-import { ForbiddenError, NotFoundError, ValidationError } from "@techorbit/errors";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@techorbit/errors";
 import { prisma } from "../lib/prisma.js";
 import {
   requirementRepository,
 } from "../repositories/requirement.repository.js";
+import { crmOwnershipRepository } from "../repositories/crm-ownership.repository.js";
 import {
   toRequirementResponse,
 } from "../lib/response-mappers.js";
@@ -174,6 +176,117 @@ export function createRequirementService(config: Config) {
         nextCursor: result.nextCursor,
         hasMore: result.hasMore,
       };
+    },
+
+    // Sprint 12 — CRM accepts (co-owns) a published requirement. Several CRMs
+    // can accept the same job; first to accept becomes primary; the commission
+    // share is recomputed to 1/N on every accept. Idempotent: if this CRM
+    // already owns, return the current state.
+    async acceptByCrm(
+      ctx: AuthContext,
+      requirementId: string,
+    ): Promise<RequirementResponse> {
+      if (!ctx.roles.includes("CRM") && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError("Only CRMs can accept a requirement");
+      }
+      const req = await requirementRepository.findByIdRaw(requirementId);
+      if (!req) throw new NotFoundError("Requirement not found");
+      if (req.status !== "OPEN") {
+        throw new ConflictError("Only open requirements can be accepted");
+      }
+
+      const updated = await prisma.$transaction(async (tx) => {
+        const { owner, coOwnerCount } = await crmOwnershipRepository.accept(
+          requirementId,
+          ctx.userId,
+          tx,
+        );
+        const event = buildEvent("requirement.crm-accepted.v1", {
+          requirementId,
+          crmUserId: ctx.userId,
+          isPrimary: owner.isPrimary,
+          coOwnerCount,
+        });
+        await enqueueEvent(tx, event, requirementId);
+        return requirementRepository.findByIdWithOwners(requirementId, tx);
+      });
+      if (!updated) throw new NotFoundError("Requirement not found");
+      return toRequirementResponse(ctx, updated);
+    },
+
+    // Sprint 12 — a co-owning CRM stops co-owning. Primary leaving promotes
+    // the oldest remaining co-owner; shares recompute to 1/N.
+    async releaseByCrm(
+      ctx: AuthContext,
+      requirementId: string,
+    ): Promise<RequirementResponse> {
+      const req = await requirementRepository.findByIdRaw(requirementId);
+      if (!req) throw new NotFoundError("Requirement not found");
+      const isOwner = await crmOwnershipRepository.isOwner(requirementId, ctx.userId);
+      if (!isOwner && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError("Only a co-owning CRM can release this requirement");
+      }
+      const updated = await prisma.$transaction(async (tx) => {
+        await crmOwnershipRepository.release(requirementId, ctx.userId, tx);
+        return requirementRepository.findByIdWithOwners(requirementId, tx);
+      });
+      if (!updated) throw new NotFoundError("Requirement not found");
+      return toRequirementResponse(ctx, updated);
+    },
+
+    // Sprint 12 — a co-owning CRM assigns an SRM to source candidates.
+    // Only one SRM at a time; reassigning replaces the existing assignment.
+    async assignSrm(
+      ctx: AuthContext,
+      requirementId: string,
+      body: AssignSrm,
+    ): Promise<RequirementResponse> {
+      const req = await requirementRepository.findByIdRaw(requirementId);
+      if (!req) throw new NotFoundError("Requirement not found");
+      const isOwner = await crmOwnershipRepository.isOwner(requirementId, ctx.userId);
+      if (!isOwner && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError(
+          "Only a co-owning CRM (or admin) can assign an SRM",
+        );
+      }
+      const updated = await prisma.$transaction(async (tx) => {
+        const result = await requirementRepository.setSrmAssignment(
+          requirementId,
+          body.srmUserId,
+          ctx.userId,
+          tx,
+        );
+        const event = buildEvent("requirement.srm-assigned.v1", {
+          requirementId,
+          srmUserId: body.srmUserId,
+          assignedByCrmId: ctx.userId,
+          requirementTitle: result.title,
+        });
+        await enqueueEvent(tx, event, requirementId);
+        return requirementRepository.findByIdWithOwners(requirementId, tx);
+      });
+      if (!updated) throw new NotFoundError("Requirement not found");
+      return toRequirementResponse(ctx, updated);
+    },
+
+    async unassignSrm(
+      ctx: AuthContext,
+      requirementId: string,
+    ): Promise<RequirementResponse> {
+      const req = await requirementRepository.findByIdRaw(requirementId);
+      if (!req) throw new NotFoundError("Requirement not found");
+      const isOwner = await crmOwnershipRepository.isOwner(requirementId, ctx.userId);
+      if (!isOwner && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError(
+          "Only a co-owning CRM (or admin) can unassign an SRM",
+        );
+      }
+      const updated = await prisma.$transaction(async (tx) => {
+        await requirementRepository.setSrmAssignment(requirementId, null, null, tx);
+        return requirementRepository.findByIdWithOwners(requirementId, tx);
+      });
+      if (!updated) throw new NotFoundError("Requirement not found");
+      return toRequirementResponse(ctx, updated);
     },
   };
 }

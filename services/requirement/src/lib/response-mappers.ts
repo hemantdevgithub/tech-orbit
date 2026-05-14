@@ -2,16 +2,21 @@ import type { RequirementResponse } from "@techorbit/types";
 import type {
   CrmAttributionRequest,
   Requirement,
+  RequirementCrmOwner,
 } from "../generated/client/index.js";
 import type { AuthContext } from "@techorbit/auth-middleware";
 import { requirementAuth } from "../repositories/requirement.repository.js";
+
+type RequirementWithOwners = Requirement & {
+  crmOwners?: RequirementCrmOwner[];
+};
 
 // Blind-posting rule: when blindPosting=true and the viewer is not the owner,
 // not the attributed CRM, and not an admin, redact customerCompanyId and
 // createdByUserId. Everything else (title, description, etc.) stays visible.
 export function toRequirementResponse(
   ctx: AuthContext,
-  req: Requirement,
+  req: RequirementWithOwners,
 ): RequirementResponse {
   const { isOwner, isAttributedCrm, hasAdminRole } = requirementAuth;
   const canSeeIdentity =
@@ -22,6 +27,15 @@ export function toRequirementResponse(
     customerCompanyId: canSeeIdentity ? req.customerCompanyId : null,
     createdByUserId: canSeeIdentity ? req.createdByUserId : null,
     attributedCrmId: req.attributedCrmId,
+    crmOwners: (req.crmOwners ?? []).map((o) => ({
+      crmUserId: o.crmUserId,
+      acceptedAt: o.acceptedAt.toISOString(),
+      isPrimary: o.isPrimary,
+      commissionShare: Number(o.commissionShare),
+    })),
+    assignedSrmId: req.assignedSrmId,
+    assignedSrmAt: req.assignedSrmAt ? req.assignedSrmAt.toISOString() : null,
+    assignedSrmByCrmId: req.assignedSrmByCrmId,
     title: req.title,
     description: req.description,
     techStack: req.techStack,

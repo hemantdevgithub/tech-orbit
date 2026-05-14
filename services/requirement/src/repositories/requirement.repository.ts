@@ -45,6 +45,10 @@ export type ListRequirementsFilters = {
   workAuthPrefs?: WorkAuthStatus | WorkAuthStatus[];
   customerCompanyId?: string;
   attributedCrmId?: string;
+  // Sprint 12 — multi-CRM co-ownership and SRM assignment filters
+  ownedByCrmId?: string;        // requirements where this CRM is in RequirementCrmOwner
+  assignedSrmId?: string;       // requirements where this SRM is assigned
+  available?: boolean;          // OPEN requirements with no co-owners (i.e. nothing in RequirementCrmOwner)
   search?: string;
 };
 
@@ -120,8 +124,11 @@ export const requirementRepository = {
     });
   },
 
-  async findById(ctx: AuthContext, id: string): Promise<Requirement> {
-    const req = await prisma.requirement.findUnique({ where: { id } });
+  async findById(ctx: AuthContext, id: string): Promise<Requirement & { crmOwners: import("../generated/client/index.js").RequirementCrmOwner[] }> {
+    const req = await prisma.requirement.findUnique({
+      where: { id },
+      include: { crmOwners: { orderBy: { acceptedAt: "asc" } } },
+    });
     if (!req) throw new NotFoundError("Requirement not found");
     if (req.status === "DRAFT") assertCanReadDraft(ctx, req);
     return req;
@@ -133,6 +140,34 @@ export const requirementRepository = {
   ): Promise<Requirement | null> {
     const db = tx ?? prisma;
     return db.requirement.findUnique({ where: { id } });
+  },
+
+  async findByIdWithOwners(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<(Requirement & { crmOwners: import("../generated/client/index.js").RequirementCrmOwner[] }) | null> {
+    const db = tx ?? prisma;
+    return db.requirement.findUnique({
+      where: { id },
+      include: { crmOwners: { orderBy: { acceptedAt: "asc" } } },
+    });
+  },
+
+  async setSrmAssignment(
+    id: string,
+    srmUserId: string | null,
+    assignedByCrmId: string | null,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Requirement> {
+    const db = tx ?? prisma;
+    return db.requirement.update({
+      where: { id },
+      data: {
+        assignedSrmId: srmUserId,
+        assignedSrmByCrmId: srmUserId === null ? null : assignedByCrmId,
+        assignedSrmAt: srmUserId === null ? null : new Date(),
+      },
+    });
   },
 
   async update(
@@ -249,6 +284,18 @@ export const requirementRepository = {
     if (params.filters.attributedCrmId) {
       filters.attributedCrmId = params.filters.attributedCrmId;
     }
+    // Sprint 12 — multi-CRM co-ownership filters
+    if (params.filters.ownedByCrmId) {
+      filters.crmOwners = { some: { crmUserId: params.filters.ownedByCrmId } };
+    }
+    if (params.filters.assignedSrmId) {
+      filters.assignedSrmId = params.filters.assignedSrmId;
+    }
+    if (params.filters.available === true) {
+      // OPEN requirements that haven't been accepted by any CRM yet.
+      filters.status = "OPEN";
+      filters.crmOwners = { none: {} };
+    }
     if (params.filters.search) {
       filters.OR = [
         { title: { contains: params.filters.search, mode: "insensitive" } },
@@ -257,7 +304,8 @@ export const requirementRepository = {
     }
 
     // Visibility: non-admin callers only see published requirements, their own
-    // drafts, or ones where they are the attributed CRM.
+    // drafts, or ones where they are the attributed CRM. Sprint 12: also include
+    // requirements where they are a co-owning CRM or the assigned SRM.
     const visibility: Prisma.RequirementWhereInput | undefined = requirementAuth.hasAdminRole(ctx)
       ? undefined
       : {
@@ -265,6 +313,8 @@ export const requirementRepository = {
             { status: { not: "DRAFT" } },
             { createdByUserId: ctx.userId },
             { attributedCrmId: ctx.userId },
+            { crmOwners: { some: { crmUserId: ctx.userId } } },
+            { assignedSrmId: ctx.userId },
           ],
         };
 
@@ -276,6 +326,7 @@ export const requirementRepository = {
     const take = params.limit + 1;
     const rows = await prisma.requirement.findMany({
       where,
+      include: { crmOwners: { orderBy: { acceptedAt: "asc" } } },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take,
       cursor: params.cursor ? { id: params.cursor } : undefined,

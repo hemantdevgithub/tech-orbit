@@ -23,6 +23,14 @@ export type CreateSubmissionInput = {
   proposedBillRate?: Decimal | number | null;
 };
 
+export type CreateInvitedInput = {
+  requirementId: string;
+  candidateId: string;
+  invitedBySrmId: string;
+  matchScore?: number | null;
+  coverNote?: string | null;
+};
+
 export type ListSubmissionsFilters = {
   requirementId?: string;
   candidateId?: string;
@@ -84,6 +92,61 @@ export const submissionRepository = {
             ? null
             : (input.proposedBillRate as Prisma.Decimal | number),
         status: "SUBMITTED",
+      },
+    });
+  },
+
+  // Sprint 12 — create a submission in INVITED status. submitter_role is SRM
+  // (the inviting SRM is the submitter on the record; candidate can flip it
+  // to SUBMITTED via accept-invite).
+  async createInvited(
+    input: CreateInvitedInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Submission> {
+    const db = tx ?? prisma;
+    return db.submission.create({
+      data: {
+        requirementId: input.requirementId,
+        candidateId: input.candidateId,
+        submittedByUserId: input.invitedBySrmId,
+        submitterRole: "SRM",
+        attributedSrmId: input.invitedBySrmId,
+        matchScore: input.matchScore ?? null,
+        coverNote: input.coverNote ?? null,
+        status: "INVITED",
+        invitedAt: new Date(),
+        invitedBySrmId: input.invitedBySrmId,
+      },
+    });
+  },
+
+  async acceptInvite(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Submission> {
+    const db = tx ?? prisma;
+    return db.submission.update({
+      where: { id },
+      data: {
+        status: "SUBMITTED",
+        inviteAcceptedAt: new Date(),
+      },
+    });
+  },
+
+  async declineInvite(
+    id: string,
+    reason: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Submission> {
+    const db = tx ?? prisma;
+    return db.submission.update({
+      where: { id },
+      data: {
+        status: "WITHDRAWN",
+        inviteDeclinedAt: new Date(),
+        withdrawnAt: new Date(),
+        withdrawnReason: reason,
       },
     });
   },

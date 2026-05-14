@@ -55,10 +55,75 @@ export const SubmissionResponseSchema = z.object({
   withdrawnReason: z.string().nullable(),
   rejectedAt: z.string().datetime().nullable(),
   rejectionReason: z.string().nullable(),
+  // Sprint 12 — invite-to-submit fields
+  invitedAt: z.string().datetime().nullable(),
+  invitedBySrmId: z.string().uuid().nullable(),
+  inviteAcceptedAt: z.string().datetime().nullable(),
+  inviteDeclinedAt: z.string().datetime().nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
 export type SubmissionResponse = z.infer<typeof SubmissionResponseSchema>;
+
+// Sprint 12 — invite-to-submit request schemas
+export const InviteCandidateSchema = z.object({
+  candidateId: z.string().uuid(),
+  coverNote: z.string().max(500).optional(),
+});
+export type InviteCandidate = z.infer<typeof InviteCandidateSchema>;
+
+export const DeclineInviteSchema = z.object({
+  reason: z.string().min(1).max(500),
+});
+export type DeclineInvite = z.infer<typeof DeclineInviteSchema>;
+
+// Sprint 12 — events
+const EventEnvelope = z.object({
+  eventId: z.string().uuid(),
+  occurredAt: z.string().datetime(),
+  version: z.literal(1),
+});
+
+export const SubmissionInvitedEventSchema = EventEnvelope.extend({
+  type: z.literal("submission.invited.v1"),
+  payload: z.object({
+    submissionId: z.string().uuid(),
+    requirementId: z.string().uuid(),
+    candidateId: z.string().uuid(),
+    invitedBySrmId: z.string().uuid(),
+    invitedAt: z.string().datetime(),
+  }),
+});
+export type SubmissionInvitedEvent = z.infer<typeof SubmissionInvitedEventSchema>;
+
+export const SubmissionInviteAcceptedEventSchema = EventEnvelope.extend({
+  type: z.literal("submission.invite-accepted.v1"),
+  payload: z.object({
+    submissionId: z.string().uuid(),
+    requirementId: z.string().uuid(),
+    candidateId: z.string().uuid(),
+    invitedBySrmId: z.string().uuid(),
+    acceptedAt: z.string().datetime(),
+  }),
+});
+export type SubmissionInviteAcceptedEvent = z.infer<
+  typeof SubmissionInviteAcceptedEventSchema
+>;
+
+export const SubmissionInviteDeclinedEventSchema = EventEnvelope.extend({
+  type: z.literal("submission.invite-declined.v1"),
+  payload: z.object({
+    submissionId: z.string().uuid(),
+    requirementId: z.string().uuid(),
+    candidateId: z.string().uuid(),
+    invitedBySrmId: z.string().uuid(),
+    declinedAt: z.string().datetime(),
+    reason: z.string(),
+  }),
+});
+export type SubmissionInviteDeclinedEvent = z.infer<
+  typeof SubmissionInviteDeclinedEventSchema
+>;
 
 export const SubmissionListResponseSchema = z.object({
   data: z.array(SubmissionResponseSchema),

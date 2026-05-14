@@ -74,6 +74,10 @@ export const RequirementFilterSchema = z.object({
   workAuthPrefs: listOf(WorkAuthStatus),
   customerCompanyId: z.string().uuid().optional(),
   attributedCrmId: z.string().uuid().optional(),
+  // Sprint 12 — multi-CRM co-ownership and SRM assignment filters
+  ownedByCrmId: z.string().uuid().optional(),
+  assignedSrmId: z.string().uuid().optional(),
+  available: z.coerce.boolean().optional(),
   search: z.string().max(200).optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -84,11 +88,26 @@ export type RequirementFilter = z.infer<typeof RequirementFilterSchema>;
 
 // customerCompanyId/createdByUserId are nullable because blind postings
 // redact them for non-owner/non-CRM viewers.
+// Sprint 12 — a single co-owning CRM record (returned inline on the requirement).
+export const RequirementCrmOwnerSchema = z.object({
+  crmUserId: z.string().uuid(),
+  acceptedAt: z.string().datetime(),
+  isPrimary: z.boolean(),
+  commissionShare: z.number(),
+});
+export type RequirementCrmOwner = z.infer<typeof RequirementCrmOwnerSchema>;
+
 export const RequirementResponseSchema = z.object({
   id: z.string().uuid(),
   customerCompanyId: z.string().uuid().nullable(),
   createdByUserId: z.string().uuid().nullable(),
   attributedCrmId: z.string().uuid().nullable(),
+  // Sprint 12 — multi-CRM co-ownership. Empty array when no one has accepted yet.
+  crmOwners: z.array(RequirementCrmOwnerSchema).default([]),
+  // Sprint 12 — SRM assignment by one of the owning CRMs.
+  assignedSrmId: z.string().uuid().nullable(),
+  assignedSrmAt: z.string().datetime().nullable(),
+  assignedSrmByCrmId: z.string().uuid().nullable(),
   title: z.string(),
   description: z.string(),
   techStack: z.array(z.string()),
@@ -112,6 +131,12 @@ export const RequirementResponseSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 export type RequirementResponse = z.infer<typeof RequirementResponseSchema>;
+
+// Sprint 12 — request schemas
+export const AssignSrmSchema = z.object({
+  srmUserId: z.string().uuid(),
+});
+export type AssignSrm = z.infer<typeof AssignSrmSchema>;
 
 export const RequirementListResponseSchema = z.object({
   data: z.array(RequirementResponseSchema),
@@ -169,3 +194,43 @@ export const RequirementClosedEventSchema = EventEnvelopeSchema.extend({
   }),
 });
 export type RequirementClosedEvent = z.infer<typeof RequirementClosedEventSchema>;
+
+// Sprint 12 — events for the new CRM accept / SRM assignment flow
+export const RequirementCrmAcceptedEventSchema = EventEnvelopeSchema.extend({
+  type: z.literal("requirement.crm-accepted.v1"),
+  payload: z.object({
+    requirementId: z.string().uuid(),
+    crmUserId: z.string().uuid(),
+    isPrimary: z.boolean(),
+    coOwnerCount: z.number().int(),
+  }),
+});
+export type RequirementCrmAcceptedEvent = z.infer<
+  typeof RequirementCrmAcceptedEventSchema
+>;
+
+export const RequirementSrmAssignedEventSchema = EventEnvelopeSchema.extend({
+  type: z.literal("requirement.srm-assigned.v1"),
+  payload: z.object({
+    requirementId: z.string().uuid(),
+    srmUserId: z.string().uuid(),
+    assignedByCrmId: z.string().uuid(),
+    requirementTitle: z.string(),
+  }),
+});
+export type RequirementSrmAssignedEvent = z.infer<
+  typeof RequirementSrmAssignedEventSchema
+>;
+
+export const RequirementAssignedMsmeEventSchema = EventEnvelopeSchema.extend({
+  type: z.literal("requirement.assigned-msme.v1"),
+  payload: z.object({
+    requirementId: z.string().uuid(),
+    msmePrimaryUserId: z.string().uuid(),
+    assignedBySrmId: z.string().uuid(),
+    requirementTitle: z.string(),
+  }),
+});
+export type RequirementAssignedMsmeEvent = z.infer<
+  typeof RequirementAssignedMsmeEventSchema
+>;

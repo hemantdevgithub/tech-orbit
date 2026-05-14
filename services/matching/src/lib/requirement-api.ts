@@ -6,6 +6,8 @@ export type RequirementSummary = {
   customerCompanyId: string;
   createdByUserId: string;
   attributedCrmId: string | null;
+  // Sprint 12 — assigned SRM (matching-svc uses this to gate invite-to-submit)
+  assignedSrmId: string | null;
   title: string;
   techStack: string[];
   seniority: "JUNIOR" | "MID" | "SENIOR" | "STAFF" | "PRINCIPAL" | "PARTNER";

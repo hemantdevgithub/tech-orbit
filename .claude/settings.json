@@ -151,7 +151,11 @@
       "Bash(node --input-type=module)",
       "Bash(node --experimental-vm-modules -e \"import\\('./next.config.mjs'\\).then\\(m => console.log\\('ok', typeof m.default\\)\\).catch\\(e => console.error\\('ERROR:', e.message\\)\\)\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('main:', d.get\\('main','N/A'\\)\\); print\\('exports:', json.dumps\\(d.get\\('exports',{}\\), indent=2\\)[:200]\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(pnpm --filter @techorbit/profile exec prisma migrate deploy)",
+      "Bash(pnpm --filter @techorbit/matching test -- --run)",
+      "Bash(pnpm --filter @techorbit/requirement test -- --run)",
+      "Bash(pnpm --filter @techorbit/profile test -- --run)"
     ],
     "additionalDirectories": [
       "/Users/hemant/techorbit/.git",

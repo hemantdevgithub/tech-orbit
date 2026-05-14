@@ -1,0 +1,58 @@
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { DeclineInviteSchema, InviteCandidateSchema } from "@techorbit/types";
+import type { SubmissionService } from "../services/submission.service.js";
+
+const IdParams = z.object({ id: z.string().uuid() });
+
+// Sprint 12 — invite-to-submit routes. SRM invites a candidate from their
+// portfolio; candidate accepts/declines on a separate submission record.
+export async function inviteRoutes(
+  fastify: FastifyInstance,
+  options: { submissionService: SubmissionService },
+): Promise<void> {
+  const { submissionService } = options;
+
+  // POST /api/v1/requirements/:id/invite-candidate — SRM-only
+  fastify.post(
+    "/api/v1/requirements/:id/invite-candidate",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = IdParams.parse(request.params);
+      const body = InviteCandidateSchema.parse(request.body);
+      const response = await submissionService.inviteCandidate(
+        request.auth,
+        id,
+        body,
+      );
+      return reply.status(201).send(response);
+    },
+  );
+
+  // POST /api/v1/submissions/:id/accept-invite — candidate-only
+  fastify.post(
+    "/api/v1/submissions/:id/accept-invite",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = IdParams.parse(request.params);
+      const response = await submissionService.acceptInvite(request.auth, id);
+      return reply.status(200).send(response);
+    },
+  );
+
+  // POST /api/v1/submissions/:id/decline-invite — candidate-only
+  fastify.post(
+    "/api/v1/submissions/:id/decline-invite",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = IdParams.parse(request.params);
+      const body = DeclineInviteSchema.parse(request.body);
+      const response = await submissionService.declineInvite(
+        request.auth,
+        id,
+        body,
+      );
+      return reply.status(200).send(response);
+    },
+  );
+}

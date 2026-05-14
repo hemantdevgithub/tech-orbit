@@ -11,6 +11,8 @@ import { msmeRoutes } from "./routes/msme.routes.js";
 import { customerRoutes } from "./routes/customer.routes.js";
 import { interviewerRoutes } from "./routes/interviewer.routes.js";
 import { internalRoutes } from "./routes/internal.routes.js";
+import { srmPortfolioRoutes } from "./routes/srm-portfolio.routes.js";
+import { startOutboxWorker, stopOutboxWorker } from "./lib/outbox-worker.js";
 import { createMsmeService } from "./services/msme.service.js";
 import { createCustomerService } from "./services/customer.service.js";
 import { createCandidateService } from "./services/candidate.service.js";
@@ -71,17 +73,20 @@ export async function buildServer(): Promise<FastifyInstance> {
   await fastify.register(msmeRoutes, { msmeService });
   await fastify.register(customerRoutes, { customerService });
   await fastify.register(interviewerRoutes);
+  await fastify.register(srmPortfolioRoutes);
   await fastify.register(internalRoutes);
 
-  // Wire up event consumers if RabbitMQ is configured
+  // Wire up event consumers + outbox relay if RabbitMQ is configured
   if (config.RABBITMQ_URL) {
     const eventBus = createEventBus({ url: config.RABBITMQ_URL }, config.SERVICE_NAME);
     fastify.addHook("onReady", async () => {
       await eventBus.connect();
       await registerUserEventConsumers(eventBus);
-      fastify.log.info("Event bus connected and consumers registered");
+      startOutboxWorker(eventBus);
+      fastify.log.info("Event bus connected, consumers registered, outbox started");
     });
     fastify.addHook("onClose", async () => {
+      stopOutboxWorker();
       await eventBus.disconnect();
     });
   }

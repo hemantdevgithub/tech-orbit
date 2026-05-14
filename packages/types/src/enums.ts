@@ -275,6 +275,49 @@ export type PortfolioInitiator = z.infer<typeof PortfolioInitiator>;
 export const PortfolioMemberType = z.enum(["CANDIDATE", "MSME"]);
 export type PortfolioMemberType = z.infer<typeof PortfolioMemberType>;
 
+// Sprint 12 — request/response Zod schemas for the portfolio routes
+export const SrmInviteMemberSchema = z.object({
+  memberUserId: z.string().uuid(),
+  memberType: PortfolioMemberType,
+});
+export type SrmInviteMember = z.infer<typeof SrmInviteMemberSchema>;
+
+export const MemberRequestJoinSchema = z.object({
+  srmUserId: z.string().uuid(),
+  memberType: PortfolioMemberType,
+});
+export type MemberRequestJoin = z.infer<typeof MemberRequestJoinSchema>;
+
+export const PortfolioRejectSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+export type PortfolioReject = z.infer<typeof PortfolioRejectSchema>;
+
+export const SrmPortfolioMembershipResponseSchema = z.object({
+  id: z.string().uuid(),
+  srmUserId: z.string().uuid(),
+  memberUserId: z.string().uuid(),
+  memberType: PortfolioMemberType,
+  status: PortfolioMembershipStatus,
+  initiatedBy: PortfolioInitiator,
+  initiatedByUserId: z.string().uuid(),
+  approvedAt: z.string().datetime().nullable(),
+  approvedByUserId: z.string().uuid().nullable(),
+  rejectedAt: z.string().datetime().nullable(),
+  rejectedByUserId: z.string().uuid().nullable(),
+  rejectionReason: z.string().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type SrmPortfolioMembershipResponse = z.infer<
+  typeof SrmPortfolioMembershipResponseSchema
+>;
+
+export const SrmPortfolioListResponseSchema = z.object({
+  data: z.array(SrmPortfolioMembershipResponseSchema),
+});
+export type SrmPortfolioListResponse = z.infer<typeof SrmPortfolioListResponseSchema>;
+
 export const RaterRole = z.enum(["CUSTOMER", "CANDIDATE"]);
 export type RaterRole = z.infer<typeof RaterRole>;
 

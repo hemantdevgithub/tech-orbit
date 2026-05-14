@@ -27,6 +27,10 @@ export function toSubmissionResponse(s: Submission): SubmissionResponse {
     withdrawnReason: s.withdrawnReason,
     rejectedAt: s.rejectedAt?.toISOString() ?? null,
     rejectionReason: s.rejectionReason,
+    invitedAt: s.invitedAt?.toISOString() ?? null,
+    invitedBySrmId: s.invitedBySrmId,
+    inviteAcceptedAt: s.inviteAcceptedAt?.toISOString() ?? null,
+    inviteDeclinedAt: s.inviteDeclinedAt?.toISOString() ?? null,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
   };
