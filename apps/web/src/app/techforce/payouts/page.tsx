@@ -6,6 +6,8 @@ import type { CommissionPayoutResponse, PayoutStatus } from "@techorbit/types";
 import { ApiError } from "@techorbit/api-client";
 import { getPaymentsClient } from "@/lib/api-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ViewToggle, useViewMode } from "@/components/view-toggle";
+import { DollarIcon } from "@/components/icons";
 
 const STATUS_STYLES: Record<PayoutStatus, string> = {
   PENDING: "bg-warning/10 text-warning border-warning/30",
@@ -29,6 +31,7 @@ export default function PayoutsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<PayoutStatus | "ALL">("ALL");
+  const [view, setView] = useViewMode("payouts-view", "list");
 
   useEffect(() => {
     getPaymentsClient()
@@ -65,50 +68,55 @@ export default function PayoutsPage() {
           { label: "Payouts" },
         ]}
       />
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-forest-900">Payouts</h1>
-        <p className="text-sage-500 text-sm mt-0.5">Your commission earnings</p>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Payouts</h1>
+          <p className="text-sage-500 text-sm mt-0.5">Your commission earnings</p>
+        </div>
+        {rows.length > 0 && <ViewToggle mode={view} onChange={setView} />}
       </div>
 
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm border border-danger/20">{error}</div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <div className="rounded-2xl bg-forest-800 p-5 text-cream-100 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10"
-            style={{ backgroundImage: "radial-gradient(circle at 85% 30%, #B2CCBA 0%, transparent 55%)" }} />
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-30 bg-gradient-to-br from-mint-300/40 via-transparent to-transparent"
+          />
           <div className="relative z-10">
             <p className="text-mint-200 text-xs uppercase tracking-wider mb-1">Pending</p>
-            <p className="text-3xl font-bold">{money(summary.pending)}</p>
+            <p className="text-2xl sm:text-3xl font-bold">{money(summary.pending)}</p>
             <p className="text-sage-400 text-xs mt-1">Awaiting invoice payment</p>
           </div>
         </div>
         <Card>
           <CardBody>
             <p className="text-sage-500 text-xs uppercase tracking-wider mb-1">This month</p>
-            <p className="text-3xl font-bold text-forest-900">{money(summary.thisMonth)}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-forest-900">{money(summary.thisMonth)}</p>
             <p className="text-sage-500 text-xs mt-1">Completed payouts</p>
           </CardBody>
         </Card>
         <Card>
           <CardBody>
             <p className="text-sage-500 text-xs uppercase tracking-wider mb-1">Lifetime</p>
-            <p className="text-3xl font-bold text-forest-900">{money(summary.lifetime)}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-forest-900">{money(summary.lifetime)}</p>
             <p className="text-sage-500 text-xs mt-1">Total earned to date</p>
           </CardBody>
         </Card>
       </div>
 
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-4 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
         {(["ALL", "PENDING", "PROCESSING", "COMPLETED", "FAILED", "SETTLED"] as const).map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors shrink-0 ${
               filter === s
                 ? "bg-forest-800 text-cream-100 border-forest-800"
-                : "bg-surface-elevated text-sage-600 border-surface-border hover:border-forest-300"
+                : "bg-surface text-sage-600 border-surface-border hover:border-forest-300"
             }`}
           >
             {s}
@@ -126,10 +134,46 @@ export default function PayoutsPage() {
             </p>
           </CardBody>
         </Card>
+      ) : view === "grid" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {filtered.map((p) => (
+            <div
+              key={p.id}
+              className="bg-surface rounded-xl border border-surface-border p-5 hover:border-forest-300 hover:shadow-card transition-all motion-reduce:transition-none"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span className="w-10 h-10 rounded-lg bg-forest-100 text-forest-700 flex items-center justify-center shrink-0">
+                  <DollarIcon size={18} />
+                </span>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[p.status]}`}>
+                  {p.status}
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-forest-900">{money(p.amountUsd)}</p>
+              <p className="text-xs text-sage-500 mt-1">{p.slot.replace(/_/g, " ")}</p>
+              <dl className="mt-3 space-y-1 text-xs">
+                <div className="flex justify-between gap-2">
+                  <dt className="text-sage-500">Processed</dt>
+                  <dd className="text-forest-900 text-right">
+                    {p.processedAt ? new Date(p.processedAt).toLocaleDateString() : "—"}
+                  </dd>
+                </div>
+                {(p.stripeTransferId || p.gustoPayrollId) && (
+                  <div className="flex justify-between gap-2">
+                    <dt className="text-sage-500">Ref</dt>
+                    <dd className="text-forest-900 font-mono text-[10px] text-right truncate max-w-[120px]">
+                      {p.stripeTransferId ?? p.gustoPayrollId ?? "—"}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          ))}
+        </div>
       ) : (
         <Card>
           <CardBody className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[600px]">
               <thead className="text-left text-xs text-sage-500 uppercase tracking-wider border-b border-surface-border">
                 <tr>
                   <th className="px-4 py-3">Slot</th>

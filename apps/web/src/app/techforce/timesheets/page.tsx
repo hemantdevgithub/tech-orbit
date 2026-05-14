@@ -9,6 +9,8 @@ import { useAuthStore } from "@/store/auth.store";
 import { getPaymentsClient } from "@/lib/api-client";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { useDisplayName } from "@/lib/display-names";
+import { ViewToggle, useViewMode } from "@/components/view-toggle";
+import { ClockIcon } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,7 @@ export default function TimesheetsPage() {
   const [working, setWorking] = useState<string | null>(null);
   const [filter, setFilter] = useState<TimesheetStatus | "ALL">("ALL");
   const [notice, setNotice] = useState<string | null>(null);
+  const [view, setView] = useViewMode("timesheets-view", "list");
 
   const isCustomer = user?.roles?.some((r) => r.roleType === "CUSTOMER");
   const isCandidate = user?.roles?.some((r) => r.roleType === "CANDIDATE");
@@ -91,23 +94,26 @@ export default function TimesheetsPage() {
           { label: "Timesheets" },
         ]}
       />
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-forest-900">Timesheets</h1>
-        <p className="text-sage-500 text-sm mt-0.5">
-          {isCandidate && "Your submitted weekly hours."}
-          {isCustomer && !isCandidate && "Timesheets on placements you own."}
-        </p>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Timesheets</h1>
+          <p className="text-sage-500 text-sm mt-0.5">
+            {isCandidate && "Your submitted weekly hours."}
+            {isCustomer && !isCandidate && "Timesheets on placements you own."}
+          </p>
+        </div>
+        {rows.length > 0 && <ViewToggle mode={view} onChange={setView} />}
       </div>
 
       {notice && <div className="mb-4 p-3 rounded-lg bg-mint-200 text-forest-900 text-sm">{notice}</div>}
       {error && <div className="mb-4 p-3 rounded-lg bg-danger/10 text-danger text-sm border border-danger/20">{error}</div>}
 
-      <div className="mb-4 flex gap-2 flex-wrap">
+      <div className="mb-4 flex gap-2 flex-wrap overflow-x-auto -mx-1 px-1 pb-1">
         {filters.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors shrink-0 ${
               filter === f
                 ? "bg-forest-800 text-cream-100 border-forest-800"
                 : "bg-surface text-sage-600 border-surface-border hover:border-forest-300"
@@ -129,6 +135,20 @@ export default function TimesheetsPage() {
             </p>
           </CardBody>
         </Card>
+      ) : view === "grid" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {rows.map((t) => (
+            <TimesheetCard
+              key={t.id}
+              t={t}
+              isOwnCandidate={t.candidateId === user?.id}
+              isCustomer={!!isCustomer}
+              working={working}
+              onApprove={approve}
+              onReject={reject}
+            />
+          ))}
+        </div>
       ) : (
         <div className="space-y-2">
           {rows.map((t) => (
@@ -148,25 +168,20 @@ export default function TimesheetsPage() {
   );
 }
 
-function TimesheetRow({
-  t,
-  isOwnCandidate,
-  isCustomer,
-  working,
-  onApprove,
-  onReject,
-}: {
+type ActionProps = {
   t: TimesheetResponse;
   isOwnCandidate: boolean;
   isCustomer: boolean;
   working: string | null;
   onApprove: (id: string) => void | Promise<void>;
   onReject: (id: string) => void | Promise<void>;
-}) {
+};
+
+function TimesheetRow({ t, isOwnCandidate, isCustomer, working, onApprove, onReject }: ActionProps) {
   const candidateName = useDisplayName(isOwnCandidate ? null : t.candidateId, "candidate");
   return (
-    <Card className="hover:border-forest-300 transition-colors">
-      <CardBody className="flex items-center justify-between gap-4 flex-wrap">
+    <Card className="hover:border-forest-300 transition-colors motion-reduce:transition-none">
+      <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-forest-900">
             Week of {new Date(t.weekStartDate).toUTCString().slice(5, 16)} · {t.hoursWorked} hrs
@@ -178,10 +193,10 @@ function TimesheetRow({
             {t.rejectionReason && <> · <span className="text-danger">Rejected: {t.rejectionReason}</span></>}
           </p>
           {t.description && (
-            <p className="text-xs text-sage-600 mt-1 italic">{t.description}</p>
+            <p className="text-xs text-sage-600 mt-1 italic line-clamp-2">{t.description}</p>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[t.status]}`}>
             {t.status}
           </span>
@@ -198,5 +213,44 @@ function TimesheetRow({
         </div>
       </CardBody>
     </Card>
+  );
+}
+
+function TimesheetCard({ t, isOwnCandidate, isCustomer, working, onApprove, onReject }: ActionProps) {
+  const candidateName = useDisplayName(isOwnCandidate ? null : t.candidateId, "candidate");
+  return (
+    <div className="bg-surface rounded-xl border border-surface-border p-5 hover:border-forest-300 hover:shadow-card transition-all motion-reduce:transition-none">
+      <div className="flex items-start justify-between mb-3">
+        <span className="w-10 h-10 rounded-lg bg-forest-100 text-forest-700 flex items-center justify-center shrink-0">
+          <ClockIcon size={18} />
+        </span>
+        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[t.status]}`}>
+          {t.status}
+        </span>
+      </div>
+      <p className="text-2xl font-bold text-forest-900">{t.hoursWorked} <span className="text-base font-medium text-sage-500">hrs</span></p>
+      <p className="text-xs text-sage-500 mt-1">
+        Week of {new Date(t.weekStartDate).toUTCString().slice(5, 16)}
+      </p>
+      <p className="text-xs text-sage-600 mt-3 font-mono">
+        Placement #{t.placementId.slice(0, 8)}
+      </p>
+      {!isOwnCandidate && (
+        <p className="text-xs text-sage-600 mt-0.5 truncate">{candidateName}</p>
+      )}
+      {t.rejectionReason && (
+        <p className="text-xs text-danger mt-2 line-clamp-2">Rejected: {t.rejectionReason}</p>
+      )}
+      {isCustomer && t.status === "SUBMITTED" && (
+        <div className="mt-4 pt-4 border-t border-surface-border flex gap-2">
+          <Button size="sm" className="flex-1" onClick={() => onApprove(t.id)} disabled={working === t.id}>
+            Approve
+          </Button>
+          <Button size="sm" variant="secondary" className="flex-1" onClick={() => onReject(t.id)} disabled={working === t.id}>
+            Reject
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
