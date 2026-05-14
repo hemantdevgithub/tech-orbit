@@ -153,6 +153,21 @@ export function createSubmissionService(deps: SubmissionServiceDeps) {
           },
           tx,
         );
+
+        // Sprint 12 — if an MSME submits against a requirement they were
+        // assigned to, transition that assignment ACTIVE → SUBMITTED so the
+        // inbox stops surfacing it as a to-do.
+        if (submitterRole === "MSME") {
+          await tx.requirementMsmeAssignment.updateMany({
+            where: {
+              requirementId: body.requirementId,
+              msmePrimaryUserId: ctx.userId,
+              status: "ACTIVE",
+            },
+            data: { status: "SUBMITTED" },
+          });
+        }
+
         const event = buildEvent("submission.created.v1", {
           submissionId: row.id,
           requirementId: row.requirementId,

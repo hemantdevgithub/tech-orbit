@@ -64,14 +64,15 @@ export type PlacementFilterInput = {
 //   - the creator (customer)
 //   - the candidate
 //   - the attributed CRM/SRM (via ValueChain lookup)
+//   - Sprint 12: a co-owning CRM (beneficiaryUserId on a CRM-slot rule)
 //   - a user of the attributed MSME (approximated in v1 as the primary user)
 //   - an interviewer who was on the value chain
 //   - admin
-function assertCanReadPlacement(
+async function assertCanReadPlacement(
   ctx: AuthContext,
   placement: Placement,
   valueChain: ValueChain | null,
-): void {
+): Promise<void> {
   if (ctx.roles.includes("ADMIN")) return;
 
   if (
@@ -90,6 +91,19 @@ function assertCanReadPlacement(
     ];
     if (participants.includes(ctx.userId)) return;
   }
+
+  // Sprint 12 — co-owning CRMs aren't on the value chain (only the primary
+  // is) but each one has a CRM-slot CommissionRule with their userId as the
+  // beneficiary. One indexed query gates the rare access path.
+  const coOwnerRule = await prisma.commissionRule.findFirst({
+    where: {
+      placementId: placement.id,
+      slot: "CRM",
+      beneficiaryUserId: ctx.userId,
+    },
+    select: { id: true },
+  });
+  if (coOwnerRule) return;
 
   throw new ForbiddenError("Cannot access this placement");
 }
@@ -195,7 +209,7 @@ export const placementRepository = {
     const placement = await prisma.placement.findUnique({ where: { id } });
     if (!placement) throw new NotFoundError("Placement not found");
     const valueChain = await prisma.valueChain.findUnique({ where: { placementId: id } });
-    assertCanReadPlacement(ctx, placement, valueChain);
+    await assertCanReadPlacement(ctx, placement, valueChain);
     return { placement, valueChain };
   },
 
@@ -219,8 +233,9 @@ export const placementRepository = {
     if (!isAdmin) {
       // Scope to placements where the caller is a participant.  We don't
       // have the ValueChain join here, so we query placements where the
-      // caller either created it, is the candidate, or appears in a
-      // ValueChain row.
+      // caller either created it, is the candidate, appears in a
+      // ValueChain row, or — Sprint 12 — is a co-owning CRM listed as
+      // a beneficiary on a CRM-slot commission rule.
       where.OR = [
         { createdByUserId: ctx.userId },
         { candidateId: ctx.userId },
@@ -231,6 +246,11 @@ export const placementRepository = {
               { attributedSrmId: ctx.userId },
               { interviewerIds: { has: ctx.userId } },
             ],
+          },
+        },
+        {
+          commissionRules: {
+            some: { slot: "CRM", beneficiaryUserId: ctx.userId },
           },
         },
       ];
