@@ -1,4 +1,5 @@
 import type {
+  AssignMsme,
   DeclineInvite,
   InviteCandidate,
   SubmissionRequest,
@@ -461,6 +462,58 @@ export function createSubmissionService(deps: SubmissionServiceDeps) {
         return next;
       });
       return toSubmissionResponse(updated);
+    },
+
+    // Sprint 12 — SRM assigns an MSME (from their approved portfolio) to
+    // source a bench consultant for the requirement. No Submission row is
+    // created; emitting requirement.assigned-msme.v1 notifies the MSME, who
+    // then submits via the normal POST /submissions when they pick a bench
+    // candidate.
+    async assignToMsme(
+      ctx: AuthContext,
+      requirementId: string,
+      body: AssignMsme,
+    ): Promise<{ ok: true }> {
+      if (!ctx.roles.includes("SRM") && !ctx.roles.includes("ADMIN")) {
+        throw new ForbiddenError("Only SRMs can assign an MSME");
+      }
+      const requirement = await requirementApi.getRequirement(requirementId);
+      if (!requirement) throw new NotFoundError("Requirement not found");
+      if (requirement.status !== "OPEN") {
+        throw new ValidationError(
+          `Cannot assign on a requirement in status ${requirement.status}`,
+        );
+      }
+      if (
+        !ctx.roles.includes("ADMIN") &&
+        requirement.assignedSrmId !== ctx.userId
+      ) {
+        throw new ForbiddenError(
+          "You can only assign MSMEs to requirements assigned to you",
+        );
+      }
+      if (!ctx.roles.includes("ADMIN")) {
+        const inRoster = await profileApi.hasApprovedPortfolioLink({
+          srmUserId: ctx.userId,
+          memberUserId: body.msmePrimaryUserId,
+          memberType: "MSME",
+        });
+        if (!inRoster) {
+          throw new ForbiddenError("MSME is not in your approved portfolio");
+        }
+      }
+      // Emit-only flow — no DB row written. Idempotency is handled by the
+      // notification-svc ProcessedEvent dedupe.
+      await prisma.$transaction(async (tx) => {
+        const event = buildEvent("requirement.assigned-msme.v1", {
+          requirementId,
+          msmePrimaryUserId: body.msmePrimaryUserId,
+          assignedBySrmId: ctx.userId,
+          requirementTitle: requirement.title,
+        });
+        await enqueueEvent(tx, event, requirementId);
+      });
+      return { ok: true };
     },
 
     async listMatchesForRequirement(

@@ -1,6 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { DeclineInviteSchema, InviteCandidateSchema } from "@techorbit/types";
+import {
+  AssignMsmeSchema,
+  DeclineInviteSchema,
+  InviteCandidateSchema,
+} from "@techorbit/types";
 import type { SubmissionService } from "../services/submission.service.js";
 
 const IdParams = z.object({ id: z.string().uuid() });
@@ -48,6 +52,23 @@ export async function inviteRoutes(
       const { id } = IdParams.parse(request.params);
       const body = DeclineInviteSchema.parse(request.body);
       const response = await submissionService.declineInvite(
+        request.auth,
+        id,
+        body,
+      );
+      return reply.status(200).send(response);
+    },
+  );
+
+  // POST /api/v1/requirements/:id/assign-to-msme — SRM-only
+  // Emits requirement.assigned-msme.v1; notification-svc fans out to the MSME.
+  fastify.post(
+    "/api/v1/requirements/:id/assign-to-msme",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = IdParams.parse(request.params);
+      const body = AssignMsmeSchema.parse(request.body);
+      const response = await submissionService.assignToMsme(
         request.auth,
         id,
         body,

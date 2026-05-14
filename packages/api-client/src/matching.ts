@@ -1,5 +1,6 @@
 import type { ApiClient } from "./client.js";
 import type {
+  AssignMsme,
   DeclineInvite,
   InviteCandidate,
   MatchingSignalResponse,
@@ -73,6 +74,16 @@ export class MatchingApiClient {
   ): Promise<SubmissionResponse> {
     return this.client.post(
       `/api/v1/submissions/${submissionId}/decline-invite`,
+      data,
+    );
+  }
+
+  assignToMsme(
+    requirementId: string,
+    data: AssignMsme,
+  ): Promise<{ ok: true }> {
+    return this.client.post(
+      `/api/v1/requirements/${requirementId}/assign-to-msme`,
       data,
     );
   }

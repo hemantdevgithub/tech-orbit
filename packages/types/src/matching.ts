@@ -77,6 +77,16 @@ export const DeclineInviteSchema = z.object({
 });
 export type DeclineInvite = z.infer<typeof DeclineInviteSchema>;
 
+// Sprint 12 — SRM assigns an MSME to source a bench consultant for a requirement.
+// Notifies the MSME (MSME_ASSIGNMENT); MSME then submits via the regular
+// POST /api/v1/submissions flow when they pick a bench candidate. No
+// Submission row is created at assignment time.
+export const AssignMsmeSchema = z.object({
+  msmePrimaryUserId: z.string().uuid(),
+  note: z.string().max(500).optional(),
+});
+export type AssignMsme = z.infer<typeof AssignMsmeSchema>;
+
 // Sprint 12 — events
 const EventEnvelope = z.object({
   eventId: z.string().uuid(),

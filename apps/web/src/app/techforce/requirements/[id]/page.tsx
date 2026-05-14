@@ -16,8 +16,13 @@ import type {
   CrmAttributionRequestResponse,
   RequirementResponse,
   RequirementStatus,
+  SrmPortfolioMembershipResponse,
 } from "@techorbit/types";
-import { getRequirementClient } from "@/lib/api-client";
+import {
+  getMatchingClient,
+  getProfileClient,
+  getRequirementClient,
+} from "@/lib/api-client";
 import { ApiError } from "@techorbit/api-client";
 import { useAuthStore } from "@/store/auth.store";
 import { Breadcrumbs } from "@/components/breadcrumbs";
@@ -317,6 +322,11 @@ export default function RequirementDetailPage() {
             </Card>
           )}
 
+          {/* Sprint 12 — assigned SRM picks from their approved portfolio. */}
+          {req.assignedSrmId === user?.id && req.status === "OPEN" && (
+            <AssignedSrmActions requirementId={req.id} />
+          )}
+
           {isOwner && req.status !== "DRAFT" && (
             <Card>
               <CardHeader>
@@ -334,5 +344,153 @@ export default function RequirementDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Sprint 12 — Two pickers shown to the SRM currently assigned to this
+// requirement: invite a candidate from their portfolio, or assign an MSME.
+// Both lists come from /api/v1/me/srm-roster?status=APPROVED. Memberships
+// not yet APPROVED are filtered out — backend will reject anyway.
+function AssignedSrmActions({ requirementId }: { requirementId: string }) {
+  const [candidates, setCandidates] = useState<SrmPortfolioMembershipResponse[]>([]);
+  const [msmes, setMsmes] = useState<SrmPortfolioMembershipResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const client = getProfileClient();
+    Promise.all([
+      client.listSrmRoster({ status: "APPROVED", memberType: "CANDIDATE" }),
+      client.listSrmRoster({ status: "APPROVED", memberType: "MSME" }),
+    ])
+      .then(([c, m]) => {
+        if (cancelled) return;
+        setCandidates(c.data);
+        setMsmes(m.data);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setErr(e instanceof ApiError ? e.message : "Failed to load roster");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function invite(candidateId: string) {
+    setWorking(`c:${candidateId}`);
+    setErr(null);
+    try {
+      await getMatchingClient().inviteCandidate(requirementId, { candidateId });
+      setNotice("Invitation sent.");
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : "Failed to invite");
+    } finally {
+      setWorking(null);
+    }
+  }
+
+  async function assignMsme(msmePrimaryUserId: string) {
+    setWorking(`m:${msmePrimaryUserId}`);
+    setErr(null);
+    try {
+      await getMatchingClient().assignToMsme(requirementId, { msmePrimaryUserId });
+      setNotice("MSME assigned.");
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : "Failed to assign");
+    } finally {
+      setWorking(null);
+    }
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Invite candidate</CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-2">
+          {notice && (
+            <p className="text-mint-700 text-xs">{notice}</p>
+          )}
+          {err && <p className="text-danger text-xs">{err}</p>}
+          {loading ? (
+            <p className="text-sage-500 text-sm">Loading roster…</p>
+          ) : candidates.length === 0 ? (
+            <p className="text-sage-500 text-sm">
+              No approved candidates in your roster yet.{" "}
+              <Link href="/techforce/roster" className="text-forest-700 hover:underline">
+                Add one →
+              </Link>
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {candidates.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
+                  <span className="font-mono text-xs text-forest-800 truncate">
+                    {c.memberUserId.slice(0, 8)}…
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => invite(c.memberUserId)}
+                    disabled={working === `c:${c.memberUserId}`}
+                  >
+                    Invite
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Assign MSME</CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-2">
+          {loading ? (
+            <p className="text-sage-500 text-sm">Loading roster…</p>
+          ) : msmes.length === 0 ? (
+            <p className="text-sage-500 text-sm">
+              No approved MSMEs in your roster yet.{" "}
+              <Link href="/techforce/roster" className="text-forest-700 hover:underline">
+                Add one →
+              </Link>
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {msmes.map((m) => (
+                <li
+                  key={m.id}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
+                  <span className="font-mono text-xs text-forest-800 truncate">
+                    {m.memberUserId.slice(0, 8)}…
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => assignMsme(m.memberUserId)}
+                    disabled={working === `m:${m.memberUserId}`}
+                  >
+                    Assign
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardBody>
+      </Card>
+    </>
   );
 }
