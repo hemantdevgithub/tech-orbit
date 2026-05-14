@@ -81,10 +81,10 @@ export function SrmDashboard() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Requirements" subtitle="Open opportunities" href="/techforce/requirements" />
-          <WorkspaceCard icon={<UsersIcon size={18} />} title="Submissions" subtitle="Candidates in flight" href="/techforce/requirements" />
-          <WorkspaceCard icon={<TargetIcon size={18} />} title="Pipeline" subtitle="Status & tracking" href="/techforce/requirements" />
-          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Placements" subtitle="Closed deals" href="/techforce/placements" />
+          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Assigned Jobs" subtitle="Reqs CRMs gave you" href="/techforce/opportunity-portal" />
+          <WorkspaceCard icon={<UsersIcon size={18} />} title="Roster" subtitle="Candidates & MSMEs" href="/techforce/roster" />
+          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Roster requests" subtitle="Pending approvals" href="/techforce/roster/requests" />
+          <WorkspaceCard icon={<TargetIcon size={18} />} title="Submissions" subtitle="Candidates in flight" href="/techforce/requirements" />
           <WorkspaceCard icon={<DollarIcon size={18} />} title="Commissions" subtitle="Earnings & payouts" href="/techforce/payouts" />
           <WorkspaceCard icon={<MessageIcon size={18} />} title="Messages" subtitle="Inbox & threads" href="/techforce/messages" />
         </div>

@@ -21,6 +21,7 @@ import {
   ReceiptIcon,
   SearchIcon,
   ShieldIcon,
+  UsersIcon,
   XIcon,
 } from "@/components/icons";
 
@@ -40,9 +41,10 @@ const ROLE_LABEL: Record<string, string> = {
 type Cta = { label: string; href: string; Icon: IconComp };
 const PRIMARY_CTA: Partial<Record<RoleType, Cta>> = {
   CUSTOMER: { label: "Post a requirement", href: "/techforce/requirements/new", Icon: PlusIcon },
-  CANDIDATE: { label: "Browse opportunities", href: "/techforce/requirements", Icon: ArrowRightIcon },
-  CRM: { label: "Claim a requirement", href: "/techforce/requirements", Icon: ArrowRightIcon },
-  SRM: { label: "Find requirements to fill", href: "/techforce/requirements", Icon: ArrowRightIcon },
+  CANDIDATE: { label: "View invitations", href: "/techforce/invitations", Icon: ArrowRightIcon },
+  // Sprint 12 — CRM/SRM CTAs lead to the new Opportunity Portal entry.
+  CRM: { label: "Accept a requirement", href: "/techforce/opportunity-portal", Icon: ArrowRightIcon },
+  SRM: { label: "See your assignments", href: "/techforce/opportunity-portal", Icon: ArrowRightIcon },
   MSME: { label: "Submit a consultant", href: "/techforce/requirements", Icon: ArrowRightIcon },
   ADMIN: { label: "Admin console", href: "/techforce/admin", Icon: ShieldIcon },
 };
@@ -50,7 +52,13 @@ const PRIMARY_CTA: Partial<Record<RoleType, Cta>> = {
 type NavItem = { label: string; href: string; Icon: IconComp; roles: RoleType[] };
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/techforce/dashboard", Icon: HomeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME", "ADMIN"] },
-  { label: "Requirements", href: "/techforce/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
+  // Sprint 12 — Opportunity Portal is the CRM/SRM entry for the new workflow.
+  { label: "Opportunity Portal", href: "/techforce/opportunity-portal", Icon: BriefcaseIcon, roles: ["CRM", "SRM"] },
+  { label: "Requirements", href: "/techforce/requirements", Icon: BriefcaseIcon, roles: ["CUSTOMER", "CANDIDATE", "MSME"] },
+  // Sprint 12 — SRM roster (two-sided portfolio).
+  { label: "Roster", href: "/techforce/roster", Icon: UsersIcon, roles: ["SRM"] },
+  // Sprint 12 — Candidate invitations inbox.
+  { label: "Invitations", href: "/techforce/invitations", Icon: HandshakeIcon, roles: ["CANDIDATE"] },
   { label: "Placements", href: "/techforce/placements", Icon: HandshakeIcon, roles: ["CUSTOMER", "CANDIDATE", "CRM", "SRM", "MSME"] },
   { label: "Timesheets", href: "/techforce/timesheets", Icon: ClockIcon, roles: ["CUSTOMER", "CANDIDATE"] },
   { label: "Invoices", href: "/techforce/invoices", Icon: ReceiptIcon, roles: ["CUSTOMER"] },

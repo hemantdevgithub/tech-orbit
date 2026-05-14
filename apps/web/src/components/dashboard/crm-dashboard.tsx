@@ -75,8 +75,8 @@ export function CrmDashboard() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Claim Requirement" subtitle="Attribute a client" href="/techforce/requirements" />
-          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Requirements" subtitle="Your attributed jobs" href="/techforce/requirements" />
+          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Opportunity Portal" subtitle="Accept & assign SRMs" href="/techforce/opportunity-portal" />
+          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Owned Jobs" subtitle="Your co-owned reqs" href="/techforce/opportunity-portal" />
           <WorkspaceCard icon={<UsersIcon size={18} />} title="Submissions" subtitle="Candidate pipeline" href="/techforce/requirements" />
           <WorkspaceCard icon={<TargetIcon size={18} />} title="Placements" subtitle="Closed deals" href="/techforce/placements" />
           <WorkspaceCard icon={<DollarIcon size={18} />} title="Commissions" subtitle="Earnings & payouts" href="/techforce/payouts" />

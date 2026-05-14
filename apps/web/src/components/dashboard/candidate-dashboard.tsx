@@ -98,9 +98,9 @@ export function CandidateDashboard() {
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Invitations" subtitle="From your SRMs" href="/techforce/invitations" />
           <WorkspaceCard icon={<SearchIcon size={18} />} title="Browse Jobs" subtitle="Open requirements" href="/techforce/requirements" />
           <WorkspaceCard icon={<TargetIcon size={18} />} title="Submissions" subtitle="Track your bids" href="/techforce/requirements" />
-          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="My Placement" subtitle="Active engagement" href="/techforce/placements" />
           <WorkspaceCard icon={<ClockIcon size={18} />} title="Timesheets" subtitle="Log your hours" href="/techforce/timesheets" />
           <WorkspaceCard icon={<DollarIcon size={18} />} title="Payouts" subtitle="Earnings & history" href="/techforce/payouts" />
         </div>
