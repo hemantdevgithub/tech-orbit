@@ -120,7 +120,7 @@ export function useAuth() {
       // Ignore logout errors — clear local state anyway
     } finally {
       store.logout();
-      router.push("/login");
+      router.push("/");
     }
   }, [router]);
 

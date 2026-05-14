@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth.store";
 import { useAuth } from "@/lib/auth-hooks";
@@ -19,7 +18,6 @@ const ROLE_LABEL: Record<string, string> = {
 export function UserMenu(): JSX.Element | null {
   const { user } = useAuthStore();
   const { logout } = useAuth();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -48,11 +46,8 @@ export function UserMenu(): JSX.Element | null {
 
   async function handleLogout() {
     setSigningOut(true);
-    try {
-      await logout();
-    } finally {
-      router.replace("/");
-    }
+    await logout();
+    // useAuth.logout already navigates to "/" after clearing the session.
   }
 
   const RoleIcon = primaryRole ? ROLE_ICON_COMPONENT[primaryRole] : null;
