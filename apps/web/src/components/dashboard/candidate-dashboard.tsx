@@ -83,7 +83,7 @@ export function CandidateDashboard() {
           <button
             onClick={toggleAvailability}
             disabled={toggling}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
               isAvailable
                 ? "bg-success text-white hover:bg-emerald-600"
                 : "bg-forest-800 text-cream-100 hover:bg-forest-700"
@@ -134,7 +134,7 @@ export function CandidateDashboard() {
             </div>
           ) : (
             recent.map((s) => (
-              <div key={s.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5">
                 <div className="min-w-0">
                   <p className="font-medium text-forest-900 text-sm truncate">
                     Requirement {s.requirementId.slice(0, 8)}…

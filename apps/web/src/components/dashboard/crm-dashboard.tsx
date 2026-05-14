@@ -64,7 +64,7 @@ export function CrmDashboard() {
         action={
           <Link
             href="/techforce/requirements"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-forest-800 text-cream-100 text-sm font-semibold hover:bg-forest-700 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-forest-800 text-cream-100 text-sm font-semibold hover:bg-forest-700 transition-colors"
           >
             <span className="text-base leading-none">+</span> Claim requirement
           </Link>
@@ -113,7 +113,7 @@ export function CrmDashboard() {
             </div>
           ) : (
             recentAttributions.map((a) => (
-              <div key={a.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-4 sm:px-5 py-3 sm:py-3.5">
                 <div className="min-w-0">
                   <p className="font-medium text-forest-900 text-sm">Requirement {a.requirementId.slice(0, 8)}…</p>
                   <p className="text-xs text-sage-500 mt-0.5">

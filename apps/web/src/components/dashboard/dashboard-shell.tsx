@@ -44,19 +44,23 @@ export type StatStripProps = {
 
 export function StatStrip({ title, stats }: StatStripProps) {
   return (
-    <div className="bg-white rounded-xl border border-sage-200 p-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-5">{title}</p>
-      <div className="flex flex-wrap gap-8">
+    <div className="bg-white rounded-xl border border-sage-200 p-4 sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-4 sm:mb-5">{title}</p>
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-x-6 gap-y-5 sm:gap-8">
         {stats.map(({ label, value, href }) =>
           href ? (
-            <Link key={label} href={href} className="hover:opacity-70 transition-opacity">
-              <p className="text-xs uppercase tracking-wider text-sage-500 mb-1">{label}</p>
-              <p className="text-3xl font-bold text-forest-900">{value}</p>
+            <Link
+              key={label}
+              href={href}
+              className="hover:opacity-70 transition-opacity motion-reduce:transition-none"
+            >
+              <p className="text-[11px] uppercase tracking-wider text-sage-500 mb-1">{label}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-forest-900">{value}</p>
             </Link>
           ) : (
             <div key={label}>
-              <p className="text-xs uppercase tracking-wider text-sage-500 mb-1">{label}</p>
-              <p className="text-3xl font-bold text-forest-900">{value}</p>
+              <p className="text-[11px] uppercase tracking-wider text-sage-500 mb-1">{label}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-forest-900">{value}</p>
             </div>
           ),
         )}
@@ -76,13 +80,17 @@ export type DashboardHeaderProps = {
 
 export function DashboardHeader({ breadcrumb = "Workspace / Dashboard", title, subtitle, action }: DashboardHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+      <div className="min-w-0">
         <p className="text-xs text-sage-400 mb-1">{breadcrumb}</p>
-        <h1 className="text-3xl font-bold text-forest-900">{title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">{title}</h1>
         {subtitle && <p className="text-sage-500 text-sm mt-1">{subtitle}</p>}
       </div>
-      {action && <div className="shrink-0 flex items-center gap-2">{action}</div>}
+      {action && (
+        <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-initial">
+          {action}
+        </div>
+      )}
     </div>
   );
 }
