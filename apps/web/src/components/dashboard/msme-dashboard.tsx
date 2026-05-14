@@ -9,10 +9,8 @@ import { DashboardHeader, WorkspaceCard, StatStrip } from "./dashboard-shell";
 import {
   BriefcaseIcon,
   UsersIcon,
-  HandshakeIcon,
-  TargetIcon,
-  DollarIcon,
-  MessageIcon,
+  AwardIcon,
+  GitBranchIcon,
 } from "@/components/icons";
 
 const STATUS_VARIANTS: Record<string, "mint" | "cream" | "success" | "muted" | "warning"> = {
@@ -89,13 +87,12 @@ export function MsmeDashboard() {
       {/* Workspace */}
       <section>
         <p className="text-xs font-semibold uppercase tracking-widest text-sage-400 mb-3">Workspace</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Requirements" subtitle="Open opportunities" href="/techforce/requirements" />
-          <WorkspaceCard icon={<UsersIcon size={18} />} title="Bench Roster" subtitle="Available consultants" href="/techforce/requirements" />
-          <WorkspaceCard icon={<TargetIcon size={18} />} title="Submissions" subtitle="Active bids" href="/techforce/requirements" />
-          <WorkspaceCard icon={<HandshakeIcon size={18} />} title="Placements" subtitle="Live engagements" href="/techforce/placements" />
-          <WorkspaceCard icon={<DollarIcon size={18} />} title="Revenue" subtitle="Earnings & payouts" href="/techforce/payouts" />
-          <WorkspaceCard icon={<MessageIcon size={18} />} title="Messages" subtitle="Inbox & threads" href="/techforce/messages" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Portfolio" subtitle="Earnings & projections" href="/techforce/payouts" />
+          <WorkspaceCard icon={<BriefcaseIcon size={18} />} title="Opportunity Portal" subtitle="Roles, levels, status" href="/techforce/requirements" />
+          <WorkspaceCard icon={<GitBranchIcon size={18} />} title="Value Chain" subtitle="Capped earnings" href="/techforce/placements" />
+          <WorkspaceCard icon={<UsersIcon size={18} />} title="Team" subtitle="Members and roles" href="/techforce/messages" />
+          <WorkspaceCard icon={<AwardIcon size={18} />} title="Perform" subtitle="Levels & calendar" href="/techforce/placements" />
         </div>
       </section>
 
