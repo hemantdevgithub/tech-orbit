@@ -67,7 +67,7 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-forest-900">Audit logs</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Audit logs</h1>
         <p className="text-sage-500 text-sm mt-0.5">Append-only record of admin actions</p>
       </div>
 
@@ -131,7 +131,7 @@ export default function AuditLogsPage() {
       ) : (
         <Card>
           <CardBody className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[720px]">
               <thead className="text-left text-xs text-sage-500 uppercase tracking-wider border-b border-surface-border">
                 <tr>
                   <th className="px-4 py-3">Action</th>

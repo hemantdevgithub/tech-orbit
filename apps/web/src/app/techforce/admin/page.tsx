@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-forest-900">Admin dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Admin dashboard</h1>
         <p className="text-sage-500 text-sm mt-0.5">Platform operations overview</p>
       </div>
 

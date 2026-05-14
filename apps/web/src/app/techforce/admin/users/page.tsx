@@ -100,21 +100,21 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-forest-900">Users</h1>
+      <div className="min-w-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-forest-900">Users</h1>
         <p className="text-sage-500 text-sm mt-0.5">Search, suspend, ban, reset passwords</p>
       </div>
 
       {notice && <div className="p-3 rounded-lg bg-mint-200 text-forest-900 text-sm">{notice}</div>}
       {error && <div className="p-3 rounded-lg bg-danger/10 text-danger text-sm border border-danger/20">{error}</div>}
 
-      <form onSubmit={search} className="flex gap-2">
+      <form onSubmit={search} className="flex flex-col sm:flex-row gap-2">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by email or name"
-          className="flex-1 px-3 py-2 rounded-lg border border-surface-border bg-surface focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm"
+          className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-surface-border bg-surface focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm"
         />
         <Button type="submit" disabled={loading || !query.trim()}>
           {loading ? "Searching…" : "Search"}
@@ -126,7 +126,7 @@ export default function UserManagementPage() {
       ) : (
         <Card>
           <CardBody className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[760px]">
               <thead className="text-left text-xs text-sage-500 uppercase tracking-wider border-b border-surface-border">
                 <tr>
                   <th className="px-4 py-3">Email</th>
